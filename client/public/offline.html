@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1B5E20" />
+  <title>GranuleCheck – Offline</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+      background: #FAFAFA;
+      color: #1C1B1F;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      text-align: center;
+    }
+    .container {
+      max-width: 400px;
+    }
+    .icon {
+      font-size: 72px;
+      margin-bottom: 24px;
+      opacity: 0.6;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #1B5E20;
+    }
+    p {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #49454F;
+      margin-bottom: 32px;
+    }
+    button {
+      background: #1B5E20;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #2E7D32;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #121212; color: #E6E1E5; }
+      p { color: #CAC4D0; }
+      h1 { color: #81C784; }
+      button { background: #388E3C; }
+      button:hover { background: #4CAF50; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    <h1>Ste offline</h1>
+    <p>
+      Nemáte pripojenie k internetu. Skontrolujte svoje pripojenie
+      a skúste to znova.
+    </p>
+    <button onclick="window.location.reload()">Skúsiť znova</button>
+  </div>
+</body>
+</html>

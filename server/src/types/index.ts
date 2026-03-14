@@ -1,0 +1,74 @@
+export type AnimalType = 'dog' | 'cat' | 'other';
+export type AnimalSize = 'mini' | 'small' | 'medium' | 'large' | 'giant';
+export type AnimalLifeStage = 'puppy' | 'junior' | 'adult' | 'senior';
+export type ActivityLevel = 'low' | 'moderate' | 'high' | 'working';
+
+export interface PetProfile {
+  id: string;
+  name: string;
+  animalType: AnimalType;
+  breed?: string;
+  ageYears?: number;
+  ageMonths?: number;
+  weightKg?: number;
+  size?: AnimalSize;
+  lifeStage?: AnimalLifeStage;
+  activityLevel?: ActivityLevel;
+  allergies: string[];
+  intolerances: string[];
+  healthConditions: string[];
+  notes?: string;
+}
+
+export interface AnalysisRequest {
+  composition: string;
+  petProfile?: PetProfile;
+}
+
+export interface Ingredient {
+  name: string;
+  category: 'protein' | 'carb' | 'fat' | 'fiber' | 'additive' | 'mineral' | 'vitamin';
+  percentage?: number;
+  quality: 'excellent' | 'good' | 'average' | 'poor' | 'harmful';
+}
+
+export interface AllergenWarning {
+  severity: 'critical' | 'high' | 'moderate';
+  allergen: string;
+  ingredientName: string;
+  message: string;
+}
+
+export interface HealthWarning {
+  severity: 'critical' | 'high' | 'moderate';
+  condition: string;
+  message: string;
+}
+
+export interface Recommendation {
+  suitableFor: string[];
+  notRecommendedFor: string[];
+}
+
+export interface PersonalizedNote {
+  petName: string;
+  overallVerdict: string;
+  explanation: string;
+}
+
+export interface AnalysisResult {
+  score: number;
+  pros: string[];
+  cons: string[];
+  recommendation: Recommendation;
+  ingredients: Ingredient[];
+  summary: string;
+  allergenWarnings: AllergenWarning[];
+  healthWarnings: HealthWarning[];
+  personalizedNote?: PersonalizedNote;
+}
+
+export interface ApiError {
+  error: string;
+  status: number;
+}
