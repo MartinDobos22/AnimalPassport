@@ -8,6 +8,8 @@ import AnalyzePage from './pages/AnalyzePage';
 import PetProfilePage from './pages/PetProfilePage';
 import HistoryPage from './pages/HistoryPage';
 import AboutPage from './pages/AboutPage';
+import HealthPassportPage from './pages/HealthPassportPage';
+import VetCardPage from './pages/VetCardPage';
 
 export default function App() {
   const [darkMode, setDarkMode] = useLocalStorage('granule-check-dark-mode', false);
@@ -23,6 +25,8 @@ export default function App() {
             <Route path="/" element={<AnalyzePage />} />
             <Route path="/profily" element={<PetProfilePage />} />
             <Route path="/historia" element={<HistoryPage />} />
+            <Route path="/zdravotny-pas" element={<HealthPassportPage />} />
+            <Route path="/karta-pre-veta" element={<VetCardPage />} />
             <Route path="/o-aplikacii" element={<AboutPage />} />
           </Routes>
         </Layout>

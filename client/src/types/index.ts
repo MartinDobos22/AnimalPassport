@@ -8,15 +8,22 @@ export interface PetProfile {
   name: string;
   animalType: AnimalType;
   breed?: string;
+  dateOfBirth?: string;
+  sex?: 'MALE' | 'FEMALE' | 'UNKNOWN';
   ageYears?: number;
   ageMonths?: number;
   weightKg?: number;
+  photoUrl?: string;
+  microchipNumber?: string;
+  passportNumber?: string;
   size?: AnimalSize;
   lifeStage?: AnimalLifeStage;
   activityLevel?: ActivityLevel;
   allergies: string[];
   intolerances: string[];
   healthConditions: string[];
+  chronicConditions?: { id: string; title: string; description?: string }[];
+  procedures?: { id: string; title: string; date: string; notes?: string }[];
   notes?: string;
 }
 
