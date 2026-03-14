@@ -20,6 +20,8 @@ import {
 import {
   Science as ScienceIcon,
   History as HistoryIcon,
+  HealthAndSafety as HealthAndSafetyIcon,
+  Description as DescriptionIcon,
   Info as InfoIcon,
   Menu as MenuIcon,
   DarkMode as DarkModeIcon,
@@ -33,6 +35,8 @@ const NAV_ITEMS = [
   { label: 'Analýza', icon: <ScienceIcon />, path: '/' },
   { label: 'Profily', icon: <PetsIcon />, path: '/profily' },
   { label: 'História', icon: <HistoryIcon />, path: '/historia' },
+  { label: 'Zdravotný pas', icon: <HealthAndSafetyIcon />, path: '/zdravotny-pas' },
+  { label: 'Karta veta', icon: <DescriptionIcon />, path: '/karta-pre-veta' },
   { label: 'O aplikácii', icon: <InfoIcon />, path: '/o-aplikacii' },
 ];
 
