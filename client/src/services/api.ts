@@ -1,4 +1,4 @@
-import { AnalysisRequest, AnalysisResult, PetProfile } from '../types';
+import { AnalysisRequest, AnalysisResult, FileExtractionResult, PetProfile } from '../types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -52,16 +52,14 @@ export async function analyzeComposition(
 }
 
 export async function analyzeAttachment(
-  attachment: AnalysisRequest['attachment'],
-  petProfile?: PetProfile
-): Promise<AnalysisResult> {
+  attachment: AnalysisRequest['attachment']
+): Promise<FileExtractionResult> {
   const res = await fetch(`${BASE_URL}/api/analyze`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       sourceType: 'file',
       attachment,
-      petProfile: sanitizePetProfileForAnalyze(petProfile),
     } satisfies AnalysisRequest),
   });
 

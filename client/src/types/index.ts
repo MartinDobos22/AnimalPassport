@@ -69,6 +69,11 @@ export interface PersonalizedNote {
   explanation: string;
 }
 
+export interface FileExtractionResult {
+  extractedText: string;
+  source: "google-vision+openai" | "google-vision" | "openai" | "pdf-parser";
+}
+
 export interface AnalysisResult {
   score: number;
   pros: string[];

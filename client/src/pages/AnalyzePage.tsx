@@ -33,7 +33,7 @@ export default function AnalyzePage() {
   const [composition, setComposition] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sourceLabel, setSourceLabel] = useState('Ručne vložené zloženie');
-  const { analyze, analyzeFile, result, loading, error } = useAnalyze();
+  const { analyze, analyzeFile, result, fileResult, loading, error } = useAnalyze();
   const [profiles] = useLocalStorage<PetProfile[]>('granule-check-pet-profiles', []);
   const [, setSavedAnalyses] = useLocalStorage<SavedAnalysis[]>('granule-check-history', []);
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
@@ -69,8 +69,7 @@ export default function AnalyzePage() {
         fileName: selectedFile.name,
         mimeType: selectedFile.type,
         base64Data,
-      },
-      selectedProfile
+      }
     );
   };
 
@@ -106,7 +105,7 @@ export default function AnalyzePage() {
         Analyzuj zdravotné podklady
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Vlož text, alebo nahraj fotku/PDF (bloček, krvné testy, alergológia) a nechaj AI vyhodnotiť výsledky
+        Vlož text pre analýzu granúl, alebo nahraj fotku/PDF pre samostatné vypísanie obsahu súboru
       </Typography>
 
       {profiles.length > 0 ? (
@@ -200,7 +199,7 @@ export default function AnalyzePage() {
           disabled={!selectedFile || loading}
           startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <ScienceIcon />}
         >
-          {loading ? 'Analyzujem súbor...' : 'Analyzovať nahraný súbor'}
+          {loading ? 'Skenujem súbor...' : 'Vypísať obsah nahraného súboru'}
         </Button>
 
         <Typography variant="caption" color="text.secondary">
@@ -243,6 +242,22 @@ export default function AnalyzePage() {
           >
             Uložiť hodnotenie
           </Button>
+        </Box>
+      )}
+
+      {fileResult && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Alert severity="info" sx={{ borderRadius: 3 }}>
+            Zdroj skenu: {sourceLabel} ({fileResult.source})
+          </Alert>
+          <TextField
+            fullWidth
+            multiline
+            minRows={8}
+            label="Extrahovaný obsah súboru"
+            value={fileResult.extractedText}
+            InputProps={{ readOnly: true }}
+          />
         </Box>
       )}
 

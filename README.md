@@ -1,6 +1,6 @@
 # GranuleCheck – Hodnotenie psích granúl 🐕
 
-Inteligentná PWA aplikácia na analýzu zloženia psích granúl a zdravotných podkladov. Môžete skopírovať text alebo nahrať PDF/fotku (napr. veterinárny bloček, krvné testy, alergologické výsledky) a aplikácia vyhodnotí obsah pomocou AI.
+Inteligentná PWA aplikácia na analýzu zloženia psích granúl a zdravotných podkladov. Môžete skopírovať text pre analýzu granúl alebo nahrať PDF/fotku (napr. veterinárny bloček, krvné testy, alergologické výsledky) a aplikácia vypíše extrahovaný obsah súboru.
 
 ## Technológie
 
@@ -113,17 +113,19 @@ Aktuálne ikony sú placeholder. Pre produkciu:
 2. Nahrajte logo vo formáte SVG/PNG (min. 512×512)
 3. Stiahnuté ikony nahraďte v `client/public/icons/`
 
-## Napojenie skutočného AI modelu
+## Konfigurácia AI a OCR
 
-Mock AI služba je v `server/src/services/aiService.ts`. Pre napojenie skutočného modelu:
+Backend používa:
 
-1. Nainštalujte SDK vášho AI providera (napr. `@anthropic-ai/sdk`)
-2. Upravte funkciu `callAiModel()` v `aiService.ts`
-3. Pridajte API kľúč do `.env` súboru:
-   ```env
-   AI_API_KEY=váš-kľúč
-   ```
-4. Prompt by mal obsahovať inštrukcie na vrátenie JSON vo formáte `AnalysisResult`
+- `OPENAI_API_KEY` pre analýzu granúl a normalizáciu textu.
+- `GOOGLE_VISION_API_KEY` pre OCR sken obrázkov cez Google Vision API.
+
+Príklad `.env` pre backend:
+
+```env
+OPENAI_API_KEY=...
+GOOGLE_VISION_API_KEY=...
+```
 
 ## Ďalšie kroky pre produkciu
 

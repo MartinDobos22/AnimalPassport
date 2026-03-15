@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { AnalysisResult, Ingredient, PetProfile } from '../types';
+import { AnalysisResult, FileExtractionResult, Ingredient, PetProfile } from '../types';
 
 interface AttachmentInput {
   fileName: string;
@@ -150,31 +150,99 @@ function extractTextFromPdfBuffer(buffer: Buffer): string {
   return text;
 }
 
-async function extractTextFromImageWithOpenAI(attachment: AttachmentInput): Promise<string> {
-  const client = getOpenAIClient();
-  if (!client) {
-    throw new Error('OCR pre fotky je dostupné len pri zapnutom OpenAI API kľúči.');
-  }
 
-  const dataUrl = `data:${attachment.mimeType};base64,${attachment.base64Data}`;
-  const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
-    temperature: 0,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: 'Prepíš všetok čitateľný text zo zdravotného dokumentu zvieraťa. Vráť iba čistý text bez komentárov.' },
-          { type: 'image_url', image_url: { url: dataUrl } },
+async function extractTextFromImageWithGoogleVision(attachment: AttachmentInput): Promise<string> {
+  const apiKey = process.env.GOOGLE_VISION_API_KEY;
+  if (!apiKey) return '';
+
+  try {
+    const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [
+          {
+            image: { content: attachment.base64Data },
+            features: [{ type: 'DOCUMENT_TEXT_DETECTION' }],
+          },
         ],
-      },
-    ],
-  });
+      }),
+    });
 
-  return response.choices[0]?.message?.content?.trim() ?? '';
+    if (!response.ok) {
+      console.error('[AI Service] Google Vision HTTP error:', response.status);
+      return '';
+    }
+
+    const payload = (await response.json()) as {
+      responses?: Array<{ fullTextAnnotation?: { text?: string } }>;
+    };
+
+    const text = payload.responses?.[0]?.fullTextAnnotation?.text ?? '';
+    return text.trim();
+  } catch (error) {
+    console.error('[AI Service] Google Vision OCR failed:', error);
+    return '';
+  }
 }
 
-export async function extractTextFromAttachment(attachment: AttachmentInput): Promise<string> {
+async function normalizeExtractedTextWithOpenAI(text: string): Promise<string> {
+  const client = getOpenAIClient();
+  if (!client || !text.trim()) {
+    return text.trim();
+  }
+
+  try {
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      messages: [
+        {
+          role: 'system',
+          content: 'Uprav OCR text bez zmeny významu: oprav iba zjavné OCR chyby, zachovaj jazyk a štruktúru. Vráť iba čistý text.',
+        },
+        {
+          role: 'user',
+          content: text,
+        },
+      ],
+    });
+
+    return response.choices[0]?.message?.content?.trim() ?? text.trim();
+  } catch (error) {
+    console.error('[AI Service] OpenAI text normalization failed:', error);
+    return text.trim();
+  }
+}
+
+async function extractTextFromImageWithOpenAI(attachment: AttachmentInput): Promise<string> {
+  const client = getOpenAIClient();
+  if (!client) return '';
+
+  try {
+    const dataUrl = `data:${attachment.mimeType};base64,${attachment.base64Data}`;
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Prepíš všetok čitateľný text zo zdravotného dokumentu zvieraťa. Vráť iba čistý text bez komentárov.' },
+            { type: 'image_url', image_url: { url: dataUrl } },
+          ],
+        },
+      ],
+    });
+
+    return response.choices[0]?.message?.content?.trim() ?? '';
+  } catch (error) {
+    console.error('[AI Service] OpenAI OCR failed:', error);
+    return '';
+  }
+}
+
+export async function extractTextFromAttachment(attachment: AttachmentInput): Promise<FileExtractionResult> {
   const supportedMimeTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   if (!supportedMimeTypes.includes(attachment.mimeType)) {
     throw new Error('Podporované sú len PDF, JPG, PNG a WEBP súbory.');
@@ -189,15 +257,29 @@ export async function extractTextFromAttachment(attachment: AttachmentInput): Pr
     if (!pdfText) {
       throw new Error('Z PDF sa nepodarilo získať text. Skúste kvalitnejší export alebo fotku dokumentu.');
     }
-    return pdfText;
+
+    const normalizedPdfText = await normalizeExtractedTextWithOpenAI(pdfText);
+
+    return {
+      extractedText: normalizedPdfText,
+      source: normalizedPdfText !== pdfText.trim() ? 'openai' : 'pdf-parser',
+    };
   }
 
-  const textFromImage = await extractTextFromImageWithOpenAI(attachment);
-  if (!textFromImage) {
+  const textFromVision = await extractTextFromImageWithGoogleVision(attachment);
+  const textFromOpenAIImage = await extractTextFromImageWithOpenAI(attachment);
+  const bestText = textFromVision.length >= textFromOpenAIImage.length ? textFromVision : textFromOpenAIImage;
+
+  if (!bestText) {
     throw new Error('Z obrázka sa nepodarilo prečítať text. Nahrajte ostrejšiu fotku.');
   }
 
-  return textFromImage;
+  const normalizedText = await normalizeExtractedTextWithOpenAI(bestText);
+
+  return {
+    extractedText: normalizedText,
+    source: textFromVision && textFromOpenAIImage ? 'google-vision+openai' : textFromVision ? 'google-vision' : 'openai',
+  };
 }
 
 // ── Mock fallback (old logic preserved) ──────────────────────────────────────
