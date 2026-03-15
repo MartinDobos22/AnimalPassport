@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#1B5E20" />
     <meta name="description" content="GranuleCheck – Inteligentná analýza zloženia psích granúl" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="GranuleCheck" />
     <link rel="manifest" href="/manifest.json" />
@@ -18,7 +19,14 @@
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
+          const isDevServer = location.port === "5173" || location.hostname === "127.0.0.1" || location.hostname === "localhost";
+          if (isDevServer) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map((registration) => registration.unregister()));
+            return;
+          }
+
           navigator.serviceWorker.register('/sw.js').then(
             (reg) => console.log('SW registered:', reg.scope),
             (err) => console.log('SW registration failed:', err)

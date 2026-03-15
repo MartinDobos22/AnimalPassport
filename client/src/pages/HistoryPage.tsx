@@ -118,6 +118,7 @@ export default function HistoryPage() {
                 </Typography>
               </Box>
               <IconButton
+                component="span"
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
