@@ -55,14 +55,21 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Uloží úspešnú odpoveď do dynamic cache
-          const cloned = response.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, cloned));
+          // Cache only idempotent API requests (GET). Cache API does not support POST keys.
+          if (request.method === 'GET' && response.ok) {
+            const cloned = response.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, cloned));
+          }
           return response;
         })
         .catch(() => {
-          // Ak sme offline, skúsime cache
-          return caches.match(request);
+          // Offline fallback len pre GET requesty
+          if (request.method === 'GET') {
+            return caches.match(request);
+          }
+
+          // Pre mutačné requesty (POST/PUT/PATCH/DELETE) vráť sieťovú chybu
+          throw new TypeError('Network error for non-GET API request');
         })
     );
     return;
