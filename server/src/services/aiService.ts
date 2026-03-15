@@ -1,6 +1,12 @@
 import OpenAI from 'openai';
 import { AnalysisResult, Ingredient, PetProfile } from '../types';
 
+interface AttachmentInput {
+  fileName: string;
+  mimeType: string;
+  base64Data: string;
+}
+
 const SYSTEM_PROMPT = `Si odborný veterinárny výživový poradca a analytik zloženia krmív pre zvieratá. Tvoja úloha je analyzovať zloženie krmiva a poskytnúť detailné hodnotenie.
 
 ## BEZPEČNOSTNÉ PRAVIDLÁ (NAJVYŠŠIA PRIORITA)
@@ -124,6 +130,74 @@ function buildUserMessage(composition: string, petProfile?: PetProfile): string 
   }
 
   return msg;
+}
+
+function decodeBase64(base64Data: string): Buffer {
+  return Buffer.from(base64Data.replace(/^data:.*;base64,/, ''), 'base64');
+}
+
+function extractTextFromPdfBuffer(buffer: Buffer): string {
+  const rawText = buffer.toString('latin1');
+  const chunks = [...rawText.matchAll(/\(([^)]{3,})\)\s*Tj/g)].map((m) => m[1]);
+  const text = chunks
+    .join(' ')
+    .replace(/\\n/g, ' ')
+    .replace(/\\r/g, ' ')
+    .replace(/\\t/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return text;
+}
+
+async function extractTextFromImageWithOpenAI(attachment: AttachmentInput): Promise<string> {
+  const client = getOpenAIClient();
+  if (!client) {
+    throw new Error('OCR pre fotky je dostupné len pri zapnutom OpenAI API kľúči.');
+  }
+
+  const dataUrl = `data:${attachment.mimeType};base64,${attachment.base64Data}`;
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    temperature: 0,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Prepíš všetok čitateľný text zo zdravotného dokumentu zvieraťa. Vráť iba čistý text bez komentárov.' },
+          { type: 'image_url', image_url: { url: dataUrl } },
+        ],
+      },
+    ],
+  });
+
+  return response.choices[0]?.message?.content?.trim() ?? '';
+}
+
+export async function extractTextFromAttachment(attachment: AttachmentInput): Promise<string> {
+  const supportedMimeTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (!supportedMimeTypes.includes(attachment.mimeType)) {
+    throw new Error('Podporované sú len PDF, JPG, PNG a WEBP súbory.');
+  }
+
+  if (attachment.base64Data.length > 7_000_000) {
+    throw new Error('Súbor je príliš veľký (max 5 MB).');
+  }
+
+  if (attachment.mimeType === 'application/pdf') {
+    const pdfText = extractTextFromPdfBuffer(decodeBase64(attachment.base64Data));
+    if (!pdfText) {
+      throw new Error('Z PDF sa nepodarilo získať text. Skúste kvalitnejší export alebo fotku dokumentu.');
+    }
+    return pdfText;
+  }
+
+  const textFromImage = await extractTextFromImageWithOpenAI(attachment);
+  if (!textFromImage) {
+    throw new Error('Z obrázka sa nepodarilo prečítať text. Nahrajte ostrejšiu fotku.');
+  }
+
+  return textFromImage;
 }
 
 // ── Mock fallback (old logic preserved) ──────────────────────────────────────

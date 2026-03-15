@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { analyzeComposition } from '../services/api';
-import { AnalysisResult, PetProfile } from '../types';
+import { analyzeAttachment, analyzeComposition } from '../services/api';
+import { AnalysisRequest, AnalysisResult, PetProfile } from '../types';
 
 export function useAnalyze() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -24,11 +24,28 @@ export function useAnalyze() {
     }
   }, []);
 
+  const analyzeFile = useCallback(async (attachment: NonNullable<AnalysisRequest['attachment']>, petProfile?: PetProfile) => {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const data = await analyzeAttachment(attachment, petProfile);
+      setResult(data);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Neočakávaná chyba pri analýze súboru';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const reset = useCallback(() => {
     setResult(null);
     setError(null);
     setLoading(false);
   }, []);
 
-  return { analyze, result, loading, error, reset };
+  return { analyze, analyzeFile, result, loading, error, reset };
 }

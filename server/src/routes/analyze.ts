@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { callAiModel } from '../services/aiService';
+import { callAiModel, extractTextFromAttachment } from '../services/aiService';
 import { AnalysisRequest, PetProfile } from '../types';
 
 const router = Router();
@@ -39,18 +39,29 @@ router.post(
   '/',
   async (req: Request<object, object, AnalysisRequest>, res: Response, next: NextFunction) => {
     try {
-      const { composition, petProfile } = req.body;
+      const { composition, sourceType, attachment, petProfile } = req.body;
 
-      if (!composition || typeof composition !== 'string' || composition.trim().length === 0) {
+      let normalizedComposition = typeof composition === 'string' ? composition.trim() : '';
+
+      if (sourceType === 'file') {
+        if (!attachment || typeof attachment !== 'object') {
+          res.status(400).json({ error: 'Chýba príloha na analýzu.', status: 400 });
+          return;
+        }
+
+        normalizedComposition = await extractTextFromAttachment(attachment);
+      }
+
+      if (!normalizedComposition) {
         res.status(400).json({
-          error: 'Pole "composition" je povinné a musí byť neprázdny reťazec.',
+          error: 'Nepodarilo sa získať text na analýzu. Skontrolujte vstupný text alebo súbor.',
           status: 400,
         });
         return;
       }
 
       const validatedProfile = validatePetProfile(petProfile);
-      const result = await callAiModel(composition.trim(), validatedProfile);
+      const result = await callAiModel(normalizedComposition, validatedProfile);
       res.json(result);
     } catch (err) {
       next(err);
