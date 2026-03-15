@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
 import { analyzeAttachment, analyzeComposition } from '../services/api';
-import { AnalysisRequest, AnalysisResult, PetProfile } from '../types';
+import { AnalysisRequest, AnalysisResult, FileExtractionResult, PetProfile } from '../types';
 
 export function useAnalyze() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [fileResult, setFileResult] = useState<FileExtractionResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -11,6 +12,7 @@ export function useAnalyze() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setFileResult(null);
 
     try {
       const data = await analyzeComposition(composition, petProfile);
@@ -24,14 +26,15 @@ export function useAnalyze() {
     }
   }, []);
 
-  const analyzeFile = useCallback(async (attachment: NonNullable<AnalysisRequest['attachment']>, petProfile?: PetProfile) => {
+  const analyzeFile = useCallback(async (attachment: NonNullable<AnalysisRequest['attachment']>) => {
     setLoading(true);
     setError(null);
     setResult(null);
+    setFileResult(null);
 
     try {
-      const data = await analyzeAttachment(attachment, petProfile);
-      setResult(data);
+      const data = await analyzeAttachment(attachment);
+      setFileResult(data);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Neočakávaná chyba pri analýze súboru';
@@ -43,9 +46,10 @@ export function useAnalyze() {
 
   const reset = useCallback(() => {
     setResult(null);
+    setFileResult(null);
     setError(null);
     setLoading(false);
   }, []);
 
-  return { analyze, analyzeFile, result, loading, error, reset };
+  return { analyze, analyzeFile, result, fileResult, loading, error, reset };
 }

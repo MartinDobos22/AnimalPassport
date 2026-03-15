@@ -49,7 +49,9 @@ router.post(
           return;
         }
 
-        normalizedComposition = await extractTextFromAttachment(attachment);
+        const extractionResult = await extractTextFromAttachment(attachment);
+        res.json(extractionResult);
+        return;
       }
 
       if (!normalizedComposition) {

@@ -81,6 +81,11 @@ export interface AnalysisResult {
   personalizedNote?: PersonalizedNote;
 }
 
+export interface FileExtractionResult {
+  extractedText: string;
+  source: 'google-vision+openai' | 'google-vision' | 'openai' | 'pdf-parser';
+}
+
 export interface ApiError {
   error: string;
   status: number;
