@@ -3,7 +3,9 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   CircularProgress,
+  Divider,
   FormControl,
   InputLabel,
   Link,
@@ -13,7 +15,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Science as ScienceIcon, Save as SaveIcon } from '@mui/icons-material';
+import { Science as ScienceIcon, Save as SaveIcon, UploadFile as UploadFileIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAnalyze } from '../hooks/useAnalyze';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -24,9 +26,14 @@ import AllergenWarningBanner from '../components/AllergenWarningBanner';
 import PersonalizedVerdictCard from '../components/PersonalizedVerdictCard';
 import type { SavedAnalysis, PetProfile } from '../types';
 
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+const SUPPORTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
 export default function AnalyzePage() {
   const [composition, setComposition] = useState('');
-  const { analyze, result, loading, error } = useAnalyze();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [sourceLabel, setSourceLabel] = useState('Ručne vložené zloženie');
+  const { analyze, analyzeFile, result, loading, error } = useAnalyze();
   const [profiles] = useLocalStorage<PetProfile[]>('granule-check-pet-profiles', []);
   const [, setSavedAnalyses] = useLocalStorage<SavedAnalysis[]>('granule-check-history', []);
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
@@ -37,8 +44,34 @@ export default function AnalyzePage() {
 
   const handleAnalyze = () => {
     if (composition.trim()) {
+      setSourceLabel('Ručne vložené zloženie');
       analyze(composition.trim(), selectedProfile);
     }
+  };
+
+  const handleFileAnalyze = async () => {
+    if (!selectedFile) return;
+
+    const base64Data = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const raw = typeof reader.result === 'string' ? reader.result : '';
+        const split = raw.split(',');
+        resolve(split.length > 1 ? split[1] : raw);
+      };
+      reader.onerror = () => reject(new Error('Nepodarilo sa načítať súbor.'));
+      reader.readAsDataURL(selectedFile);
+    });
+
+    setSourceLabel(`Súbor: ${selectedFile.name}`);
+    await analyzeFile(
+      {
+        fileName: selectedFile.name,
+        mimeType: selectedFile.type,
+        base64Data,
+      },
+      selectedProfile
+    );
   };
 
   const handleSave = () => {
@@ -46,7 +79,8 @@ export default function AnalyzePage() {
     const entry: SavedAnalysis = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       date: new Date().toISOString(),
-      composition: composition.trim(),
+      composition: composition.trim() || sourceLabel,
+      sourceLabel,
       result,
       petProfileId: selectedProfile?.id,
       petProfileName: selectedProfile?.name,
@@ -69,10 +103,10 @@ export default function AnalyzePage() {
   return (
     <Box>
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-        Analyzuj zloženie granúl
+        Analyzuj zdravotné podklady
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Skopíruj zloženie z obalu krmiva a zisti jeho kvalitu
+        Vlož text, alebo nahraj fotku/PDF (bloček, krvné testy, alergológia) a nechaj AI vyhodnotiť výsledky
       </Typography>
 
       {profiles.length > 0 ? (
@@ -109,7 +143,7 @@ export default function AnalyzePage() {
         multiline
         minRows={4}
         maxRows={10}
-        placeholder="Vlož zloženie z obalu krmiva... napr. kuracie mäso (30%), ryža, kukurica, kurací tuk, repný rezok, lososový olej, minerály, vitamíny..."
+        placeholder="Vlož text zo zdravotnej dokumentácie alebo zloženie..."
         value={composition}
         onChange={(e) => setComposition(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -124,10 +158,55 @@ export default function AnalyzePage() {
         startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <ScienceIcon />}
         onClick={handleAnalyze}
         disabled={loading || !composition.trim()}
-        sx={{ mb: 4, py: 1.5, fontSize: '1rem' }}
+        sx={{ mb: 3, py: 1.5, fontSize: '1rem' }}
       >
-        {loading ? 'Analyzujem zloženie...' : 'Analyzovať'}
+        {loading ? 'Analyzujem text...' : 'Analyzovať text'}
       </Button>
+
+      <Divider sx={{ mb: 2 }}>alebo</Divider>
+
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 4 }}>
+        <Button variant="outlined" component="label" startIcon={<UploadFileIcon />} disabled={loading}>
+          Vybrať PDF alebo fotku
+          <input
+            type="file"
+            hidden
+            accept="application/pdf,image/jpeg,image/png,image/webp"
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              if (!file) {
+                setSelectedFile(null);
+                return;
+              }
+              if (!SUPPORTED_FILE_TYPES.includes(file.type)) {
+                setSelectedFile(null);
+                return;
+              }
+              if (file.size > MAX_FILE_SIZE_BYTES) {
+                setSelectedFile(null);
+                return;
+              }
+              setSelectedFile(file);
+            }}
+          />
+        </Button>
+
+        {selectedFile && <Chip label={`${selectedFile.name} (${Math.round(selectedFile.size / 1024)} kB)`} />}
+
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={handleFileAnalyze}
+          disabled={!selectedFile || loading}
+          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <ScienceIcon />}
+        >
+          {loading ? 'Analyzujem súbor...' : 'Analyzovať nahraný súbor'}
+        </Button>
+
+        <Typography variant="caption" color="text.secondary">
+          Podporované typy: PDF, JPG, PNG, WEBP (max 5 MB)
+        </Typography>
+      </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>
@@ -137,7 +216,10 @@ export default function AnalyzePage() {
 
       {result && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* 1. Allergen & health warnings — ALWAYS first, impossible to miss */}
+          <Alert severity="info" sx={{ borderRadius: 3 }}>
+            Zdroj analýzy: {sourceLabel}
+          </Alert>
+
           {hasWarnings && (
             <AllergenWarningBanner
               allergenWarnings={result.allergenWarnings ?? []}
@@ -145,21 +227,14 @@ export default function AnalyzePage() {
             />
           )}
 
-          {/* 2. Personalized verdict card */}
           {result.personalizedNote && (
             <PersonalizedVerdictCard note={result.personalizedNote} />
           )}
 
-          {/* 3. General score card */}
           <ScoreCard score={result.score} summary={result.summary} />
-
-          {/* 4. Pros & cons */}
           <ProsConsCard pros={result.pros} cons={result.cons} />
-
-          {/* 5. Recommendation */}
           <RecommendationChip recommendation={result.recommendation} />
 
-          {/* 6. Save button */}
           <Button
             variant="outlined"
             startIcon={<SaveIcon />}

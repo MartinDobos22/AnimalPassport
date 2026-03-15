@@ -1,6 +1,6 @@
 # GranuleCheck – Hodnotenie psích granúl 🐕
 
-Inteligentná PWA aplikácia na analýzu zloženia psích granúl. Skopírujte zloženie z obalu krmiva a aplikácia vyhodnotí kvalitu ingrediencií, identifikuje výhody a nevýhody, a poradí, pre aké psy je krmivo vhodné.
+Inteligentná PWA aplikácia na analýzu zloženia psích granúl a zdravotných podkladov. Môžete skopírovať text alebo nahrať PDF/fotku (napr. veterinárny bloček, krvné testy, alergologické výsledky) a aplikácia vyhodnotí obsah pomocou AI.
 
 ## Technológie
 

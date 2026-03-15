@@ -28,7 +28,13 @@ export interface PetProfile {
 }
 
 export interface AnalysisRequest {
-  composition: string;
+  composition?: string;
+  sourceType?: 'text' | 'file';
+  attachment?: {
+    fileName: string;
+    mimeType: string;
+    base64Data: string;
+  };
   petProfile?: PetProfile;
 }
 

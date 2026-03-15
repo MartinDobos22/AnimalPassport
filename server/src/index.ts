@@ -11,7 +11,7 @@ const PORT = process.env.PORT ?? 3001;
 
 // Middleware
 app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] }));
-app.use(express.json());
+app.use(express.json({ limit: '8mb' }));
 
 // Routes
 app.use('/api/analyze', analyzeRouter);
