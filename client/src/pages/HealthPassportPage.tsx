@@ -424,6 +424,38 @@ export default function HealthPassportPage() {
                 {fileResult.contextAnalysis.summary}
               </Alert>
             )}
+            {fileResult?.healthPassportInterpretation && (
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                    Detailný rozbor zdravotného pasu (AI)
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    {fileResult.healthPassportInterpretation.summary}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
+                    Ako to AI chápe: {fileResult.healthPassportInterpretation.aiUnderstanding}
+                  </Typography>
+                  <Stack spacing={1}>
+                    {fileResult.healthPassportInterpretation.vaccinations.map((vac, index) => (
+                      <Box key={`${vac.vaccineName}-${vac.dateAdministered}-${index}`} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, p: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {vac.disease || 'Nešpecifikované ochorenie'}
+                        </Typography>
+                        <Typography variant="caption" display="block">Vakcína: {vac.vaccineName || 'neznáme'}</Typography>
+                        <Typography variant="caption" display="block">Podané: {vac.dateAdministered || 'neznámy dátum'}</Typography>
+                        {vac.validUntil && <Typography variant="caption" display="block">Platnosť do: {vac.validUntil}</Typography>}
+                        {vac.batchNumber && <Typography variant="caption" display="block">Šarža: {vac.batchNumber}</Typography>}
+                        {vac.manufacturer && <Typography variant="caption" display="block">Výrobca: {vac.manufacturer}</Typography>}
+                        {vac.veterinarian && <Typography variant="caption" display="block">Veterinár/klinika: {vac.veterinarian}</Typography>}
+                        {vac.notes && <Typography variant="caption" display="block">Poznámka: {vac.notes}</Typography>}
+                        <Chip size="small" sx={{ mt: 0.5 }} label={`Istota AI: ${vac.confidence}`} color={vac.confidence === 'high' ? 'success' : vac.confidence === 'medium' ? 'warning' : 'default'} />
+                      </Box>
+                    ))}
+                  </Stack>
+                </CardContent>
+              </Card>
+            )}
             <TextField
               label="URL fotky stránky / bločku (voliteľné)"
               value={wizard.attachmentUrl}
