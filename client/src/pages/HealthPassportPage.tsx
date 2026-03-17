@@ -144,6 +144,41 @@ export default function HealthPassportPage() {
   const [attachmentPreviewUrl, setAttachmentPreviewUrl] = useState('');
   const [attachmentError, setAttachmentError] = useState('');
 
+  const handleAttachmentFileChange = (file: File | null) => {
+    if (!file) {
+      setAttachmentFile(null);
+      setAttachmentPreviewUrl('');
+      setAttachmentError('');
+      return;
+    }
+    if (!SUPPORTED_FILE_TYPES.includes(file.type)) {
+      setAttachmentFile(null);
+      setAttachmentPreviewUrl('');
+      setAttachmentError('Nepodporovaný typ súboru.');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setAttachmentFile(null);
+      setAttachmentPreviewUrl('');
+      setAttachmentError('Súbor je príliš veľký (max 5 MB).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const raw = typeof reader.result === 'string' ? reader.result : '';
+      setAttachmentPreviewUrl(raw);
+      setAttachmentFile(file);
+      setAttachmentError('');
+    };
+    reader.onerror = () => {
+      setAttachmentPreviewUrl('');
+      setAttachmentFile(null);
+      setAttachmentError('Nepodarilo sa načítať súbor.');
+    };
+    reader.readAsDataURL(file);
+  };
+
   const todaysDoseLogs = doseLogs.filter((x) => x.dogId === selectedDogId && x.date === today());
 
   const toggleDose = (logId: string) => {
@@ -457,41 +492,7 @@ export default function HealthPassportPage() {
                   type="file"
                   hidden
                   accept="application/pdf,image/jpeg,image/png,image/webp"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    if (!file) {
-                      setAttachmentFile(null);
-                      setAttachmentPreviewUrl('');
-                      setAttachmentError('');
-                      return;
-                    }
-                    if (!SUPPORTED_FILE_TYPES.includes(file.type)) {
-                      setAttachmentFile(null);
-                      setAttachmentPreviewUrl('');
-                      setAttachmentError('Nepodporovaný typ súboru.');
-                      return;
-                    }
-                    if (file.size > MAX_FILE_SIZE_BYTES) {
-                      setAttachmentFile(null);
-                      setAttachmentPreviewUrl('');
-                      setAttachmentError('Súbor je príliš veľký (max 5 MB).');
-                      return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      const raw = typeof reader.result === 'string' ? reader.result : '';
-                      setAttachmentPreviewUrl(raw);
-                      setAttachmentFile(file);
-                      setAttachmentError('');
-                    };
-                    reader.onerror = () => {
-                      setAttachmentPreviewUrl('');
-                      setAttachmentFile(null);
-                      setAttachmentError('Nepodarilo sa načítať súbor.');
-                    };
-                    reader.readAsDataURL(file);
-                  }}
+                  onChange={(e) => handleAttachmentFileChange(e.target.files?.[0] ?? null)}
                 />
               </Button>
               {attachmentFile && <Chip label={`${attachmentFile.name} (${Math.round(attachmentFile.size / 1024)} kB)`} />}
