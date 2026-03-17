@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -22,6 +23,7 @@ import {
 } from '@mui/material';
 import { UploadFile as UploadFileIcon } from '@mui/icons-material';
 import type { PetProfile } from '../types';
+import { useAnalyze } from '../hooks/useAnalyze';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import type {
   DewormingRecord,
@@ -143,40 +145,60 @@ export default function HealthPassportPage() {
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [attachmentPreviewUrl, setAttachmentPreviewUrl] = useState('');
   const [attachmentError, setAttachmentError] = useState('');
+  const [pendingAttachment, setPendingAttachment] = useState<{ fileName: string; mimeType: string; base64Data: string } | null>(null);
+  const { analyzeFile, fileResult, loadingFile, error: fileAnalyzeError } = useAnalyze();
 
   const handleAttachmentFileChange = (file: File | null) => {
     if (!file) {
       setAttachmentFile(null);
       setAttachmentPreviewUrl('');
       setAttachmentError('');
+      setPendingAttachment(null);
       return;
     }
     if (!SUPPORTED_FILE_TYPES.includes(file.type)) {
       setAttachmentFile(null);
       setAttachmentPreviewUrl('');
       setAttachmentError('Nepodporovaný typ súboru.');
+      setPendingAttachment(null);
       return;
     }
     if (file.size > MAX_FILE_SIZE_BYTES) {
       setAttachmentFile(null);
       setAttachmentPreviewUrl('');
       setAttachmentError('Súbor je príliš veľký (max 5 MB).');
+      setPendingAttachment(null);
       return;
     }
 
     const reader = new FileReader();
     reader.onload = () => {
       const raw = typeof reader.result === 'string' ? reader.result : '';
+      const base64Data = raw.split(',')[1] ?? '';
+      if (!base64Data) {
+        setAttachmentPreviewUrl('');
+        setAttachmentFile(null);
+        setAttachmentError('Nepodarilo sa načítať súbor.');
+        setPendingAttachment(null);
+        return;
+      }
       setAttachmentPreviewUrl(raw);
       setAttachmentFile(file);
       setAttachmentError('');
+      setPendingAttachment({ fileName: file.name, mimeType: file.type, base64Data });
     };
     reader.onerror = () => {
       setAttachmentPreviewUrl('');
       setAttachmentFile(null);
       setAttachmentError('Nepodarilo sa načítať súbor.');
+      setPendingAttachment(null);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleAnalyzeAttachment = async () => {
+    if (!pendingAttachment) return;
+    await analyzeFile(pendingAttachment);
   };
 
   const todaysDoseLogs = doseLogs.filter((x) => x.dogId === selectedDogId && x.date === today());
@@ -340,6 +362,7 @@ export default function HealthPassportPage() {
     setAttachmentFile(null);
     setAttachmentPreviewUrl('');
     setAttachmentError('');
+    setPendingAttachment(null);
   };
 
   const [timelineFilter, setTimelineFilter] = useState<'ALL' | TimelineEvent['type']>('ALL');
@@ -383,8 +406,24 @@ export default function HealthPassportPage() {
                 onChange={(e) => handleAttachmentFileChange(e.target.files?.[0] ?? null)}
               />
             </Button>
+            <Button
+              variant="contained"
+              onClick={handleAnalyzeAttachment}
+              disabled={loadingFile || !pendingAttachment || Boolean(attachmentError)}
+              startIcon={loadingFile ? <CircularProgress size={16} color="inherit" /> : undefined}
+            >
+              {loadingFile ? 'Analyzujem súbor...' : 'Analyzovať súbor'}
+            </Button>
             {attachmentFile && <Chip label={`${attachmentFile.name} (${Math.round(attachmentFile.size / 1024)} kB)`} />}
             {attachmentError && <Alert severity="warning">{attachmentError}</Alert>}
+            {fileAnalyzeError && <Alert severity="error">{fileAnalyzeError}</Alert>}
+            {fileResult?.contextAnalysis && (
+              <Alert severity="info">
+                Typ dokumentu: <strong>{fileResult.contextAnalysis.documentType}</strong> ({fileResult.contextAnalysis.confidence})
+                <br />
+                {fileResult.contextAnalysis.summary}
+              </Alert>
+            )}
             <TextField
               label="URL fotky stránky / bločku (voliteľné)"
               value={wizard.attachmentUrl}
