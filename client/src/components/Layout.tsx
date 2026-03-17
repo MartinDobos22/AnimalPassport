@@ -36,7 +36,7 @@ const NAV_ITEMS = [
   { label: 'Profily', icon: <PetsIcon />, path: '/profily' },
   { label: 'História', icon: <HistoryIcon />, path: '/historia' },
   { label: 'Zdravotný pas', icon: <HealthAndSafetyIcon />, path: '/zdravotny-pas' },
-  { label: 'Karta veta', icon: <DescriptionIcon />, path: '/karta-pre-veta' },
+  { label: 'Karta veterinára', icon: <DescriptionIcon />, path: '/karta-pre-veterinara' },
   { label: 'O aplikácii', icon: <InfoIcon />, path: '/o-aplikacii' },
 ];
 

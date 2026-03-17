@@ -46,7 +46,7 @@ export default function VetCardPage() {
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>Karta pre veta</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>Karta pre veterinára</Typography>
         <Stack direction="row" spacing={1}>
           <Button variant="outlined" onClick={() => window.print()}>Export PDF (print)</Button>
           <Button variant="outlined">Zdieľací link (MVP)</Button>

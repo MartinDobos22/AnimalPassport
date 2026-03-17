@@ -95,7 +95,7 @@ export default function HealthPassportPage() {
     dogVaccinations.forEach((v) => t.push({ id: `vac-${v.id}`, dogId: v.dogId, type: 'VACCINATION', title: `Očkovanie: ${v.name}`, subtitle: `Platnosť do ${v.validUntil}`, date: v.dateApplied }));
     dogDewormings.forEach((v) => t.push({ id: `dew-${v.id}`, dogId: v.dogId, type: 'DEWORMING', title: `Odčervenie: ${v.productName}`, subtitle: `Ďalší termín ${v.nextDueDate}`, date: v.dateGiven }));
     dogEctos.forEach((v) => t.push({ id: `ect-${v.id}`, dogId: v.dogId, type: 'ECTOPARASITE', title: `Antiparazitikum: ${v.productName}`, subtitle: `Ďalší termín ${v.nextDueDate}`, date: v.dateGiven }));
-    dogVisits.forEach((v) => t.push({ id: `visit-${v.id}`, dogId: v.dogId, type: 'VET_VISIT', title: `Návšteva veta: ${v.clinicName}`, subtitle: v.reason, date: v.date }));
+    dogVisits.forEach((v) => t.push({ id: `visit-${v.id}`, dogId: v.dogId, type: 'VET_VISIT', title: `Návšteva veterinára: ${v.clinicName}`, subtitle: v.reason, date: v.date }));
     dogMeds.forEach((v) => t.push({ id: `med-${v.id}`, dogId: v.dogId, type: 'MEDICATION', title: `Liek: ${v.name}`, subtitle: `${v.dose}, ${v.frequency}`, date: v.startDate }));
     dogDiet.forEach((v) => t.push({ id: `diet-${v.id}`, dogId: v.dogId, type: 'DIET', title: `Diéta: ${v.foodName}`, subtitle: v.suitabilityStatus, date: v.startedAt }));
     dogExpenses.forEach((v) => t.push({ id: `exp-${v.id}`, dogId: v.dogId, type: 'EXPENSE', title: `Výdavok ${v.amount.toFixed(2)} ${v.currency}`, subtitle: v.category, date: v.date }));
@@ -326,7 +326,7 @@ export default function HealthPassportPage() {
             </Select>
           </FormControl>
           <Button variant="contained" onClick={() => setWizardOpen(true)}>Pridať návštevu</Button>
-          <Button variant="outlined" href="/karta-pre-veta">Karta pre veta</Button>
+          <Button variant="outlined" href="/karta-pre-veterinara">Karta pre veterinára</Button>
         </Stack>
       </Stack>
 
@@ -388,7 +388,7 @@ export default function HealthPassportPage() {
       </Card>
 
       <Dialog open={wizardOpen} onClose={() => setWizardOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Po návšteve veta ({wizardStep + 1}/3)</DialogTitle>
+        <DialogTitle>Po návšteve veterinára ({wizardStep + 1}/3)</DialogTitle>
         <DialogContent>
           {wizardStep === 0 && (
             <Stack spacing={2} sx={{ mt: 1 }}>

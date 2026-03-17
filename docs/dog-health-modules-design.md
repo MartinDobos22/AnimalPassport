@@ -277,13 +277,13 @@ Base: `/api/v1`
 - `GET /dogs/:dogId/semaphores`
   - response: `{ vaccination: VALID|EXPIRING_SOON|EXPIRED, deworming: ..., ectoparasite: ... }`
 - `GET /dogs/:dogId/vet-card`
-  - agregovaný read-only payload pre „Karta pre veta“
+  - agregovaný read-only payload pre „Karta pre veterinára“
 - `GET /dogs/:dogId/timeline?types=...&from=&to=&cursor=`
 - `POST /dogs/:dogId/attachments` (generic upload)
 
 ---
 
-## 3) Výpočet „Karta pre veta“ (agregácie)
+## 3) Výpočet „Karta pre veterinára“ (agregácie)
 
 ## Sekcie karty
 1. Identita psa
@@ -341,13 +341,13 @@ Base: `/api/v1`
 - `quickActions`
   - „Pridať návštevu“
   - „Pridať vakcínu“
-  - „Karta pre veta“
+  - „Karta pre veterinára“
 
 ---
 
-## 5) UX flow – rýchle zadanie údajov po návšteve veta
+## 5) UX flow – rýchle zadanie údajov po návšteve veterinára
 
-## 5.1 Primárny flow: 3-krokový wizard „Po návšteve veta“
+## 5.1 Primárny flow: 3-krokový wizard „Po návšteve veterinára“
 
 ### Krok 1: Návšteva (povinné minimum)
 - Dátum, klinika, dôvod
