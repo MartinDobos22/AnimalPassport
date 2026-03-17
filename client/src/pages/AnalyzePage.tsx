@@ -39,6 +39,11 @@ export default function AnalyzePage() {
   const [snackOpen, setSnackOpen] = useState(false);
   const [attachmentName, setAttachmentName] = useState('');
   const [attachmentError, setAttachmentError] = useState('');
+  const [pendingAttachment, setPendingAttachment] = useState<{
+    fileName: string;
+    mimeType: string;
+    base64Data: string;
+  } | null>(null);
   const navigate = useNavigate();
 
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId);
@@ -55,18 +60,21 @@ export default function AnalyzePage() {
     if (!file) {
       setAttachmentName('');
       setAttachmentError('');
+      setPendingAttachment(null);
       return;
     }
 
     if (!SUPPORTED_FILE_TYPES.includes(file.type)) {
       setAttachmentName('');
       setAttachmentError('Podporované sú PDF, JPG, PNG a WEBP.');
+      setPendingAttachment(null);
       return;
     }
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
       setAttachmentName('');
       setAttachmentError('Súbor je príliš veľký (max 5 MB).');
+      setPendingAttachment(null);
       return;
     }
 
@@ -76,16 +84,25 @@ export default function AnalyzePage() {
       const base64Data = raw.split(',')[1] ?? '';
       if (!base64Data) {
         setAttachmentError('Nepodarilo sa načítať súbor.');
+        setPendingAttachment(null);
         return;
       }
 
       setAttachmentName(file.name);
       setAttachmentError('');
-      setSourceLabel(`OCR súbor: ${file.name}`);
-      await analyzeFile({ fileName: file.name, mimeType: file.type, base64Data });
+      setPendingAttachment({ fileName: file.name, mimeType: file.type, base64Data });
     };
-    reader.onerror = () => setAttachmentError('Nepodarilo sa načítať súbor.');
+    reader.onerror = () => {
+      setAttachmentError('Nepodarilo sa načítať súbor.');
+      setPendingAttachment(null);
+    };
     reader.readAsDataURL(file);
+  };
+
+  const handleAnalyzeAttachment = async () => {
+    if (!pendingAttachment) return;
+    setSourceLabel(`OCR súbor: ${pendingAttachment.fileName}`);
+    await analyzeFile(pendingAttachment);
   };
 
   const handleSave = () => {
@@ -160,6 +177,13 @@ export default function AnalyzePage() {
             accept="application/pdf,image/jpeg,image/png,image/webp"
             onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
           />
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleAnalyzeAttachment}
+          disabled={loadingText || loadingFile || !pendingAttachment || Boolean(attachmentError)}
+        >
+          {loadingFile ? 'Analyzujem súbor...' : 'Analyzovať súbor'}
         </Button>
         {attachmentName && <Chip label={attachmentName} />}
       </Stack>
