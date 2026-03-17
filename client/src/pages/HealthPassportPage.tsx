@@ -330,6 +330,36 @@ export default function HealthPassportPage() {
         </Stack>
       </Stack>
 
+      <Card sx={{ mb: 2 }}>
+        <CardContent>
+          <Typography variant="h6" sx={{ mb: 1 }}>Príloha do zdravotného pasu</Typography>
+          <Stack spacing={1.5}>
+            <TextField
+              label="Popis prílohy (napr. pas strana 4)"
+              value={wizard.attachmentLabel}
+              onChange={(e) => setWizard({ ...wizard, attachmentLabel: e.target.value })}
+            />
+            <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
+              Vybrať PDF alebo fotku
+              <input
+                type="file"
+                hidden
+                accept="application/pdf,image/jpeg,image/png,image/webp"
+                onChange={(e) => handleAttachmentFileChange(e.target.files?.[0] ?? null)}
+              />
+            </Button>
+            {attachmentFile && <Chip label={`${attachmentFile.name} (${Math.round(attachmentFile.size / 1024)} kB)`} />}
+            {attachmentError && <Alert severity="warning">{attachmentError}</Alert>}
+            <TextField
+              label="URL fotky stránky / bločku (voliteľné)"
+              value={wizard.attachmentUrl}
+              onChange={(e) => setWizard({ ...wizard, attachmentUrl: e.target.value })}
+              helperText="Ak vyberiete súbor, použije sa nahratý súbor pri ukladaní návštevy."
+            />
+          </Stack>
+        </CardContent>
+      </Card>
+
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' }, mb: 2 }}>
         <Card><CardContent><Typography variant="body2">Očkovanie</Typography><Chip label={lastVaccinationStatus} color={lastVaccinationStatus === 'VALID' ? 'success' : lastVaccinationStatus === 'EXPIRING_SOON' ? 'warning' : 'error'} /></CardContent></Card>
         <Card><CardContent><Typography variant="body2">Odčervenie</Typography><Chip label={lastDewormingStatus} color={lastDewormingStatus === 'VALID' ? 'success' : lastDewormingStatus === 'EXPIRING_SOON' ? 'warning' : 'error'} /></CardContent></Card>
