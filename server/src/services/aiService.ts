@@ -242,6 +242,77 @@ async function extractTextFromImageWithOpenAI(attachment: AttachmentInput): Prom
   }
 }
 
+interface DocumentContextAnalysis {
+  documentType: string;
+  confidence: 'high' | 'medium' | 'low';
+  summary: string;
+  keyFindings: string[];
+  recommendedActions: string[];
+}
+
+const FEED_RELATED_KEYWORDS = [
+  'zloženie', 'granule', 'krmivo', 'protein', 'tuk', 'vláknina', 'popol', 'ingrediencie',
+  'kuracie', 'hovädzie', 'losos', 'kukurica', 'pšenica', 'mäsová múčka',
+];
+
+function looksLikeFeedComposition(text: string): boolean {
+  const lowered = text.toLowerCase();
+  const hits = FEED_RELATED_KEYWORDS.filter((keyword) => lowered.includes(keyword)).length;
+  const hasPercentages = /\b\d{1,2}(?:[,.]\d+)?\s?%/u.test(lowered);
+  return hits >= 2 || (hits >= 1 && hasPercentages);
+}
+
+async function analyzeDocumentContextWithOpenAI(text: string): Promise<DocumentContextAnalysis | null> {
+  const client = getOpenAIClient();
+  if (!client) return null;
+
+  try {
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: `Si veterinárny asistent. Urči kontext extrahovaného textu z dokumentu (fotka/PDF) a vráť iba JSON.
+Formát:
+{
+  "documentType": "krmivo|laboratorny-vysledok|veterinarna-sprava|ucet|ine",
+  "confidence": "high|medium|low",
+  "summary": "stručné zhrnutie po slovensky",
+  "keyFindings": ["bod 1", "bod 2"],
+  "recommendedActions": ["krok 1", "krok 2"]
+}`,
+        },
+        {
+          role: 'user',
+          content: text.slice(0, 12000),
+        },
+      ],
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) return null;
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+
+    return {
+      documentType: typeof parsed.documentType === 'string' ? parsed.documentType : 'ine',
+      confidence:
+        parsed.confidence === 'high' || parsed.confidence === 'medium' || parsed.confidence === 'low'
+          ? parsed.confidence
+          : 'low',
+      summary: typeof parsed.summary === 'string' ? parsed.summary : 'Kontext dokumentu sa nepodarilo spoľahlivo určiť.',
+      keyFindings: Array.isArray(parsed.keyFindings) ? parsed.keyFindings.filter((x): x is string => typeof x === 'string') : [],
+      recommendedActions: Array.isArray(parsed.recommendedActions)
+        ? parsed.recommendedActions.filter((x): x is string => typeof x === 'string')
+        : [],
+    };
+  } catch (error) {
+    console.error('[AI Service] Document context analysis failed:', error);
+    return null;
+  }
+}
+
 export async function extractTextFromAttachment(attachment: AttachmentInput): Promise<FileExtractionResult> {
   const supportedMimeTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   if (!supportedMimeTypes.includes(attachment.mimeType)) {
@@ -260,9 +331,14 @@ export async function extractTextFromAttachment(attachment: AttachmentInput): Pr
 
     const normalizedPdfText = await normalizeExtractedTextWithOpenAI(pdfText);
 
+    const contextAnalysis = await analyzeDocumentContextWithOpenAI(normalizedPdfText);
+    const shouldRunFeedAnalysis = contextAnalysis?.documentType === 'krmivo' || looksLikeFeedComposition(normalizedPdfText);
+
     return {
       extractedText: normalizedPdfText,
       source: normalizedPdfText !== pdfText.trim() ? 'openai' : 'pdf-parser',
+      contextAnalysis: contextAnalysis ?? undefined,
+      feedAnalysis: shouldRunFeedAnalysis ? await callAiModel(normalizedPdfText) : undefined,
     };
   }
 
@@ -276,9 +352,14 @@ export async function extractTextFromAttachment(attachment: AttachmentInput): Pr
 
   const normalizedText = await normalizeExtractedTextWithOpenAI(bestText);
 
+  const contextAnalysis = await analyzeDocumentContextWithOpenAI(normalizedText);
+  const shouldRunFeedAnalysis = contextAnalysis?.documentType === 'krmivo' || looksLikeFeedComposition(normalizedText);
+
   return {
     extractedText: normalizedText,
     source: textFromVision && textFromOpenAIImage ? 'google-vision+openai' : textFromVision ? 'google-vision' : 'openai',
+    contextAnalysis: contextAnalysis ?? undefined,
+    feedAnalysis: shouldRunFeedAnalysis ? await callAiModel(normalizedText) : undefined,
   };
 }
 

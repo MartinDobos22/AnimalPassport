@@ -84,6 +84,14 @@ export interface AnalysisResult {
 export interface FileExtractionResult {
   extractedText: string;
   source: 'google-vision+openai' | 'google-vision' | 'openai' | 'pdf-parser';
+  contextAnalysis?: {
+    documentType: string;
+    confidence: 'high' | 'medium' | 'low';
+    summary: string;
+    keyFindings: string[];
+    recommendedActions: string[];
+  };
+  feedAnalysis?: AnalysisResult;
 }
 
 export interface ApiError {
