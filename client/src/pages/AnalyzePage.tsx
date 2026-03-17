@@ -3,9 +3,7 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
-  Divider,
   FormControl,
   InputLabel,
   Link,
@@ -15,7 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Science as ScienceIcon, Save as SaveIcon, UploadFile as UploadFileIcon } from '@mui/icons-material';
+import { Science as ScienceIcon, Save as SaveIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAnalyze } from '../hooks/useAnalyze';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -26,14 +24,11 @@ import AllergenWarningBanner from '../components/AllergenWarningBanner';
 import PersonalizedVerdictCard from '../components/PersonalizedVerdictCard';
 import type { SavedAnalysis, PetProfile } from '../types';
 
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
-const SUPPORTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 export default function AnalyzePage() {
   const [composition, setComposition] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sourceLabel, setSourceLabel] = useState('Ručne vložené zloženie');
-  const { analyze, analyzeFile, result, fileResult, loading, error } = useAnalyze();
+  const { analyze, result, loadingText, error } = useAnalyze();
   const [profiles] = useLocalStorage<PetProfile[]>('granule-check-pet-profiles', []);
   const [, setSavedAnalyses] = useLocalStorage<SavedAnalysis[]>('granule-check-history', []);
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
@@ -47,30 +42,6 @@ export default function AnalyzePage() {
       setSourceLabel('Ručne vložené zloženie');
       analyze(composition.trim(), selectedProfile);
     }
-  };
-
-  const handleFileAnalyze = async () => {
-    if (!selectedFile) return;
-
-    const base64Data = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const raw = typeof reader.result === 'string' ? reader.result : '';
-        const split = raw.split(',');
-        resolve(split.length > 1 ? split[1] : raw);
-      };
-      reader.onerror = () => reject(new Error('Nepodarilo sa načítať súbor.'));
-      reader.readAsDataURL(selectedFile);
-    });
-
-    setSourceLabel(`Súbor: ${selectedFile.name}`);
-    await analyzeFile(
-      {
-        fileName: selectedFile.name,
-        mimeType: selectedFile.type,
-        base64Data,
-      }
-    );
   };
 
   const handleSave = () => {
@@ -105,7 +76,7 @@ export default function AnalyzePage() {
         Analyzuj zdravotné podklady
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Vlož text pre analýzu granúl, alebo nahraj fotku/PDF pre samostatné vypísanie obsahu súboru
+        Vlož text pre analýzu granúl
       </Typography>
 
       {profiles.length > 0 ? (
@@ -146,7 +117,7 @@ export default function AnalyzePage() {
         value={composition}
         onChange={(e) => setComposition(e.target.value)}
         onKeyDown={handleKeyDown}
-        disabled={loading}
+        disabled={loadingText}
         sx={{ mb: 2 }}
       />
 
@@ -154,58 +125,13 @@ export default function AnalyzePage() {
         variant="contained"
         size="large"
         fullWidth
-        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <ScienceIcon />}
+        startIcon={loadingText ? <CircularProgress size={20} color="inherit" /> : <ScienceIcon />}
         onClick={handleAnalyze}
-        disabled={loading || !composition.trim()}
+        disabled={loadingText || !composition.trim()}
         sx={{ mb: 3, py: 1.5, fontSize: '1rem' }}
       >
-        {loading ? 'Analyzujem text...' : 'Analyzovať text'}
+        {loadingText ? 'Analyzujem text...' : 'Analyzovať text'}
       </Button>
-
-      <Divider sx={{ mb: 2 }}>alebo</Divider>
-
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 4 }}>
-        <Button variant="outlined" component="label" startIcon={<UploadFileIcon />} disabled={loading}>
-          Vybrať PDF alebo fotku
-          <input
-            type="file"
-            hidden
-            accept="application/pdf,image/jpeg,image/png,image/webp"
-            onChange={(e) => {
-              const file = e.target.files?.[0] ?? null;
-              if (!file) {
-                setSelectedFile(null);
-                return;
-              }
-              if (!SUPPORTED_FILE_TYPES.includes(file.type)) {
-                setSelectedFile(null);
-                return;
-              }
-              if (file.size > MAX_FILE_SIZE_BYTES) {
-                setSelectedFile(null);
-                return;
-              }
-              setSelectedFile(file);
-            }}
-          />
-        </Button>
-
-        {selectedFile && <Chip label={`${selectedFile.name} (${Math.round(selectedFile.size / 1024)} kB)`} />}
-
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={handleFileAnalyze}
-          disabled={!selectedFile || loading}
-          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <ScienceIcon />}
-        >
-          {loading ? 'Skenujem súbor...' : 'Vypísať obsah nahraného súboru'}
-        </Button>
-
-        <Typography variant="caption" color="text.secondary">
-          Podporované typy: PDF, JPG, PNG, WEBP (max 5 MB)
-        </Typography>
-      </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>
@@ -242,22 +168,6 @@ export default function AnalyzePage() {
           >
             Uložiť hodnotenie
           </Button>
-        </Box>
-      )}
-
-      {fileResult && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Alert severity="info" sx={{ borderRadius: 3 }}>
-            Zdroj skenu: {sourceLabel} ({fileResult.source})
-          </Alert>
-          <TextField
-            fullWidth
-            multiline
-            minRows={8}
-            label="Extrahovaný obsah súboru"
-            value={fileResult.extractedText}
-            InputProps={{ readOnly: true }}
-          />
         </Box>
       )}
 
