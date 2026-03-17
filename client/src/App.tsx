@@ -26,7 +26,7 @@ export default function App() {
             <Route path="/profily" element={<PetProfilePage />} />
             <Route path="/historia" element={<HistoryPage />} />
             <Route path="/zdravotny-pas" element={<HealthPassportPage />} />
-            <Route path="/karta-pre-veta" element={<VetCardPage />} />
+            <Route path="/karta-pre-veterinara" element={<VetCardPage />} />
             <Route path="/o-aplikacii" element={<AboutPage />} />
           </Routes>
         </Layout>

@@ -110,7 +110,7 @@ export default function PetProfilePage() {
   return (
     <Box>
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>Profil psa</Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Rozšírený profil pre zdravie, vakcinácie a návštevy veta.</Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>Rozšírený profil pre zdravie, vakcinácie a návštevy veterinára.</Typography>
 
       <Button variant="contained" startIcon={<AddIcon />} onClick={openNew} sx={{ mb: 3 }}>Pridať psa</Button>
 
