@@ -1,4 +1,5 @@
 import { AnalysisRequest, AnalysisResult, FileExtractionResult, PetProfile } from '../types';
+import { logger } from '../utils/logger';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -31,29 +32,46 @@ export async function analyzeComposition(
   composition: string,
   petProfile?: PetProfile
 ): Promise<AnalysisResult> {
-  const payload: AnalysisRequest = {
+  const requestPayload: AnalysisRequest = {
     composition,
     sourceType: 'text',
     petProfile: sanitizePetProfileForAnalyze(petProfile),
   };
 
+  logger.info('Odosielam textovú analýzu na backend', {
+    compositionLength: composition.length,
+    hasPetProfile: Boolean(petProfile),
+  });
+
   const res = await fetch(`${BASE_URL}/api/analyze`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(requestPayload),
   });
 
   if (!res.ok) {
+    logger.error('Textová analýza zlyhala', { status: res.status });
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? `Chyba servera (${res.status})`);
   }
 
-  return res.json();
+  const responsePayload = (await res.json()) as AnalysisResult;
+  logger.info('Textová analýza úspešne dokončená', {
+    score: responsePayload.score,
+    ingredientsCount: responsePayload.ingredients.length,
+  });
+
+  return responsePayload;
 }
 
 export async function analyzeAttachment(
   attachment: AnalysisRequest['attachment']
 ): Promise<FileExtractionResult> {
+  logger.info('Odosielam súbor na analýzu', {
+    fileName: attachment?.fileName,
+    mimeType: attachment?.mimeType,
+  });
+
   const res = await fetch(`${BASE_URL}/api/analyze`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -64,9 +82,16 @@ export async function analyzeAttachment(
   });
 
   if (!res.ok) {
+    logger.error('Súborová analýza zlyhala', { status: res.status });
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? `Chyba servera (${res.status})`);
   }
 
-  return res.json();
+  const responsePayload = (await res.json()) as FileExtractionResult;
+  logger.info('Súborová analýza úspešne dokončená', {
+    source: responsePayload.source,
+    extractedTextLength: responsePayload.extractedText.length,
+  });
+
+  return responsePayload;
 }

@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { callAiModel, extractTextFromAttachment } from '../services/aiService';
 import { AnalysisRequest, PetProfile } from '../types';
+import { logger } from '../utils/logger';
 
 const router = Router();
 
@@ -41,20 +42,31 @@ router.post(
     try {
       const { composition, sourceType, attachment, petProfile } = req.body;
 
+      logger.info('Spúšťam analýzu požiadavky', {
+        sourceType,
+        hasPetProfile: Boolean(petProfile),
+      });
+
       let normalizedComposition = typeof composition === 'string' ? composition.trim() : '';
 
       if (sourceType === 'file') {
         if (!attachment || typeof attachment !== 'object') {
+          logger.warn('Chýba príloha pri file analýze');
           res.status(400).json({ error: 'Chýba príloha na analýzu.', status: 400 });
           return;
         }
 
         const extractionResult = await extractTextFromAttachment(attachment);
+        logger.info('Analýza súboru dokončená', {
+          source: extractionResult.source,
+          extractedTextLength: extractionResult.extractedText.length,
+        });
         res.json(extractionResult);
         return;
       }
 
       if (!normalizedComposition) {
+        logger.warn('Prázdny text na analýzu');
         res.status(400).json({
           error: 'Nepodarilo sa získať text na analýzu. Skontrolujte vstupný text alebo súbor.',
           status: 400,
@@ -64,6 +76,10 @@ router.post(
 
       const validatedProfile = validatePetProfile(petProfile);
       const result = await callAiModel(normalizedComposition, validatedProfile);
+      logger.info('Textová analýza dokončená', {
+        score: result.score,
+        ingredientsCount: result.ingredients.length,
+      });
       res.json(result);
     } catch (err) {
       next(err);
