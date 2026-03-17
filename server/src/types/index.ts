@@ -91,19 +91,9 @@ export interface FileExtractionResult {
     keyFindings: string[];
     recommendedActions: string[];
   };
-  medicalInterpretation?: {
-    detectedDocumentKind:
-      | 'health-passport'
-      | 'allergy-report'
-      | 'blood-test'
-      | 'surgery-report'
-      | 'vet-report'
-      | 'receipt'
-      | 'other';
-    confidence: 'high' | 'medium' | 'low';
+  healthPassportInterpretation?: {
     summary: string;
     aiUnderstanding: string;
-    keyAlerts: string[];
     vaccinations: Array<{
       disease: string;
       vaccineName: string;
@@ -113,45 +103,6 @@ export interface FileExtractionResult {
       veterinarian?: string;
       manufacturer?: string;
       confidence: 'high' | 'medium' | 'low';
-      notes?: string;
-    }>;
-    allergyFindings: Array<{
-      allergen: string;
-      result: string;
-      severity?: string;
-      referenceRange?: string;
-      confidence: 'high' | 'medium' | 'low';
-      notes?: string;
-    }>;
-    bloodFindings: Array<{
-      parameter: string;
-      value: string;
-      unit?: string;
-      referenceRange?: string;
-      interpretation?: string;
-      confidence: 'high' | 'medium' | 'low';
-    }>;
-    procedures: Array<{
-      procedureName: string;
-      date?: string;
-      outcome?: string;
-      recommendations?: string;
-      confidence: 'high' | 'medium' | 'low';
-    }>;
-    medications: Array<{
-      name: string;
-      dose?: string;
-      schedule?: string;
-      startDate?: string;
-      endDate?: string;
-      purpose?: string;
-      confidence: 'high' | 'medium' | 'low';
-    }>;
-    followUps: string[];
-    financialItems: Array<{
-      item: string;
-      amount?: string;
-      currency?: string;
       notes?: string;
     }>;
   };

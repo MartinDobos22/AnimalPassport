@@ -250,19 +250,9 @@ interface DocumentContextAnalysis {
   recommendedActions: string[];
 }
 
-interface MedicalDocumentInterpretation {
-  detectedDocumentKind:
-    | 'health-passport'
-    | 'allergy-report'
-    | 'blood-test'
-    | 'surgery-report'
-    | 'vet-report'
-    | 'receipt'
-    | 'other';
-  confidence: 'high' | 'medium' | 'low';
+interface HealthPassportInterpretation {
   summary: string;
   aiUnderstanding: string;
-  keyAlerts: string[];
   vaccinations: Array<{
     disease: string;
     vaccineName: string;
@@ -272,45 +262,6 @@ interface MedicalDocumentInterpretation {
     veterinarian?: string;
     manufacturer?: string;
     confidence: 'high' | 'medium' | 'low';
-    notes?: string;
-  }>;
-  allergyFindings: Array<{
-    allergen: string;
-    result: string;
-    severity?: string;
-    referenceRange?: string;
-    confidence: 'high' | 'medium' | 'low';
-    notes?: string;
-  }>;
-  bloodFindings: Array<{
-    parameter: string;
-    value: string;
-    unit?: string;
-    referenceRange?: string;
-    interpretation?: string;
-    confidence: 'high' | 'medium' | 'low';
-  }>;
-  procedures: Array<{
-    procedureName: string;
-    date?: string;
-    outcome?: string;
-    recommendations?: string;
-    confidence: 'high' | 'medium' | 'low';
-  }>;
-  medications: Array<{
-    name: string;
-    dose?: string;
-    schedule?: string;
-    startDate?: string;
-    endDate?: string;
-    purpose?: string;
-    confidence: 'high' | 'medium' | 'low';
-  }>;
-  followUps: string[];
-  financialItems: Array<{
-    item: string;
-    amount?: string;
-    currency?: string;
     notes?: string;
   }>;
 }
@@ -379,43 +330,17 @@ Formát:
 }
 
 
-function normalizeDocumentKindFromContext(documentType?: string): MedicalDocumentInterpretation['detectedDocumentKind'] {
-  switch (documentType) {
-    case 'veterinarna-sprava':
-      return 'vet-report';
-    case 'laboratorny-vysledok':
-      return 'blood-test';
-    case 'ucet':
-      return 'receipt';
-    default:
-      return 'other';
-  }
-}
-
-function detectMedicalDocHint(text: string): MedicalDocumentInterpretation['detectedDocumentKind'] {
+function looksLikeHealthPassport(text: string): boolean {
   const lowered = text.toLowerCase();
-  if (/(zdravotn.y\s+pas|passport|vaccin|vakc|rabies|očkov)/u.test(lowered)) return 'health-passport';
-  if (/(alerg|ige|elisa|prick|hypersenz)/u.test(lowered)) return 'allergy-report';
-  if (/(hematol|hemoglobin|leukocyt|erytrocyt|biochem|alt|ast|crea|bun|gluk|krvn)/u.test(lowered)) return 'blood-test';
-  if (/(oper[aá]ci|anest[eé]z|chirurg|sutura|hospitaliz)/u.test(lowered)) return 'surgery-report';
-  if (/(faktúra|doklad|blo[čc]ek|cena|eur|€)/u.test(lowered)) return 'receipt';
-  if (/(veterin|diagn[oó]z|terapi|kontrol|liečb|vyšetren)/u.test(lowered)) return 'vet-report';
-  return 'other';
+  const keywords = ['zdravotný pas', 'vaccination', 'vakc', 'rabies', 'veterin', 'passport', 'očkov'];
+  return keywords.filter((k) => lowered.includes(k)).length >= 2;
 }
 
-function isMedicalDocumentKind(kind: MedicalDocumentInterpretation['detectedDocumentKind']): boolean {
-  return kind !== 'other';
-}
-
-async function interpretMedicalDocumentWithOpenAI(
-  text: string,
-  contextDocumentType?: string,
-): Promise<MedicalDocumentInterpretation | null> {
+async function interpretHealthPassportWithOpenAI(text: string): Promise<HealthPassportInterpretation | null> {
   const client = getOpenAIClient();
   if (!client) return null;
 
   try {
-    const hint = normalizeDocumentKindFromContext(contextDocumentType);
     const response = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0,
@@ -423,31 +348,30 @@ async function interpretMedicalDocumentWithOpenAI(
       messages: [
         {
           role: 'system',
-          content: `Si veterinárny dokumentačný analytik. Urob detailný rozbor veterinárneho dokumentu.
-Rozpoznaj typ dokumentu a vytiahni štruktúrované údaje (očkovania, alergológia, krvné testy, operácie, liečba, bločky).
-Vráť IBA validný JSON v tvare:
+          content: `Si veterinárny asistent. Z textu zdravotného pasu zvieraťa priprav detailný rozbor očkovaní.
+Vráť iba JSON v tvare:
 {
-  "detectedDocumentKind": "health-passport|allergy-report|blood-test|surgery-report|vet-report|receipt|other",
-  "confidence": "high|medium|low",
-  "summary": "stručný súhrn po slovensky",
-  "aiUnderstanding": "ako AI chápe dokument a podľa akých indícií",
-  "keyAlerts": ["dôležitý alert 1"],
-  "vaccinations": [{"disease":"","vaccineName":"","dateAdministered":"","validUntil":"","batchNumber":"","veterinarian":"","manufacturer":"","confidence":"high|medium|low","notes":""}],
-  "allergyFindings": [{"allergen":"","result":"pozitívny/negatívny/hraničný + hodnota","severity":"nízka/stredná/vysoká","referenceRange":"","confidence":"high|medium|low","notes":""}],
-  "bloodFindings": [{"parameter":"","value":"","unit":"","referenceRange":"","interpretation":"nízke/vysoké/v norme","confidence":"high|medium|low"}],
-  "procedures": [{"procedureName":"","date":"","outcome":"","recommendations":"","confidence":"high|medium|low"}],
-  "medications": [{"name":"","dose":"","schedule":"","startDate":"","endDate":"","purpose":"","confidence":"high|medium|low"}],
-  "followUps": ["odporúčaná kontrola alebo krok"],
-  "financialItems": [{"item":"","amount":"","currency":"EUR","notes":""}]
+  "summary": "stručné zhrnutie",
+  "aiUnderstanding": "ako AI chápe čo je dokument a prečo (2-4 vety)",
+  "vaccinations": [
+    {
+      "disease": "proti čomu bolo očkovanie",
+      "vaccineName": "názov vakcíny",
+      "dateAdministered": "YYYY-MM-DD alebo pôvodný dátum",
+      "validUntil": "YYYY-MM-DD alebo text",
+      "batchNumber": "šarža",
+      "veterinarian": "veterinár/klinika",
+      "manufacturer": "výrobca",
+      "confidence": "high|medium|low",
+      "notes": "doplňujúca poznámka"
+    }
+  ]
 }
-Ak údaj chýba, nechaj prázdny string alebo prázdne pole.`,
+Ak údaj v texte chýba, použi prázdny string alebo pole.`,
         },
         {
           role: 'user',
-          content: `Predbežný typ dokumentu: ${hint}
-
-Text dokumentu:
-${text.slice(0, 12000)}`,
+          content: text.slice(0, 12000),
         },
       ],
     });
@@ -455,131 +379,36 @@ ${text.slice(0, 12000)}`,
     const content = response.choices[0]?.message?.content;
     if (!content) return null;
     const parsed = JSON.parse(content) as Record<string, unknown>;
-
-    const normalizeConfidence = (value: unknown): 'high' | 'medium' | 'low' =>
-      value === 'high' || value === 'medium' || value === 'low' ? value : 'low';
-
-    const normalizeKind = (value: unknown): MedicalDocumentInterpretation['detectedDocumentKind'] =>
-      value === 'health-passport' ||
-      value === 'allergy-report' ||
-      value === 'blood-test' ||
-      value === 'surgery-report' ||
-      value === 'vet-report' ||
-      value === 'receipt' ||
-      value === 'other'
-        ? value
-        : hint;
+    const rawVaccinations = Array.isArray(parsed.vaccinations) ? parsed.vaccinations : [];
 
     return {
-      detectedDocumentKind: normalizeKind(parsed.detectedDocumentKind),
-      confidence: normalizeConfidence(parsed.confidence),
-      summary: typeof parsed.summary === 'string' ? parsed.summary : 'Nepodarilo sa vytvoriť spoľahlivé zhrnutie dokumentu.',
+      summary: typeof parsed.summary === 'string' ? parsed.summary : 'Z textu sa nepodarilo spoľahlivo vytvoriť zhrnutie očkovaní.',
       aiUnderstanding:
         typeof parsed.aiUnderstanding === 'string'
           ? parsed.aiUnderstanding
-          : 'AI určila dokument podľa kľúčových veterinárnych a laboratórnych výrazov.',
-      keyAlerts: Array.isArray(parsed.keyAlerts) ? parsed.keyAlerts.filter((x): x is string => typeof x === 'string') : [],
-      vaccinations: Array.isArray(parsed.vaccinations)
-        ? parsed.vaccinations
-            .map((item) => {
-              if (!item || typeof item !== 'object') return null;
-              const i = item as Record<string, unknown>;
-              return {
-                disease: typeof i.disease === 'string' ? i.disease : '',
-                vaccineName: typeof i.vaccineName === 'string' ? i.vaccineName : '',
-                dateAdministered: typeof i.dateAdministered === 'string' ? i.dateAdministered : '',
-                validUntil: typeof i.validUntil === 'string' ? i.validUntil : undefined,
-                batchNumber: typeof i.batchNumber === 'string' ? i.batchNumber : undefined,
-                veterinarian: typeof i.veterinarian === 'string' ? i.veterinarian : undefined,
-                manufacturer: typeof i.manufacturer === 'string' ? i.manufacturer : undefined,
-                confidence: normalizeConfidence(i.confidence),
-                notes: typeof i.notes === 'string' ? i.notes : undefined,
-              };
-            })
-            .filter((x): x is NonNullable<typeof x> => Boolean(x))
-        : [],
-      allergyFindings: Array.isArray(parsed.allergyFindings)
-        ? parsed.allergyFindings
-            .map((item) => {
-              if (!item || typeof item !== 'object') return null;
-              const i = item as Record<string, unknown>;
-              return {
-                allergen: typeof i.allergen === 'string' ? i.allergen : '',
-                result: typeof i.result === 'string' ? i.result : '',
-                severity: typeof i.severity === 'string' ? i.severity : undefined,
-                referenceRange: typeof i.referenceRange === 'string' ? i.referenceRange : undefined,
-                confidence: normalizeConfidence(i.confidence),
-                notes: typeof i.notes === 'string' ? i.notes : undefined,
-              };
-            })
-            .filter((x): x is NonNullable<typeof x> => Boolean(x))
-        : [],
-      bloodFindings: Array.isArray(parsed.bloodFindings)
-        ? parsed.bloodFindings
-            .map((item) => {
-              if (!item || typeof item !== 'object') return null;
-              const i = item as Record<string, unknown>;
-              return {
-                parameter: typeof i.parameter === 'string' ? i.parameter : '',
-                value: typeof i.value === 'string' ? i.value : '',
-                unit: typeof i.unit === 'string' ? i.unit : undefined,
-                referenceRange: typeof i.referenceRange === 'string' ? i.referenceRange : undefined,
-                interpretation: typeof i.interpretation === 'string' ? i.interpretation : undefined,
-                confidence: normalizeConfidence(i.confidence),
-              };
-            })
-            .filter((x): x is NonNullable<typeof x> => Boolean(x))
-        : [],
-      procedures: Array.isArray(parsed.procedures)
-        ? parsed.procedures
-            .map((item) => {
-              if (!item || typeof item !== 'object') return null;
-              const i = item as Record<string, unknown>;
-              return {
-                procedureName: typeof i.procedureName === 'string' ? i.procedureName : '',
-                date: typeof i.date === 'string' ? i.date : undefined,
-                outcome: typeof i.outcome === 'string' ? i.outcome : undefined,
-                recommendations: typeof i.recommendations === 'string' ? i.recommendations : undefined,
-                confidence: normalizeConfidence(i.confidence),
-              };
-            })
-            .filter((x): x is NonNullable<typeof x> => Boolean(x))
-        : [],
-      medications: Array.isArray(parsed.medications)
-        ? parsed.medications
-            .map((item) => {
-              if (!item || typeof item !== 'object') return null;
-              const i = item as Record<string, unknown>;
-              return {
-                name: typeof i.name === 'string' ? i.name : '',
-                dose: typeof i.dose === 'string' ? i.dose : undefined,
-                schedule: typeof i.schedule === 'string' ? i.schedule : undefined,
-                startDate: typeof i.startDate === 'string' ? i.startDate : undefined,
-                endDate: typeof i.endDate === 'string' ? i.endDate : undefined,
-                purpose: typeof i.purpose === 'string' ? i.purpose : undefined,
-                confidence: normalizeConfidence(i.confidence),
-              };
-            })
-            .filter((x): x is NonNullable<typeof x> => Boolean(x))
-        : [],
-      followUps: Array.isArray(parsed.followUps) ? parsed.followUps.filter((x): x is string => typeof x === 'string') : [],
-      financialItems: Array.isArray(parsed.financialItems)
-        ? parsed.financialItems
-            .map((item) => {
-              if (!item || typeof item !== 'object') return null;
-              const i = item as Record<string, unknown>;
-              return {
-                item: typeof i.item === 'string' ? i.item : '',
-                amount: typeof i.amount === 'string' ? i.amount : undefined,
-                currency: typeof i.currency === 'string' ? i.currency : undefined,
-                notes: typeof i.notes === 'string' ? i.notes : undefined,
-              };
-            })
-            .filter((x): x is NonNullable<typeof x> => Boolean(x))
-        : [],
+          : 'AI rozpoznala zdravotný dokument podľa veterinárnych výrazov a štruktúry dátumov/štítkov.',
+      vaccinations: rawVaccinations
+        .map((item) => {
+          if (!item || typeof item !== 'object') return null;
+          const i = item as Record<string, unknown>;
+          const confidence: 'high' | 'medium' | 'low' =
+            i.confidence === 'high' || i.confidence === 'medium' || i.confidence === 'low' ? i.confidence : 'low';
+          return {
+            disease: typeof i.disease === 'string' ? i.disease : '',
+            vaccineName: typeof i.vaccineName === 'string' ? i.vaccineName : '',
+            dateAdministered: typeof i.dateAdministered === 'string' ? i.dateAdministered : '',
+            validUntil: typeof i.validUntil === 'string' ? i.validUntil : undefined,
+            batchNumber: typeof i.batchNumber === 'string' ? i.batchNumber : undefined,
+            veterinarian: typeof i.veterinarian === 'string' ? i.veterinarian : undefined,
+            manufacturer: typeof i.manufacturer === 'string' ? i.manufacturer : undefined,
+            confidence,
+            notes: typeof i.notes === 'string' ? i.notes : undefined,
+          };
+        })
+        .filter((item): item is NonNullable<typeof item> => Boolean(item)),
     };
   } catch (error) {
-    console.error('[AI Service] Medical document interpretation failed:', error);
+    console.error('[AI Service] Health passport interpretation failed:', error);
     return null;
   }
 }
@@ -604,19 +433,17 @@ export async function extractTextFromAttachment(attachment: AttachmentInput): Pr
 
     const contextAnalysis = await analyzeDocumentContextWithOpenAI(normalizedPdfText);
     const shouldRunFeedAnalysis = contextAnalysis?.documentType === 'krmivo' || looksLikeFeedComposition(normalizedPdfText);
-    const contextKindHint = contextAnalysis?.documentType;
-    const hintedKind = normalizeDocumentKindFromContext(contextKindHint) !== 'other'
-      ? normalizeDocumentKindFromContext(contextKindHint)
-      : detectMedicalDocHint(normalizedPdfText);
-    const medicalInterpretation = isMedicalDocumentKind(hintedKind)
-      ? await interpretMedicalDocumentWithOpenAI(normalizedPdfText, contextKindHint)
+    const shouldInterpretPassport =
+      contextAnalysis?.documentType === 'veterinarna-sprava' || looksLikeHealthPassport(normalizedPdfText);
+    const healthPassportInterpretation = shouldInterpretPassport
+      ? await interpretHealthPassportWithOpenAI(normalizedPdfText)
       : null;
 
     return {
       extractedText: normalizedPdfText,
       source: normalizedPdfText !== pdfText.trim() ? 'openai' : 'pdf-parser',
       contextAnalysis: contextAnalysis ?? undefined,
-      medicalInterpretation: medicalInterpretation ?? undefined,
+      healthPassportInterpretation: healthPassportInterpretation ?? undefined,
       feedAnalysis: shouldRunFeedAnalysis ? await callAiModel(normalizedPdfText) : undefined,
     };
   }
@@ -633,19 +460,17 @@ export async function extractTextFromAttachment(attachment: AttachmentInput): Pr
 
   const contextAnalysis = await analyzeDocumentContextWithOpenAI(normalizedText);
   const shouldRunFeedAnalysis = contextAnalysis?.documentType === 'krmivo' || looksLikeFeedComposition(normalizedText);
-  const contextKindHint = contextAnalysis?.documentType;
-  const hintedKind = normalizeDocumentKindFromContext(contextKindHint) !== 'other'
-    ? normalizeDocumentKindFromContext(contextKindHint)
-    : detectMedicalDocHint(normalizedText);
-  const medicalInterpretation = isMedicalDocumentKind(hintedKind)
-    ? await interpretMedicalDocumentWithOpenAI(normalizedText, contextKindHint)
+  const shouldInterpretPassport =
+    contextAnalysis?.documentType === 'veterinarna-sprava' || looksLikeHealthPassport(normalizedText);
+  const healthPassportInterpretation = shouldInterpretPassport
+    ? await interpretHealthPassportWithOpenAI(normalizedText)
     : null;
 
   return {
     extractedText: normalizedText,
     source: textFromVision && textFromOpenAIImage ? 'google-vision+openai' : textFromVision ? 'google-vision' : 'openai',
     contextAnalysis: contextAnalysis ?? undefined,
-    medicalInterpretation: medicalInterpretation ?? undefined,
+    healthPassportInterpretation: healthPassportInterpretation ?? undefined,
     feedAnalysis: shouldRunFeedAnalysis ? await callAiModel(normalizedText) : undefined,
   };
 }
