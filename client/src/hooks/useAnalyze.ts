@@ -5,11 +5,12 @@ import { AnalysisRequest, AnalysisResult, FileExtractionResult, PetProfile } fro
 export function useAnalyze() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [fileResult, setFileResult] = useState<FileExtractionResult | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState(false);
+  const [loadingFile, setLoadingFile] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const analyze = useCallback(async (composition: string, petProfile?: PetProfile) => {
-    setLoading(true);
+    setLoadingText(true);
     setError(null);
     setResult(null);
     setFileResult(null);
@@ -22,12 +23,12 @@ export function useAnalyze() {
         err instanceof Error ? err.message : 'Neočakávaná chyba pri analýze';
       setError(message);
     } finally {
-      setLoading(false);
+      setLoadingText(false);
     }
   }, []);
 
   const analyzeFile = useCallback(async (attachment: NonNullable<AnalysisRequest['attachment']>) => {
-    setLoading(true);
+    setLoadingFile(true);
     setError(null);
     setResult(null);
     setFileResult(null);
@@ -40,7 +41,7 @@ export function useAnalyze() {
         err instanceof Error ? err.message : 'Neočakávaná chyba pri analýze súboru';
       setError(message);
     } finally {
-      setLoading(false);
+      setLoadingFile(false);
     }
   }, []);
 
@@ -48,8 +49,19 @@ export function useAnalyze() {
     setResult(null);
     setFileResult(null);
     setError(null);
-    setLoading(false);
+    setLoadingText(false);
+    setLoadingFile(false);
   }, []);
 
-  return { analyze, analyzeFile, result, fileResult, loading, error, reset };
+  return {
+    analyze,
+    analyzeFile,
+    result,
+    fileResult,
+    loadingText,
+    loadingFile,
+    loading: loadingText || loadingFile,
+    error,
+    reset,
+  };
 }

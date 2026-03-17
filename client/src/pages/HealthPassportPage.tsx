@@ -20,6 +20,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { UploadFile as UploadFileIcon } from '@mui/icons-material';
 import type { PetProfile } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import type {
@@ -42,6 +43,9 @@ const plusDays = (date: string, days: number) => {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 };
+
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+const SUPPORTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
 function statusByDate(targetDate: string, soonDays: number): ValidityStatus {
   const now = new Date(today());
@@ -136,6 +140,9 @@ export default function HealthPassportPage() {
     extraFoodExpense: '',
   });
 
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [attachmentPreviewUrl, setAttachmentPreviewUrl] = useState('');
+  const [attachmentError, setAttachmentError] = useState('');
 
   const todaysDoseLogs = doseLogs.filter((x) => x.dogId === selectedDogId && x.date === today());
 
@@ -160,8 +167,15 @@ export default function HealthPassportPage() {
   const saveWizard = () => {
     if (!selectedDogId || !wizard.clinicName.trim() || !wizard.reason.trim()) return;
     const visitId = uid();
-    const attachment = wizard.attachmentLabel || wizard.attachmentUrl
-      ? [{ id: uid(), label: wizard.attachmentLabel || 'Doklad', imageUrl: wizard.attachmentUrl || undefined, createdAt: new Date().toISOString() }]
+    const attachmentUrl = attachmentPreviewUrl || wizard.attachmentUrl;
+    const attachment = wizard.attachmentLabel || attachmentUrl || attachmentFile
+      ? [{
+          id: uid(),
+          label: wizard.attachmentLabel || attachmentFile?.name || 'Doklad',
+          imageUrl: attachmentUrl || undefined,
+          fileName: attachmentFile?.name || undefined,
+          createdAt: new Date().toISOString(),
+        }]
       : undefined;
 
     const createdMedicationIds: string[] = [];
@@ -288,6 +302,9 @@ export default function HealthPassportPage() {
       addDiet: false, foodName: '', reactionNotes: '', suitabilityStatus: 'SUITABLE',
       attachmentLabel: '', attachmentUrl: '', totalExpense: '', extraMedicationExpense: '', extraFoodExpense: '',
     });
+    setAttachmentFile(null);
+    setAttachmentPreviewUrl('');
+    setAttachmentError('');
   };
 
   const [timelineFilter, setTimelineFilter] = useState<'ALL' | TimelineEvent['type']>('ALL');
@@ -404,7 +421,52 @@ export default function HealthPassportPage() {
           {wizardStep === 2 && (
             <Stack spacing={2} sx={{ mt: 1 }}>
               <TextField label="Popis prílohy (napr. pas strana 4)" value={wizard.attachmentLabel} onChange={(e) => setWizard({ ...wizard, attachmentLabel: e.target.value })} />
-              <TextField label="URL fotky stránky / bločku" value={wizard.attachmentUrl} onChange={(e) => setWizard({ ...wizard, attachmentUrl: e.target.value })} helperText="MVP: URL namiesto uploadu súboru" />
+              <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
+                Vybrať PDF alebo fotku
+                <input
+                  type="file"
+                  hidden
+                  accept="application/pdf,image/jpeg,image/png,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    if (!file) {
+                      setAttachmentFile(null);
+                      setAttachmentPreviewUrl('');
+                      setAttachmentError('');
+                      return;
+                    }
+                    if (!SUPPORTED_FILE_TYPES.includes(file.type)) {
+                      setAttachmentFile(null);
+                      setAttachmentPreviewUrl('');
+                      setAttachmentError('Nepodporovaný typ súboru.');
+                      return;
+                    }
+                    if (file.size > MAX_FILE_SIZE_BYTES) {
+                      setAttachmentFile(null);
+                      setAttachmentPreviewUrl('');
+                      setAttachmentError('Súbor je príliš veľký (max 5 MB).');
+                      return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      const raw = typeof reader.result === 'string' ? reader.result : '';
+                      setAttachmentPreviewUrl(raw);
+                      setAttachmentFile(file);
+                      setAttachmentError('');
+                    };
+                    reader.onerror = () => {
+                      setAttachmentPreviewUrl('');
+                      setAttachmentFile(null);
+                      setAttachmentError('Nepodarilo sa načítať súbor.');
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </Button>
+              {attachmentFile && <Chip label={`${attachmentFile.name} (${Math.round(attachmentFile.size / 1024)} kB)`} />}
+              {attachmentError && <Alert severity="warning">{attachmentError}</Alert>}
+              <TextField label="URL fotky stránky / bločku (voliteľné)" value={wizard.attachmentUrl} onChange={(e) => setWizard({ ...wizard, attachmentUrl: e.target.value })} helperText="Ak vyberiete súbor, použije sa nahratý súbor." />
               <TextField label="Výdavok návštevy" type="number" value={wizard.totalExpense} onChange={(e) => setWizard({ ...wizard, totalExpense: e.target.value })} />
               <TextField label="Výdavok lieky" type="number" value={wizard.extraMedicationExpense} onChange={(e) => setWizard({ ...wizard, extraMedicationExpense: e.target.value })} />
               <TextField label="Výdavok krmivo" type="number" value={wizard.extraFoodExpense} onChange={(e) => setWizard({ ...wizard, extraFoodExpense: e.target.value })} />
