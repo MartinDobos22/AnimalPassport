@@ -48,6 +48,40 @@ const plusDays = (date: string, days: number) => {
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const SUPPORTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const VISIT_CATEGORY_OPTIONS = [
+  {
+    main: 'Laboratórne vyšetrenia',
+    sub: ['Krvné testy', 'Vyšetrenie moču', 'Vyšetrenie stolice', 'Mikrobiológia (kultivácie)', 'Cytológia', 'Biopsia / histológia'],
+  },
+  {
+    main: 'Alergie a koža',
+    sub: ['Kožné scrapings', 'Kožné stery / pásikové testy', 'Alergologické krvné testy', 'Intradermálne alergotesty'],
+  },
+  {
+    main: 'Zobrazovacie metódy',
+    sub: ['Röntgen (RTG)', 'Ultrazvuk (USG)', 'CT', 'MRI', 'Endoskopia'],
+  },
+  {
+    main: 'Srdce a cievy',
+    sub: ['EKG', 'Meranie krvného tlaku', 'Echokardiografia', 'Röntgen hrudníka'],
+  },
+  {
+    main: 'Očné vyšetrenia',
+    sub: ['Vyšetrenie oka', 'Meranie vnútroočného tlaku', 'Test slzivosti', 'Farbiace testy rohovky'],
+  },
+  {
+    main: 'Neurologické vyšetrenia',
+    sub: ['Klinické neuro vyšetrenie', 'Pokročilé zobrazovanie (MRI/CT)'],
+  },
+  {
+    main: 'Infekčné ochorenia',
+    sub: ['Rýchlotesty (napr. parvo, FeLV/FIV, srdcový červ)', 'Sérologické panely'],
+  },
+  {
+    main: 'Genetické testy',
+    sub: ['Dedičné ochorenia', 'Plemenné testy'],
+  },
+] as const;
 
 function statusByDate(targetDate: string, soonDays: number): ValidityStatus {
   const now = new Date(today());
@@ -106,6 +140,8 @@ export default function HealthPassportPage() {
 
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
+  const [selectedVisitMainCategory, setSelectedVisitMainCategory] = useState('');
+  const [selectedVisitSubcategory, setSelectedVisitSubcategory] = useState('');
   const [wizard, setWizard] = useState({
     date: today(),
     clinicName: '',
@@ -220,9 +256,11 @@ export default function HealthPassportPage() {
   }));
 
   const currentDiet = [...dogDiet].sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
+  const selectedVisitSubcategoryOptions = VISIT_CATEGORY_OPTIONS.find((item) => item.main === selectedVisitMainCategory)?.sub ?? [];
 
   const saveWizard = () => {
-    if (!selectedDogId || !wizard.clinicName.trim() || !wizard.reason.trim()) return;
+    if (!selectedDogId || !wizard.clinicName.trim() || !selectedVisitMainCategory || !selectedVisitSubcategory) return;
+    const visitReason = [selectedVisitMainCategory, selectedVisitSubcategory, wizard.reason.trim()].filter(Boolean).join(' · ');
     const visitId = uid();
     const attachmentUrl = attachmentPreviewUrl || wizard.attachmentUrl;
     const attachment = wizard.attachmentLabel || attachmentUrl || attachmentFile
@@ -242,7 +280,7 @@ export default function HealthPassportPage() {
       dogId: selectedDogId,
       date: wizard.date,
       clinicName: wizard.clinicName,
-      reason: wizard.reason,
+      reason: visitReason,
       findings: wizard.findings,
       diagnosis: wizard.diagnosis,
       recommendations: wizard.recommendations,
@@ -390,6 +428,41 @@ export default function HealthPassportPage() {
 
       <Card sx={{ mb: 2 }}>
         <CardContent>
+          <Typography variant="h6" sx={{ mb: 1 }}>Vyšetrenia pre zdravotný pas</Typography>
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+            <FormControl fullWidth>
+              <InputLabel>Hlavná kategória</InputLabel>
+              <Select
+                value={selectedVisitMainCategory}
+                label="Hlavná kategória"
+                onChange={(e) => {
+                  setSelectedVisitMainCategory(e.target.value);
+                  setSelectedVisitSubcategory('');
+                }}
+              >
+                {VISIT_CATEGORY_OPTIONS.map((item) => (
+                  <MenuItem key={item.main} value={item.main}>{item.main}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth disabled={!selectedVisitMainCategory}>
+              <InputLabel>Podkategória</InputLabel>
+              <Select
+                value={selectedVisitSubcategory}
+                label="Podkategória"
+                onChange={(e) => setSelectedVisitSubcategory(e.target.value)}
+              >
+                {selectedVisitSubcategoryOptions.map((sub) => (
+                  <MenuItem key={sub} value={sub}>{sub}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 2 }}>
+        <CardContent>
           <Typography variant="h6" sx={{ mb: 1 }}>Príloha do zdravotného pasu</Typography>
           <Stack spacing={1.5}>
             <TextField
@@ -530,7 +603,7 @@ export default function HealthPassportPage() {
             <Stack spacing={2} sx={{ mt: 1 }}>
               <TextField label="Dátum" type="date" InputLabelProps={{ shrink: true }} value={wizard.date} onChange={(e) => setWizard({ ...wizard, date: e.target.value })} />
               <TextField label="Klinika" value={wizard.clinicName} onChange={(e) => setWizard({ ...wizard, clinicName: e.target.value })} />
-              <TextField label="Dôvod" value={wizard.reason} onChange={(e) => setWizard({ ...wizard, reason: e.target.value })} />
+              <TextField label="Poznámka k dôvodu (voliteľné)" value={wizard.reason} onChange={(e) => setWizard({ ...wizard, reason: e.target.value })} helperText="Kategória a podkategória sa berú z výberu na hlavnej stránke." />
               <TextField label="Nález / diagnóza" value={wizard.diagnosis} onChange={(e) => setWizard({ ...wizard, diagnosis: e.target.value })} />
               <TextField label="Odporúčania" value={wizard.recommendations} onChange={(e) => setWizard({ ...wizard, recommendations: e.target.value })} />
               <TextField label="Ďalšia kontrola" type="date" InputLabelProps={{ shrink: true }} value={wizard.nextCheckDate} onChange={(e) => setWizard({ ...wizard, nextCheckDate: e.target.value })} />
