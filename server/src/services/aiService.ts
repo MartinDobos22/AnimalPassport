@@ -250,6 +250,22 @@ interface DocumentContextAnalysis {
   recommendedActions: string[];
 }
 
+interface HealthPassportInterpretation {
+  summary: string;
+  aiUnderstanding: string;
+  vaccinations: Array<{
+    disease: string;
+    vaccineName: string;
+    dateAdministered: string;
+    validUntil?: string;
+    batchNumber?: string;
+    veterinarian?: string;
+    manufacturer?: string;
+    confidence: 'high' | 'medium' | 'low';
+    notes?: string;
+  }>;
+}
+
 const FEED_RELATED_KEYWORDS = [
   'zloženie', 'granule', 'krmivo', 'protein', 'tuk', 'vláknina', 'popol', 'ingrediencie',
   'kuracie', 'hovädzie', 'losos', 'kukurica', 'pšenica', 'mäsová múčka',
@@ -313,6 +329,90 @@ Formát:
   }
 }
 
+
+function looksLikeHealthPassport(text: string): boolean {
+  const lowered = text.toLowerCase();
+  const keywords = ['zdravotný pas', 'vaccination', 'vakc', 'rabies', 'veterin', 'passport', 'očkov'];
+  return keywords.filter((k) => lowered.includes(k)).length >= 2;
+}
+
+async function interpretHealthPassportWithOpenAI(text: string): Promise<HealthPassportInterpretation | null> {
+  const client = getOpenAIClient();
+  if (!client) return null;
+
+  try {
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content: `Si veterinárny asistent. Z textu zdravotného pasu zvieraťa priprav detailný rozbor očkovaní.
+Vráť iba JSON v tvare:
+{
+  "summary": "stručné zhrnutie",
+  "aiUnderstanding": "ako AI chápe čo je dokument a prečo (2-4 vety)",
+  "vaccinations": [
+    {
+      "disease": "proti čomu bolo očkovanie",
+      "vaccineName": "názov vakcíny",
+      "dateAdministered": "YYYY-MM-DD alebo pôvodný dátum",
+      "validUntil": "YYYY-MM-DD alebo text",
+      "batchNumber": "šarža",
+      "veterinarian": "veterinár/klinika",
+      "manufacturer": "výrobca",
+      "confidence": "high|medium|low",
+      "notes": "doplňujúca poznámka"
+    }
+  ]
+}
+Ak údaj v texte chýba, použi prázdny string alebo pole.`,
+        },
+        {
+          role: 'user',
+          content: text.slice(0, 12000),
+        },
+      ],
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) return null;
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+    const rawVaccinations = Array.isArray(parsed.vaccinations) ? parsed.vaccinations : [];
+
+    return {
+      summary: typeof parsed.summary === 'string' ? parsed.summary : 'Z textu sa nepodarilo spoľahlivo vytvoriť zhrnutie očkovaní.',
+      aiUnderstanding:
+        typeof parsed.aiUnderstanding === 'string'
+          ? parsed.aiUnderstanding
+          : 'AI rozpoznala zdravotný dokument podľa veterinárnych výrazov a štruktúry dátumov/štítkov.',
+      vaccinations: rawVaccinations
+        .map((item) => {
+          if (!item || typeof item !== 'object') return null;
+          const i = item as Record<string, unknown>;
+          const confidence: 'high' | 'medium' | 'low' =
+            i.confidence === 'high' || i.confidence === 'medium' || i.confidence === 'low' ? i.confidence : 'low';
+          return {
+            disease: typeof i.disease === 'string' ? i.disease : '',
+            vaccineName: typeof i.vaccineName === 'string' ? i.vaccineName : '',
+            dateAdministered: typeof i.dateAdministered === 'string' ? i.dateAdministered : '',
+            validUntil: typeof i.validUntil === 'string' ? i.validUntil : undefined,
+            batchNumber: typeof i.batchNumber === 'string' ? i.batchNumber : undefined,
+            veterinarian: typeof i.veterinarian === 'string' ? i.veterinarian : undefined,
+            manufacturer: typeof i.manufacturer === 'string' ? i.manufacturer : undefined,
+            confidence,
+            notes: typeof i.notes === 'string' ? i.notes : undefined,
+          };
+        })
+        .filter((item): item is NonNullable<typeof item> => Boolean(item)),
+    };
+  } catch (error) {
+    console.error('[AI Service] Health passport interpretation failed:', error);
+    return null;
+  }
+}
+
 export async function extractTextFromAttachment(attachment: AttachmentInput): Promise<FileExtractionResult> {
   const supportedMimeTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   if (!supportedMimeTypes.includes(attachment.mimeType)) {
@@ -333,11 +433,17 @@ export async function extractTextFromAttachment(attachment: AttachmentInput): Pr
 
     const contextAnalysis = await analyzeDocumentContextWithOpenAI(normalizedPdfText);
     const shouldRunFeedAnalysis = contextAnalysis?.documentType === 'krmivo' || looksLikeFeedComposition(normalizedPdfText);
+    const shouldInterpretPassport =
+      contextAnalysis?.documentType === 'veterinarna-sprava' || looksLikeHealthPassport(normalizedPdfText);
+    const healthPassportInterpretation = shouldInterpretPassport
+      ? await interpretHealthPassportWithOpenAI(normalizedPdfText)
+      : null;
 
     return {
       extractedText: normalizedPdfText,
       source: normalizedPdfText !== pdfText.trim() ? 'openai' : 'pdf-parser',
       contextAnalysis: contextAnalysis ?? undefined,
+      healthPassportInterpretation: healthPassportInterpretation ?? undefined,
       feedAnalysis: shouldRunFeedAnalysis ? await callAiModel(normalizedPdfText) : undefined,
     };
   }
@@ -354,11 +460,17 @@ export async function extractTextFromAttachment(attachment: AttachmentInput): Pr
 
   const contextAnalysis = await analyzeDocumentContextWithOpenAI(normalizedText);
   const shouldRunFeedAnalysis = contextAnalysis?.documentType === 'krmivo' || looksLikeFeedComposition(normalizedText);
+  const shouldInterpretPassport =
+    contextAnalysis?.documentType === 'veterinarna-sprava' || looksLikeHealthPassport(normalizedText);
+  const healthPassportInterpretation = shouldInterpretPassport
+    ? await interpretHealthPassportWithOpenAI(normalizedText)
+    : null;
 
   return {
     extractedText: normalizedText,
     source: textFromVision && textFromOpenAIImage ? 'google-vision+openai' : textFromVision ? 'google-vision' : 'openai',
     contextAnalysis: contextAnalysis ?? undefined,
+    healthPassportInterpretation: healthPassportInterpretation ?? undefined,
     feedAnalysis: shouldRunFeedAnalysis ? await callAiModel(normalizedText) : undefined,
   };
 }

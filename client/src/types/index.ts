@@ -79,6 +79,21 @@ export interface FileExtractionResult {
     keyFindings: string[];
     recommendedActions: string[];
   };
+  healthPassportInterpretation?: {
+    summary: string;
+    aiUnderstanding: string;
+    vaccinations: Array<{
+      disease: string;
+      vaccineName: string;
+      dateAdministered: string;
+      validUntil?: string;
+      batchNumber?: string;
+      veterinarian?: string;
+      manufacturer?: string;
+      confidence: 'high' | 'medium' | 'low';
+      notes?: string;
+    }>;
+  };
   feedAnalysis?: AnalysisResult;
 }
 
