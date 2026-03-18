@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { callAiModel, extractTextFromAttachment } from '../services/aiService';
 import { AnalysisRequest, PetProfile } from '../types';
 import { logger } from '../utils/logger';
+import { isExamAlias } from '../services/examAlias';
 
 const router = Router();
 
@@ -40,7 +41,7 @@ router.post(
   '/',
   async (req: Request<object, object, AnalysisRequest>, res: Response, next: NextFunction) => {
     try {
-      const { composition, sourceType, attachment, petProfile } = req.body;
+      const { composition, sourceType, attachment, petProfile, examAlias } = req.body;
 
       logger.info('Spúšťam analýzu požiadavky', {
         sourceType,
@@ -56,10 +57,12 @@ router.post(
           return;
         }
 
-        const extractionResult = await extractTextFromAttachment(attachment);
+        const validatedExamAlias = typeof examAlias === 'string' && isExamAlias(examAlias) ? examAlias : undefined;
+        const extractionResult = await extractTextFromAttachment(attachment, validatedExamAlias);
         logger.info('Analýza súboru dokončená', {
           source: extractionResult.source,
           extractedTextLength: extractionResult.extractedText.length,
+          examAlias: validatedExamAlias,
         });
         res.json(extractionResult);
         return;

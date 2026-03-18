@@ -35,7 +35,7 @@ export function useAnalyze() {
     }
   }, []);
 
-  const analyzeFile = useCallback(async (attachment: NonNullable<AnalysisRequest['attachment']>) => {
+  const analyzeFile = useCallback(async (attachment: NonNullable<AnalysisRequest['attachment']>, examAlias?: string) => {
     setLoadingFile(true);
     setError(null);
     setResult(null);
@@ -47,7 +47,7 @@ export function useAnalyze() {
     });
 
     try {
-      const data = await analyzeAttachment(attachment);
+      const data = await analyzeAttachment(attachment, examAlias);
       setFileResult(data);
       logger.info('Hook useAnalyze prijal výsledok súborovej analýzy', { source: data.source });
     } catch (err) {
