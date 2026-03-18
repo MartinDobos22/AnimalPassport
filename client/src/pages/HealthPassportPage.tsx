@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   Chip,
+  Collapse,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -256,6 +257,7 @@ export default function HealthPassportPage() {
   }, [dogVaccinations, dogDewormings, dogEctos, dogVisits, dogMeds, dogDiet, dogExpenses]);
 
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [showAiImportTools, setShowAiImportTools] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
   const [selectedVisitMainCategory, setSelectedVisitMainCategory] = useState('');
   const [selectedVisitSubcategory, setSelectedVisitSubcategory] = useState('');
@@ -435,8 +437,8 @@ export default function HealthPassportPage() {
   };
 
   const handleAnalyzeAttachment = async () => {
-    if (!pendingAttachment || !selectedExamAlias) return;
-    await analyzeFile(pendingAttachment, selectedExamAlias);
+    if (!pendingAttachment) return;
+    await analyzeFile(pendingAttachment, selectedExamAlias || undefined);
   };
 
   const todaysDoseLogs = doseLogs.filter((x) => x.dogId === selectedDogId && x.date === today());
@@ -953,6 +955,9 @@ export default function HealthPassportPage() {
             </Select>
           </FormControl>
           <Button variant="contained" onClick={() => setWizardOpen(true)}>Pridať návštevu</Button>
+          <Button variant="contained" color="secondary" onClick={() => setShowAiImportTools((prev) => !prev)}>
+            {showAiImportTools ? 'Skryť AI import' : 'AI import z fotografie'}
+          </Button>
           <Button variant="outlined" href="/karta-pre-veterinara">Karta pre veterinára</Button>
         </Stack>
       </Stack>
@@ -1002,18 +1007,18 @@ export default function HealthPassportPage() {
         </CardContent>
       </Card>
 
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 1 }}>Príloha do zdravotného pasu</Typography>
-          <Stack spacing={1.5}>
+      <Collapse in={showAiImportTools} unmountOnExit>
+        <Card sx={{ mb: 2 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 1 }}>AI import zo zdravotného pasu (fotografia/PDF)</Typography>
+            <Stack spacing={1.5}>
             <TextField
               label="Popis prílohy (napr. pas strana 4)"
               value={wizard.attachmentLabel}
               onChange={(e) => setWizard({ ...wizard, attachmentLabel: e.target.value })}
             />
-            {selectedExamAlias && (
               <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
-                Add file
+                Nahrať fotografiu / dokument
                 <input
                   type="file"
                   hidden
@@ -1021,11 +1026,10 @@ export default function HealthPassportPage() {
                   onChange={(e) => handleAttachmentFileChange(e.target.files?.[0] ?? null)}
                 />
               </Button>
-            )}
             <Button
               variant="contained"
               onClick={handleAnalyzeAttachment}
-              disabled={loadingFile || !selectedExamAlias || !pendingAttachment || Boolean(attachmentError)}
+              disabled={loadingFile || !pendingAttachment || Boolean(attachmentError)}
               startIcon={loadingFile ? <CircularProgress size={16} color="inherit" /> : undefined}
             >
               {loadingFile ? 'Analyzujem súbor...' : 'Analyzovať súbor'}
@@ -1241,9 +1245,10 @@ export default function HealthPassportPage() {
               onChange={(e) => setWizard({ ...wizard, attachmentUrl: e.target.value })}
               helperText="Ak vyberiete súbor, použije sa nahratý súbor pri ukladaní návštevy."
             />
-          </Stack>
-        </CardContent>
-      </Card>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Collapse>
 
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' }, mb: 2 }}>
         <Card><CardContent><Typography variant="body2">Očkovanie</Typography><Chip label={lastVaccinationStatus} color={lastVaccinationStatus === 'VALID' ? 'success' : lastVaccinationStatus === 'EXPIRING_SOON' ? 'warning' : 'error'} /></CardContent></Card>
