@@ -65,7 +65,8 @@ export async function analyzeComposition(
 }
 
 export async function analyzeAttachment(
-  attachment: AnalysisRequest['attachment']
+  attachment: AnalysisRequest['attachment'],
+  examAlias?: string
 ): Promise<FileExtractionResult> {
   logger.info('Odosielam súbor na analýzu', {
     fileName: attachment?.fileName,
@@ -78,6 +79,7 @@ export async function analyzeAttachment(
     body: JSON.stringify({
       sourceType: 'file',
       attachment,
+      examAlias,
     } satisfies AnalysisRequest),
   });
 
