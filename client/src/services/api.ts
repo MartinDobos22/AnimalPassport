@@ -68,19 +68,23 @@ export async function analyzeAttachment(
   attachment: AnalysisRequest['attachment'],
   examAlias?: string
 ): Promise<FileExtractionResult> {
+  const requestPayload = {
+    sourceType: 'file',
+    attachment,
+    examAlias,
+  } satisfies AnalysisRequest;
+
   logger.info('Odosielam súbor na analýzu', {
     fileName: attachment?.fileName,
     mimeType: attachment?.mimeType,
+    examAlias: examAlias ?? null,
+    base64Length: attachment?.base64Data?.length ?? 0,
   });
 
   const res = await fetch(`${BASE_URL}/api/analyze`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      sourceType: 'file',
-      attachment,
-      examAlias,
-    } satisfies AnalysisRequest),
+    body: JSON.stringify(requestPayload),
   });
 
   if (!res.ok) {
@@ -93,6 +97,9 @@ export async function analyzeAttachment(
   logger.info('Súborová analýza úspešne dokončená', {
     source: responsePayload.source,
     extractedTextLength: responsePayload.extractedText.length,
+    contextDocumentType: responsePayload.contextAnalysis?.documentType ?? null,
+    selectedExamAlias: responsePayload.examAnalysis?.examAlias ?? examAlias ?? null,
+    selectedExamType: responsePayload.examAnalysis?.examType ?? null,
   });
 
   return responsePayload;

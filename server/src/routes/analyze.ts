@@ -58,11 +58,22 @@ router.post(
         }
 
         const validatedExamAlias = typeof examAlias === 'string' && isExamAlias(examAlias) ? examAlias : undefined;
+        logger.info('Backend prijal file analýzu', {
+          fileName: attachment.fileName,
+          mimeType: attachment.mimeType,
+          base64Length: attachment.base64Data?.length ?? 0,
+          requestedExamAlias: typeof examAlias === 'string' ? examAlias : null,
+          validatedExamAlias: validatedExamAlias ?? null,
+        });
         const extractionResult = await extractTextFromAttachment(attachment, validatedExamAlias);
-        logger.info('Analýza súboru dokončená', {
+        logger.info('Analýza súboru dokončená, odosielam odpoveď na frontend', {
           source: extractionResult.source,
           extractedTextLength: extractionResult.extractedText.length,
-          examAlias: validatedExamAlias,
+          contextDocumentType: extractionResult.contextAnalysis?.documentType ?? null,
+          examAlias: extractionResult.examAnalysis?.examAlias ?? validatedExamAlias ?? null,
+          examType: extractionResult.examAnalysis?.examType ?? null,
+          hasFeedAnalysis: Boolean(extractionResult.feedAnalysis),
+          hasHealthPassportInterpretation: Boolean(extractionResult.healthPassportInterpretation),
         });
         res.json(extractionResult);
         return;
