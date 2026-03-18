@@ -87,3 +87,9 @@ export const EXAM_ALIAS_TO_TYPE: Record<ExamAlias, ExamType> = {
     dedicne_ochorenia: 'genetics',
     plemenne_testy: 'genetics',
 };
+
+export const EXAM_ALIASES = Object.keys(EXAM_ALIAS_TO_TYPE) as ExamAlias[];
+
+export function isExamAlias(value: string): value is ExamAlias {
+    return EXAM_ALIASES.includes(value as ExamAlias);
+}

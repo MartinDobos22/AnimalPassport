@@ -1,5 +1,8 @@
 import OpenAI from 'openai';
 import { AnalysisResult, FileExtractionResult, Ingredient, PetProfile } from '../types';
+import type { ExamAlias } from './examAlias';
+import { EXAM_ALIAS_TO_TYPE } from './examAlias';
+import { EXAM_ALIAS_PROMPTS } from './examAliasPrompts';
 
 interface AttachmentInput {
   fileName: string;
@@ -329,6 +332,30 @@ Formát:
   }
 }
 
+async function analyzeExamDocumentWithOpenAI(text: string, examAlias: ExamAlias): Promise<string> {
+  const client = getOpenAIClient();
+  if (!client) {
+    return [
+      `Analyzovaný typ vyšetrenia: ${examAlias}.`,
+      'OpenAI API kľúč nie je dostupný, preto nebolo možné spustiť detailnú AI interpretáciu dokumentu.',
+      'Skontrolujte prosím serverové nastavenia a skúste analýzu znova.',
+    ].join(' ');
+  }
+
+  const examPrompt = EXAM_ALIAS_PROMPTS[examAlias];
+
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o',
+    temperature: 0.2,
+    messages: [
+      { role: 'system', content: examPrompt },
+      { role: 'user', content: `Analyzuj tento dokument:\n\n${text.slice(0, 15000)}` },
+    ],
+  });
+
+  return response.choices[0]?.message?.content?.trim() ?? 'Nepodarilo sa vytvoriť analýzu dokumentu.';
+}
+
 
 function looksLikeHealthPassport(text: string): boolean {
   const lowered = text.toLowerCase();
@@ -413,7 +440,10 @@ Ak údaj v texte chýba, použi prázdny string alebo pole.`,
   }
 }
 
-export async function extractTextFromAttachment(attachment: AttachmentInput): Promise<FileExtractionResult> {
+export async function extractTextFromAttachment(
+  attachment: AttachmentInput,
+  examAlias?: ExamAlias,
+): Promise<FileExtractionResult> {
   const supportedMimeTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   if (!supportedMimeTypes.includes(attachment.mimeType)) {
     throw new Error('Podporované sú len PDF, JPG, PNG a WEBP súbory.');
@@ -439,12 +469,21 @@ export async function extractTextFromAttachment(attachment: AttachmentInput): Pr
       ? await interpretHealthPassportWithOpenAI(normalizedPdfText)
       : null;
 
+    const examAnalysis = examAlias
+      ? {
+          examAlias,
+          examType: EXAM_ALIAS_TO_TYPE[examAlias],
+          analysis: await analyzeExamDocumentWithOpenAI(normalizedPdfText, examAlias),
+        }
+      : undefined;
+
     return {
       extractedText: normalizedPdfText,
       source: normalizedPdfText !== pdfText.trim() ? 'openai' : 'pdf-parser',
       contextAnalysis: contextAnalysis ?? undefined,
       healthPassportInterpretation: healthPassportInterpretation ?? undefined,
       feedAnalysis: shouldRunFeedAnalysis ? await callAiModel(normalizedPdfText) : undefined,
+      examAnalysis,
     };
   }
 
@@ -466,12 +505,21 @@ export async function extractTextFromAttachment(attachment: AttachmentInput): Pr
     ? await interpretHealthPassportWithOpenAI(normalizedText)
     : null;
 
+  const examAnalysis = examAlias
+    ? {
+        examAlias,
+        examType: EXAM_ALIAS_TO_TYPE[examAlias],
+        analysis: await analyzeExamDocumentWithOpenAI(normalizedText, examAlias),
+      }
+    : undefined;
+
   return {
     extractedText: normalizedText,
     source: textFromVision && textFromOpenAIImage ? 'google-vision+openai' : textFromVision ? 'google-vision' : 'openai',
     contextAnalysis: contextAnalysis ?? undefined,
     healthPassportInterpretation: healthPassportInterpretation ?? undefined,
     feedAnalysis: shouldRunFeedAnalysis ? await callAiModel(normalizedText) : undefined,
+    examAnalysis,
   };
 }
 

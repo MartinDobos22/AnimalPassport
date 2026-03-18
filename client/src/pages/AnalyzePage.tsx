@@ -28,6 +28,33 @@ import type { SavedAnalysis, PetProfile } from '../types';
 
 const SUPPORTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+const EXAM_TYPE_OPTIONS = [
+  { value: 'krvne_testy', label: 'Krvné testy' },
+  { value: 'vysetrenie_mocu', label: 'Vyšetrenie moču' },
+  { value: 'vysetrenie_stolice', label: 'Vyšetrenie stolice' },
+  { value: 'mikrobiologia', label: 'Mikrobiológia' },
+  { value: 'cytologia', label: 'Cytológia' },
+  { value: 'biopsia_histologia', label: 'Biopsia / histológia' },
+  { value: 'kozne_scrapings', label: 'Kožné scrapings' },
+  { value: 'kozne_stery', label: 'Kožné stery' },
+  { value: 'alergologicke_krvne_testy', label: 'Alergologické krvné testy' },
+  { value: 'intradermalne_alergotesty', label: 'Intradermálne alergotesty' },
+  { value: 'rtg', label: 'RTG' },
+  { value: 'ultrazvuk', label: 'Ultrazvuk' },
+  { value: 'ct', label: 'CT' },
+  { value: 'mri', label: 'MRI' },
+  { value: 'endoskopia', label: 'Endoskopia' },
+  { value: 'ekg', label: 'EKG' },
+  { value: 'krvny_tlak', label: 'Krvný tlak' },
+  { value: 'echo', label: 'ECHO srdca' },
+  { value: 'vysetrenie_oka', label: 'Vyšetrenie oka' },
+  { value: 'vnutoocny_tlak', label: 'Vnútroočný tlak' },
+  { value: 'klinicke_neuro', label: 'Klinické neuro vyšetrenie' },
+  { value: 'rychlotesty', label: 'Rýchlotesty' },
+  { value: 'serologicke_panely', label: 'Serologické panely' },
+  { value: 'dedicne_ochorenia', label: 'Genetika - dedičné ochorenia' },
+  { value: 'plemenne_testy', label: 'Genetika - plemenné testy' },
+] as const;
 
 export default function AnalyzePage() {
   const [composition, setComposition] = useState('');
@@ -36,6 +63,7 @@ export default function AnalyzePage() {
   const [profiles] = useLocalStorage<PetProfile[]>('granule-check-pet-profiles', []);
   const [, setSavedAnalyses] = useLocalStorage<SavedAnalysis[]>('granule-check-history', []);
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
+  const [selectedExamAlias, setSelectedExamAlias] = useState<string>('');
   const [snackOpen, setSnackOpen] = useState(false);
   const [attachmentName, setAttachmentName] = useState('');
   const [attachmentError, setAttachmentError] = useState('');
@@ -100,9 +128,9 @@ export default function AnalyzePage() {
   };
 
   const handleAnalyzeAttachment = async () => {
-    if (!pendingAttachment) return;
+    if (!pendingAttachment || !selectedExamAlias) return;
     setSourceLabel(`OCR súbor: ${pendingAttachment.fileName}`);
-    await analyzeFile(pendingAttachment);
+    await analyzeFile(pendingAttachment, selectedExamAlias);
   };
 
   const handleSave = () => {
@@ -170,18 +198,40 @@ export default function AnalyzePage() {
       )}
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 2 }}>
-        <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>Nahrať PDF/fotku
-          <input
-            hidden
-            type="file"
-            accept="application/pdf,image/jpeg,image/png,image/webp"
-            onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
-          />
-        </Button>
+        <FormControl fullWidth>
+          <InputLabel>Typ vyšetrenia</InputLabel>
+          <Select
+            value={selectedExamAlias}
+            label="Typ vyšetrenia"
+            onChange={(e) => {
+              setSelectedExamAlias(e.target.value);
+              setAttachmentName('');
+              setAttachmentError('');
+              setPendingAttachment(null);
+            }}
+          >
+            <MenuItem value="">Vyber typ vyšetrenia</MenuItem>
+            {EXAM_TYPE_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {selectedExamAlias && (
+          <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>Add file
+            <input
+              hidden
+              type="file"
+              accept="application/pdf,image/jpeg,image/png,image/webp"
+              onChange={(e) => handleFileSelect(e.target.files?.[0] ?? null)}
+            />
+          </Button>
+        )}
         <Button
           variant="contained"
           onClick={handleAnalyzeAttachment}
-          disabled={loadingText || loadingFile || !pendingAttachment || Boolean(attachmentError)}
+          disabled={loadingText || loadingFile || !selectedExamAlias || !pendingAttachment || Boolean(attachmentError)}
         >
           {loadingFile ? 'Analyzujem súbor...' : 'Analyzovať súbor'}
         </Button>
@@ -235,6 +285,13 @@ export default function AnalyzePage() {
               Typ dokumentu: <strong>{fileResult.contextAnalysis.documentType}</strong> ({fileResult.contextAnalysis.confidence})
               <br />
               {fileResult.contextAnalysis.summary}
+            </Alert>
+          )}
+          {fileResult.examAnalysis && (
+            <Alert severity="info" sx={{ borderRadius: 3 }}>
+              <strong>AI analýza vyšetrenia ({fileResult.examAnalysis.examType}):</strong>
+              <br />
+              {fileResult.examAnalysis.analysis}
             </Alert>
           )}
           <Button variant="text" onClick={() => setComposition(fileResult.extractedText)}>

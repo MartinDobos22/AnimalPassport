@@ -30,6 +30,7 @@ export interface PetProfile {
 export interface AnalysisRequest {
   composition?: string;
   sourceType?: 'text' | 'file';
+  examAlias?: string;
   attachment?: {
     fileName: string;
     mimeType: string;
@@ -84,6 +85,11 @@ export interface AnalysisResult {
 export interface FileExtractionResult {
   extractedText: string;
   source: 'google-vision+openai' | 'google-vision' | 'openai' | 'pdf-parser';
+  examAnalysis?: {
+    examAlias: string;
+    examType: string;
+    analysis: string;
+  };
   contextAnalysis?: {
     documentType: string;
     confidence: 'high' | 'medium' | 'low';
