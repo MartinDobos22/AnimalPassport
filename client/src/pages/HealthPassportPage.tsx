@@ -21,7 +21,18 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { UploadFile as UploadFileIcon } from '@mui/icons-material';
+import {
+  Biotech as BiotechIcon,
+  CalendarMonth as CalendarMonthIcon,
+  EventNote as EventNoteIcon,
+  MedicalServices as MedicalServicesIcon,
+  Medication as MedicationIcon,
+  PestControl as PestControlIcon,
+  ReceiptLong as ReceiptLongIcon,
+  Restaurant as RestaurantIcon,
+  UploadFile as UploadFileIcon,
+  Vaccines as VaccinesIcon,
+} from '@mui/icons-material';
 import type { PetProfile } from '../types';
 import { useAnalyze } from '../hooks/useAnalyze';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -114,6 +125,38 @@ const EXAM_SUBCATEGORY_TO_ALIAS: Record<string, string> = {
   'Sérologické panely': 'serologicke_panely',
   'Dedičné ochorenia': 'dedicne_ochorenia',
   'Plemenné testy': 'plemenne_testy',
+};
+const TIMELINE_FILTER_OPTIONS: Array<{ value: 'ALL' | TimelineEvent['type']; label: string }> = [
+  { value: 'ALL', label: 'Všetko' },
+  { value: 'VACCINATION', label: 'Očkovanie' },
+  { value: 'DEWORMING', label: 'Odčervenie' },
+  { value: 'ECTOPARASITE', label: 'Ektoparazity' },
+  { value: 'VET_VISIT', label: 'Vet návštevy' },
+  { value: 'MEDICATION', label: 'Lieky' },
+  { value: 'DIET', label: 'Diéta' },
+  { value: 'EXPENSE', label: 'Výdavky' },
+  { value: 'NOTE', label: 'Poznámky' },
+];
+const TIMELINE_TYPE_META: Record<TimelineEvent['type'], { label: string; color: 'primary' | 'success' | 'warning' | 'error' | 'secondary' | 'info' }> = {
+  VACCINATION: { label: 'Očkovanie', color: 'success' },
+  DEWORMING: { label: 'Odčervenie', color: 'secondary' },
+  ECTOPARASITE: { label: 'Ektoparazity', color: 'warning' },
+  VET_VISIT: { label: 'Návšteva veterinára', color: 'primary' },
+  MEDICATION: { label: 'Liečba', color: 'info' },
+  DIET: { label: 'Diéta', color: 'success' },
+  EXPENSE: { label: 'Výdavok', color: 'error' },
+  NOTE: { label: 'Poznámka', color: 'info' },
+};
+
+const timelineIconByType: Record<TimelineEvent['type'], JSX.Element> = {
+  VACCINATION: <VaccinesIcon fontSize="small" />,
+  DEWORMING: <BiotechIcon fontSize="small" />,
+  ECTOPARASITE: <PestControlIcon fontSize="small" />,
+  VET_VISIT: <MedicalServicesIcon fontSize="small" />,
+  MEDICATION: <MedicationIcon fontSize="small" />,
+  DIET: <RestaurantIcon fontSize="small" />,
+  EXPENSE: <ReceiptLongIcon fontSize="small" />,
+  NOTE: <EventNoteIcon fontSize="small" />,
 };
 
 function statusByDate(targetDate: string, soonDays: number): ValidityStatus {
@@ -501,7 +544,16 @@ export default function HealthPassportPage() {
   };
 
   const [timelineFilter, setTimelineFilter] = useState<'ALL' | TimelineEvent['type']>('ALL');
-  const visibleTimeline = timelineFilter === 'ALL' ? timeline : timeline.filter((x) => x.type === timelineFilter);
+  const [timelineSearch, setTimelineSearch] = useState('');
+  const visibleTimeline = (timelineFilter === 'ALL' ? timeline : timeline.filter((x) => x.type === timelineFilter))
+    .filter((x) => (`${x.title} ${x.subtitle ?? ''}`).toLowerCase().includes(timelineSearch.trim().toLowerCase()));
+  const groupedTimeline = useMemo(() => {
+    return visibleTimeline.reduce<Record<string, TimelineEvent[]>>((acc, event) => {
+      if (!acc[event.date]) acc[event.date] = [];
+      acc[event.date].push(event);
+      return acc;
+    }, {});
+  }, [visibleTimeline]);
   const canCreateAiRecord = Boolean(selectedDogId && aiRecordDraft.clinicName.trim() && (selectedVisitSubcategory || fileResult?.examAnalysis?.examType));
   const selectedVisit = selectedVisitId ? dogVisits.find((visit) => visit.id === selectedVisitId) ?? null : null;
   const selectedVaccination = selectedTimelineRecord?.type === 'VACCINATION'
@@ -990,26 +1042,69 @@ export default function HealthPassportPage() {
 
       <Card sx={{ mb: 2 }}>
         <CardContent>
-          <Typography variant="h6" sx={{ mb: 1 }}>Timeline</Typography>
-          <Tabs value={timelineFilter} onChange={(_e, val) => setTimelineFilter(val)} variant="scrollable" scrollButtons="auto" sx={{ mb: 1 }}>
-            {['ALL', 'VACCINATION', 'DEWORMING', 'ECTOPARASITE', 'VET_VISIT', 'MEDICATION', 'DIET', 'EXPENSE'].map((x) => <Tab key={x} value={x} label={x} />)}
-          </Tabs>
-          <Stack spacing={1}>
-            {visibleTimeline.slice(0, 20).map((event) => (
-              <Box key={event.id} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.2 }}>
-                <Typography variant="subtitle2">{event.title}</Typography>
-                <Typography variant="caption" color="text.secondary">{event.date} · {event.type}</Typography>
-                {event.subtitle && <Typography variant="body2">{event.subtitle}</Typography>}
-                <Button
-                  size="small"
-                  sx={{ mt: 1 }}
-                  onClick={() => openTimelineRecordDetail(event)}
-                >
-                  Detail záznamu
-                </Button>
-              </Box>
-            ))}
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={1.5}
+            sx={{ mb: 1.5, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' } }}
+          >
+            <Box>
+              <Typography variant="h6">Timeline</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Rýchly prehľad po dňoch, s filtrovaním a vyhľadávaním.
+              </Typography>
+            </Box>
+            <TextField
+              size="small"
+              label="Hľadať v záznamoch"
+              value={timelineSearch}
+              onChange={(e) => setTimelineSearch(e.target.value)}
+              sx={{ minWidth: { xs: '100%', md: 280 } }}
+            />
           </Stack>
+          <Tabs value={timelineFilter} onChange={(_e, val) => setTimelineFilter(val)} variant="scrollable" scrollButtons="auto" sx={{ mb: 1.5 }}>
+            {TIMELINE_FILTER_OPTIONS.map((option) => <Tab key={option.value} value={option.value} label={option.label} />)}
+          </Tabs>
+          {!visibleTimeline.length ? (
+            <Alert severity="info">Nenašli sa žiadne záznamy pre zvolený filter.</Alert>
+          ) : (
+            <Stack spacing={2}>
+              {Object.entries(groupedTimeline).map(([date, events]) => (
+                <Box key={date}>
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                    <CalendarMonthIcon fontSize="small" color="action" />
+                    <Typography variant="subtitle2">{date}</Typography>
+                    <Chip size="small" variant="outlined" label={`${events.length} záznamov`} />
+                  </Stack>
+                  <Stack spacing={1}>
+                    {events.map((event) => {
+                      const meta = TIMELINE_TYPE_META[event.type];
+                      return (
+                        <Card key={event.id} variant="outlined" sx={{ borderLeft: 4, borderLeftColor: `${meta.color}.main` }}>
+                          <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ justifyContent: 'space-between', alignItems: { sm: 'center' } }}>
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                {timelineIconByType[event.type]}
+                                <Typography variant="subtitle2">{event.title}</Typography>
+                              </Stack>
+                              <Chip size="small" color={meta.color} label={meta.label} />
+                            </Stack>
+                            {event.subtitle && (
+                              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+                                {event.subtitle}
+                              </Typography>
+                            )}
+                            <Button size="small" sx={{ mt: 1 }} onClick={() => openTimelineRecordDetail(event)}>
+                              Otvoriť detail
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </Stack>
+                </Box>
+              ))}
+            </Stack>
+          )}
         </CardContent>
       </Card>
 
