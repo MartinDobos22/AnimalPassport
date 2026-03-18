@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -159,6 +159,47 @@ const timelineIconByType: Record<TimelineEvent['type'], JSX.Element> = {
   NOTE: <EventNoteIcon fontSize="small" />,
 };
 
+type AiDetectedRecordType = 'VACCINATION' | 'DEWORMING' | 'ECTOPARASITE' | 'MEDICATION' | 'NOTE' | 'SKIP';
+
+interface AiDetectedDraftRecord {
+  id: string;
+  sourceConfidence: 'high' | 'medium' | 'low';
+  sourceDisease?: string;
+  targetType: AiDetectedRecordType;
+  productName: string;
+  date: string;
+  validUntil: string;
+  batchNumber: string;
+  intervalDays: number;
+}
+
+const KNOWN_DEWORMING_KEYWORDS = ['drontal', 'milbemax', 'milprazon', 'caniverm', 'deworm', 'odcerv'];
+const KNOWN_ECTOPARASITE_KEYWORDS = ['simparica', 'bravecto', 'advantix', 'nexgard', 'ecto', 'parazit', 'klie', 'blch'];
+const KNOWN_RABIES_KEYWORDS = ['rabies', 'besnot', 'nobivac rabies'];
+
+const normalizeDateInput = (value: string) => {
+  if (!value) return today();
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) return value;
+  const dottedMatch = value.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})$/);
+  if (dottedMatch) {
+    const day = dottedMatch[1].padStart(2, '0');
+    const month = dottedMatch[2].padStart(2, '0');
+    const yearRaw = dottedMatch[3];
+    const year = yearRaw.length === 2 ? `20${yearRaw}` : yearRaw;
+    return `${year}-${month}-${day}`;
+  }
+  return today();
+};
+
+const inferAiTargetType = (disease: string, vaccineName: string): AiDetectedRecordType => {
+  const value = `${disease} ${vaccineName}`.toLowerCase();
+  if (KNOWN_DEWORMING_KEYWORDS.some((keyword) => value.includes(keyword))) return 'DEWORMING';
+  if (KNOWN_ECTOPARASITE_KEYWORDS.some((keyword) => value.includes(keyword))) return 'ECTOPARASITE';
+  if (KNOWN_RABIES_KEYWORDS.some((keyword) => value.includes(keyword))) return 'VACCINATION';
+  return 'VACCINATION';
+};
+
 function statusByDate(targetDate: string, soonDays: number): ValidityStatus {
   const now = new Date(today());
   const t = new Date(targetDate);
@@ -265,6 +306,7 @@ export default function HealthPassportPage() {
     recommendations: '',
   });
   const [aiRecordFeedback, setAiRecordFeedback] = useState<string | null>(null);
+  const [aiDetectedRecords, setAiDetectedRecords] = useState<AiDetectedDraftRecord[]>([]);
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
   const [isEditingVisit, setIsEditingVisit] = useState(false);
   const [selectedTimelineRecord, setSelectedTimelineRecord] = useState<{ id: string; type: TimelineEvent['type'] } | null>(null);
@@ -322,6 +364,27 @@ export default function HealthPassportPage() {
     note: '',
   });
   const { analyzeFile, fileResult, loadingFile, error: fileAnalyzeError } = useAnalyze();
+
+  useEffect(() => {
+    if (!fileResult?.healthPassportInterpretation?.vaccinations) {
+      setAiDetectedRecords([]);
+      return;
+    }
+
+    const records = fileResult.healthPassportInterpretation.vaccinations.map((item, index) => ({
+      id: `${Date.now()}-${index}`,
+      sourceConfidence: item.confidence,
+      sourceDisease: item.disease,
+      targetType: inferAiTargetType(item.disease, item.vaccineName),
+      productName: item.vaccineName || item.disease || 'Neznámy záznam',
+      date: normalizeDateInput(item.dateAdministered),
+      validUntil: normalizeDateInput(item.validUntil ?? plusDays(today(), 365)),
+      batchNumber: item.batchNumber ?? '',
+      intervalDays: 90,
+    }));
+
+    setAiDetectedRecords(records);
+  }, [fileResult]);
 
   const handleAttachmentFileChange = (file: File | null) => {
     if (!file) {
@@ -554,7 +617,12 @@ export default function HealthPassportPage() {
       return acc;
     }, {});
   }, [visibleTimeline]);
-  const canCreateAiRecord = Boolean(selectedDogId && aiRecordDraft.clinicName.trim() && (selectedVisitSubcategory || fileResult?.examAnalysis?.examType));
+  const hasSelectedAiDetectedRecords = aiDetectedRecords.some((item) => item.targetType !== 'SKIP');
+  const canCreateAiRecord = Boolean(
+    selectedDogId
+      && aiRecordDraft.clinicName.trim()
+      && ((selectedVisitSubcategory || fileResult?.examAnalysis?.examType) || hasSelectedAiDetectedRecords),
+  );
   const selectedVisit = selectedVisitId ? dogVisits.find((visit) => visit.id === selectedVisitId) ?? null : null;
   const selectedVaccination = selectedTimelineRecord?.type === 'VACCINATION'
     ? dogVaccinations.find((item) => item.id === selectedTimelineRecord.id) ?? null
@@ -757,9 +825,9 @@ export default function HealthPassportPage() {
   };
 
   const saveAiRecord = () => {
-    if (!canCreateAiRecord || !fileResult?.examAnalysis) return;
+    if (!canCreateAiRecord || !selectedDogId) return;
 
-    const reasonSource = selectedVisitSubcategory || fileResult.examAnalysis.examType;
+    const reasonSource = selectedVisitSubcategory || fileResult?.examAnalysis?.examType || 'AI import zdravotného pasu';
     const reason = [selectedVisitMainCategory, reasonSource].filter(Boolean).join(' · ');
     const attachmentUrl = attachmentPreviewUrl || wizard.attachmentUrl;
     const attachment = wizard.attachmentLabel || attachmentUrl || attachmentFile
@@ -773,24 +841,91 @@ export default function HealthPassportPage() {
       : undefined;
 
     const aiSummary = [
-      fileResult.contextAnalysis?.summary ? `Kontext: ${fileResult.contextAnalysis.summary}` : '',
-      fileResult.examAnalysis.analysis ? `AI analýza: ${fileResult.examAnalysis.analysis}` : '',
+      fileResult?.contextAnalysis?.summary ? `Kontext: ${fileResult.contextAnalysis.summary}` : '',
+      fileResult?.examAnalysis?.analysis ? `AI analýza: ${fileResult.examAnalysis.analysis}` : '',
     ]
       .filter(Boolean)
       .join('\n\n');
 
+    const visitId = uid();
+    const selectedRecords = aiDetectedRecords.filter((item) => item.targetType !== 'SKIP');
+    const createdMedicationIds = selectedRecords
+      .filter((item) => item.targetType === 'MEDICATION')
+      .map(() => uid());
+    let medicationIndex = 0;
+
     setVisits((prev) => [...prev, {
-      id: uid(),
+      id: visitId,
       dogId: selectedDogId,
       date: aiRecordDraft.date,
       clinicName: aiRecordDraft.clinicName.trim(),
       reason: reason || 'AI analýza dokumentu',
-      findings: aiSummary,
+      findings: [aiSummary, selectedRecords.length ? `AI import záznamov: ${selectedRecords.length}` : '']
+        .filter(Boolean)
+        .join('\n\n'),
       diagnosis: aiRecordDraft.diagnosis.trim() || undefined,
       recommendations: aiRecordDraft.recommendations.trim() || undefined,
-      medicationIds: [],
+      medicationIds: createdMedicationIds,
       attachments: attachment,
     }]);
+
+    selectedRecords.forEach((record) => {
+      if (record.targetType === 'VACCINATION') {
+        const vaccineType: VaccinationRecord['type'] = KNOWN_RABIES_KEYWORDS.some((keyword) => (
+          `${record.productName} ${record.sourceDisease ?? ''}`.toLowerCase().includes(keyword)
+        ))
+          ? 'RABIES'
+          : 'OTHER';
+        setVaccinations((prev) => [...prev, {
+          id: uid(),
+          dogId: selectedDogId,
+          type: vaccineType,
+          name: record.productName,
+          dateApplied: record.date,
+          validUntil: record.validUntil || plusDays(record.date, 365),
+          batchNumber: record.batchNumber || undefined,
+          attachments: attachment,
+        }]);
+      }
+      if (record.targetType === 'DEWORMING') {
+        setDewormings((prev) => [...prev, {
+          id: uid(),
+          dogId: selectedDogId,
+          productName: record.productName,
+          dateGiven: record.date,
+          intervalDays: record.intervalDays,
+          nextDueDate: plusDays(record.date, record.intervalDays),
+          attachments: attachment,
+        }]);
+      }
+      if (record.targetType === 'ECTOPARASITE') {
+        setEctos((prev) => [...prev, {
+          id: uid(),
+          dogId: selectedDogId,
+          productName: record.productName,
+          form: 'TABLET',
+          dateGiven: record.date,
+          intervalDays: record.intervalDays,
+          nextDueDate: plusDays(record.date, record.intervalDays),
+          attachments: attachment,
+        }]);
+      }
+      if (record.targetType === 'MEDICATION') {
+        const medicationId = createdMedicationIds[medicationIndex];
+        medicationIndex += 1;
+        if (!medicationId) return;
+        setMedications((prev) => [...prev, {
+          id: medicationId,
+          dogId: selectedDogId,
+          name: record.productName,
+          reason: record.sourceDisease || 'AI import zo zdravotného pasu',
+          dose: 'Neuvedené',
+          frequency: 'Podľa odporúčania veterinára',
+          startDate: record.date,
+          fromVetVisitId: visitId,
+        }]);
+      }
+    });
 
     setAiRecordFeedback('AI výsledok bol uložený ako zdravotný záznam v timeline.');
     setAiRecordDraft({
@@ -799,6 +934,7 @@ export default function HealthPassportPage() {
       diagnosis: '',
       recommendations: '',
     });
+    setAiDetectedRecords((prev) => prev.map((item) => ({ ...item, targetType: 'SKIP' })));
   };
 
   if (!dogProfiles.length) {
@@ -947,6 +1083,114 @@ export default function HealthPassportPage() {
                       value={aiRecordDraft.recommendations}
                       onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, recommendations: e.target.value }))}
                     />
+                    {aiDetectedRecords.length > 0 && (
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+                            AI rozpoznané záznamy (vyberte kam sa majú uložiť)
+                          </Typography>
+                          <Stack spacing={1.25}>
+                            {aiDetectedRecords.map((item) => (
+                              <Box key={item.id} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, p: 1 }}>
+                                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+                                  <FormControl fullWidth size="small">
+                                    <InputLabel>Typ záznamu</InputLabel>
+                                    <Select
+                                      label="Typ záznamu"
+                                      value={item.targetType}
+                                      onChange={(e) => {
+                                        const nextType = e.target.value as AiDetectedRecordType;
+                                        setAiDetectedRecords((prev) => prev.map((entry) => (
+                                          entry.id === item.id ? { ...entry, targetType: nextType } : entry
+                                        )));
+                                      }}
+                                    >
+                                      <MenuItem value="VACCINATION">Očkovanie</MenuItem>
+                                      <MenuItem value="DEWORMING">Odčervenie</MenuItem>
+                                      <MenuItem value="ECTOPARASITE">Antiparazitikum</MenuItem>
+                                      <MenuItem value="MEDICATION">Liek / tabletka</MenuItem>
+                                      <MenuItem value="NOTE">Iba poznámka návštevy</MenuItem>
+                                      <MenuItem value="SKIP">Neukladať</MenuItem>
+                                    </Select>
+                                  </FormControl>
+                                  <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="Názov prípravku"
+                                    value={item.productName}
+                                    onChange={(e) => {
+                                      const nextName = e.target.value;
+                                      setAiDetectedRecords((prev) => prev.map((entry) => (
+                                        entry.id === item.id ? { ...entry, productName: nextName } : entry
+                                      )));
+                                    }}
+                                  />
+                                </Stack>
+                                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ mt: 1 }}>
+                                  <TextField
+                                    size="small"
+                                    label="Dátum"
+                                    type="date"
+                                    InputLabelProps={{ shrink: true }}
+                                    value={item.date}
+                                    onChange={(e) => {
+                                      const nextDate = e.target.value;
+                                      setAiDetectedRecords((prev) => prev.map((entry) => (
+                                        entry.id === item.id ? { ...entry, date: nextDate } : entry
+                                      )));
+                                    }}
+                                  />
+                                  <TextField
+                                    size="small"
+                                    label="Platnosť do"
+                                    type="date"
+                                    InputLabelProps={{ shrink: true }}
+                                    value={item.validUntil}
+                                    onChange={(e) => {
+                                      const nextDate = e.target.value;
+                                      setAiDetectedRecords((prev) => prev.map((entry) => (
+                                        entry.id === item.id ? { ...entry, validUntil: nextDate } : entry
+                                      )));
+                                    }}
+                                  />
+                                  <TextField
+                                    size="small"
+                                    label="Šarža"
+                                    value={item.batchNumber}
+                                    onChange={(e) => {
+                                      const nextBatch = e.target.value;
+                                      setAiDetectedRecords((prev) => prev.map((entry) => (
+                                        entry.id === item.id ? { ...entry, batchNumber: nextBatch } : entry
+                                      )));
+                                    }}
+                                  />
+                                  {(item.targetType === 'DEWORMING' || item.targetType === 'ECTOPARASITE') && (
+                                    <TextField
+                                      size="small"
+                                      label="Interval (dni)"
+                                      type="number"
+                                      value={item.intervalDays}
+                                      onChange={(e) => {
+                                        const interval = Number(e.target.value || 0);
+                                        setAiDetectedRecords((prev) => prev.map((entry) => (
+                                          entry.id === item.id ? { ...entry, intervalDays: Math.max(1, interval || 30) } : entry
+                                        )));
+                                      }}
+                                    />
+                                  )}
+                                </Stack>
+                                <Chip
+                                  size="small"
+                                  sx={{ mt: 1 }}
+                                  label={`AI istota: ${item.sourceConfidence}`}
+                                  color={item.sourceConfidence === 'high' ? 'success' : item.sourceConfidence === 'medium' ? 'warning' : 'default'}
+                                />
+                              </Box>
+                            ))}
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    )}
                     <Button
                       variant="contained"
                       onClick={saveAiRecord}
