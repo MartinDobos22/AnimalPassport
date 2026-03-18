@@ -30,6 +30,7 @@ import type {
   DewormingRecord,
   DietEntry,
   EctoparasiteRecord,
+  ExpenseCategory,
   ExpenseRecord,
   MedicationDoseLog,
   MedicationRecord,
@@ -223,6 +224,8 @@ export default function HealthPassportPage() {
   const [aiRecordFeedback, setAiRecordFeedback] = useState<string | null>(null);
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
   const [isEditingVisit, setIsEditingVisit] = useState(false);
+  const [selectedTimelineRecord, setSelectedTimelineRecord] = useState<{ id: string; type: TimelineEvent['type'] } | null>(null);
+  const [isEditingTimelineRecord, setIsEditingTimelineRecord] = useState(false);
   const [visitDraft, setVisitDraft] = useState({
     date: '',
     clinicName: '',
@@ -232,6 +235,48 @@ export default function HealthPassportPage() {
     diagnosis: '',
     recommendations: '',
     nextCheckDate: '',
+  });
+  const [vaccinationDraft, setVaccinationDraft] = useState({
+    name: '',
+    type: 'RABIES' as 'RABIES' | 'COMBINED' | 'OTHER',
+    dateApplied: today(),
+    validUntil: plusDays(today(), 365),
+    batchNumber: '',
+  });
+  const [dewormingDraft, setDewormingDraft] = useState({
+    productName: '',
+    dateGiven: today(),
+    intervalDays: 90,
+    nextDueDate: plusDays(today(), 90),
+  });
+  const [ectoDraft, setEctoDraft] = useState({
+    productName: '',
+    form: 'TABLET' as 'TABLET' | 'SPOT_ON' | 'COLLAR',
+    dateGiven: today(),
+    intervalDays: 30,
+    nextDueDate: plusDays(today(), 30),
+  });
+  const [medicationDraft, setMedicationDraft] = useState({
+    name: '',
+    reason: '',
+    dose: '',
+    frequency: '',
+    startDate: today(),
+    endDate: '',
+  });
+  const [dietDraft, setDietDraft] = useState({
+    foodName: '',
+    startedAt: today(),
+    endedAt: '',
+    reactionNotes: '',
+    suitabilityStatus: 'SUITABLE' as 'SUITABLE' | 'RISKY' | 'UNSUITABLE',
+  });
+  const [expenseDraft, setExpenseDraft] = useState({
+    date: today(),
+    amount: '',
+    currency: 'EUR',
+    category: 'OTHER' as ExpenseCategory,
+    note: '',
   });
   const { analyzeFile, fileResult, loadingFile, error: fileAnalyzeError } = useAnalyze();
 
@@ -459,6 +504,24 @@ export default function HealthPassportPage() {
   const visibleTimeline = timelineFilter === 'ALL' ? timeline : timeline.filter((x) => x.type === timelineFilter);
   const canCreateAiRecord = Boolean(selectedDogId && aiRecordDraft.clinicName.trim() && (selectedVisitSubcategory || fileResult?.examAnalysis?.examType));
   const selectedVisit = selectedVisitId ? dogVisits.find((visit) => visit.id === selectedVisitId) ?? null : null;
+  const selectedVaccination = selectedTimelineRecord?.type === 'VACCINATION'
+    ? dogVaccinations.find((item) => item.id === selectedTimelineRecord.id) ?? null
+    : null;
+  const selectedDeworming = selectedTimelineRecord?.type === 'DEWORMING'
+    ? dogDewormings.find((item) => item.id === selectedTimelineRecord.id) ?? null
+    : null;
+  const selectedEcto = selectedTimelineRecord?.type === 'ECTOPARASITE'
+    ? dogEctos.find((item) => item.id === selectedTimelineRecord.id) ?? null
+    : null;
+  const selectedMedication = selectedTimelineRecord?.type === 'MEDICATION'
+    ? dogMeds.find((item) => item.id === selectedTimelineRecord.id) ?? null
+    : null;
+  const selectedDiet = selectedTimelineRecord?.type === 'DIET'
+    ? dogDiet.find((item) => item.id === selectedTimelineRecord.id) ?? null
+    : null;
+  const selectedExpense = selectedTimelineRecord?.type === 'EXPENSE'
+    ? dogExpenses.find((item) => item.id === selectedTimelineRecord.id) ?? null
+    : null;
 
   const openVisitDetail = (visitId: string) => {
     const visit = dogVisits.find((item) => item.id === visitId);
@@ -475,6 +538,79 @@ export default function HealthPassportPage() {
       recommendations: visit.recommendations ?? '',
       nextCheckDate: visit.nextCheckDate ?? '',
     });
+  };
+
+  const openTimelineRecordDetail = (event: TimelineEvent) => {
+    if (event.type === 'VET_VISIT') {
+      openVisitDetail(event.id.replace('visit-', ''));
+      return;
+    }
+
+    const recordId = event.id.replace(/^[^-]+-/, '');
+    setSelectedTimelineRecord({ id: recordId, type: event.type });
+    setIsEditingTimelineRecord(false);
+
+    if (event.type === 'VACCINATION') {
+      const record = dogVaccinations.find((item) => item.id === recordId);
+      if (!record) return;
+      setVaccinationDraft({
+        name: record.name,
+        type: record.type,
+        dateApplied: record.dateApplied,
+        validUntil: record.validUntil,
+        batchNumber: record.batchNumber ?? '',
+      });
+    } else if (event.type === 'DEWORMING') {
+      const record = dogDewormings.find((item) => item.id === recordId);
+      if (!record) return;
+      setDewormingDraft({
+        productName: record.productName,
+        dateGiven: record.dateGiven,
+        intervalDays: record.intervalDays,
+        nextDueDate: record.nextDueDate,
+      });
+    } else if (event.type === 'ECTOPARASITE') {
+      const record = dogEctos.find((item) => item.id === recordId);
+      if (!record) return;
+      setEctoDraft({
+        productName: record.productName,
+        form: record.form,
+        dateGiven: record.dateGiven,
+        intervalDays: record.intervalDays ?? 30,
+        nextDueDate: record.nextDueDate,
+      });
+    } else if (event.type === 'MEDICATION') {
+      const record = dogMeds.find((item) => item.id === recordId);
+      if (!record) return;
+      setMedicationDraft({
+        name: record.name,
+        reason: record.reason,
+        dose: record.dose,
+        frequency: record.frequency,
+        startDate: record.startDate,
+        endDate: record.endDate ?? '',
+      });
+    } else if (event.type === 'DIET') {
+      const record = dogDiet.find((item) => item.id === recordId);
+      if (!record) return;
+      setDietDraft({
+        foodName: record.foodName,
+        startedAt: record.startedAt,
+        endedAt: record.endedAt ?? '',
+        reactionNotes: record.reactionNotes ?? '',
+        suitabilityStatus: record.suitabilityStatus ?? 'SUITABLE',
+      });
+    } else if (event.type === 'EXPENSE') {
+      const record = dogExpenses.find((item) => item.id === recordId);
+      if (!record) return;
+      setExpenseDraft({
+        date: record.date,
+        amount: String(record.amount),
+        currency: record.currency,
+        category: record.category,
+        note: record.note ?? '',
+      });
+    }
   };
 
   const saveVisitDetail = () => {
@@ -502,6 +638,70 @@ export default function HealthPassportPage() {
     setVisits((prev) => prev.filter((visit) => visit.id !== selectedVisitId));
     setSelectedVisitId(null);
     setIsEditingVisit(false);
+  };
+
+  const saveTimelineRecordDetail = () => {
+    if (!selectedTimelineRecord) return;
+    if (selectedTimelineRecord.type === 'VACCINATION') {
+      setVaccinations((prev) => prev.map((item) => (
+        item.id !== selectedTimelineRecord.id
+          ? item
+          : { ...item, name: vaccinationDraft.name, type: vaccinationDraft.type, dateApplied: vaccinationDraft.dateApplied, validUntil: vaccinationDraft.validUntil, batchNumber: vaccinationDraft.batchNumber || undefined }
+      )));
+    } else if (selectedTimelineRecord.type === 'DEWORMING') {
+      setDewormings((prev) => prev.map((item) => (
+        item.id !== selectedTimelineRecord.id
+          ? item
+          : { ...item, productName: dewormingDraft.productName, dateGiven: dewormingDraft.dateGiven, intervalDays: dewormingDraft.intervalDays, nextDueDate: dewormingDraft.nextDueDate }
+      )));
+    } else if (selectedTimelineRecord.type === 'ECTOPARASITE') {
+      setEctos((prev) => prev.map((item) => (
+        item.id !== selectedTimelineRecord.id
+          ? item
+          : { ...item, productName: ectoDraft.productName, form: ectoDraft.form, dateGiven: ectoDraft.dateGiven, intervalDays: ectoDraft.intervalDays, nextDueDate: ectoDraft.nextDueDate }
+      )));
+    } else if (selectedTimelineRecord.type === 'MEDICATION') {
+      setMedications((prev) => prev.map((item) => (
+        item.id !== selectedTimelineRecord.id
+          ? item
+          : { ...item, name: medicationDraft.name, reason: medicationDraft.reason, dose: medicationDraft.dose, frequency: medicationDraft.frequency, startDate: medicationDraft.startDate, endDate: medicationDraft.endDate || undefined }
+      )));
+    } else if (selectedTimelineRecord.type === 'DIET') {
+      setDietEntries((prev) => prev.map((item) => (
+        item.id !== selectedTimelineRecord.id
+          ? item
+          : { ...item, foodName: dietDraft.foodName, startedAt: dietDraft.startedAt, endedAt: dietDraft.endedAt || undefined, reactionNotes: dietDraft.reactionNotes || undefined, suitabilityStatus: dietDraft.suitabilityStatus }
+      )));
+    } else if (selectedTimelineRecord.type === 'EXPENSE') {
+      setExpenses((prev) => prev.map((item) => (
+        item.id !== selectedTimelineRecord.id
+          ? item
+          : { ...item, date: expenseDraft.date, amount: Number(expenseDraft.amount || 0), currency: expenseDraft.currency, category: expenseDraft.category, note: expenseDraft.note || undefined }
+      )));
+    }
+
+    setIsEditingTimelineRecord(false);
+  };
+
+  const deleteTimelineRecord = () => {
+    if (!selectedTimelineRecord) return;
+    if (selectedTimelineRecord.type === 'VACCINATION') {
+      setVaccinations((prev) => prev.filter((item) => item.id !== selectedTimelineRecord.id));
+    } else if (selectedTimelineRecord.type === 'DEWORMING') {
+      setDewormings((prev) => prev.filter((item) => item.id !== selectedTimelineRecord.id));
+    } else if (selectedTimelineRecord.type === 'ECTOPARASITE') {
+      setEctos((prev) => prev.filter((item) => item.id !== selectedTimelineRecord.id));
+    } else if (selectedTimelineRecord.type === 'MEDICATION') {
+      setMedications((prev) => prev.filter((item) => item.id !== selectedTimelineRecord.id));
+      setDoseLogs((prev) => prev.filter((item) => item.medicationId !== selectedTimelineRecord.id));
+      setVisits((prev) => prev.map((visit) => ({ ...visit, medicationIds: visit.medicationIds.filter((medId) => medId !== selectedTimelineRecord.id) })));
+    } else if (selectedTimelineRecord.type === 'DIET') {
+      setDietEntries((prev) => prev.filter((item) => item.id !== selectedTimelineRecord.id));
+    } else if (selectedTimelineRecord.type === 'EXPENSE') {
+      setExpenses((prev) => prev.filter((item) => item.id !== selectedTimelineRecord.id));
+    }
+    setSelectedTimelineRecord(null);
+    setIsEditingTimelineRecord(false);
   };
 
   const saveAiRecord = () => {
@@ -800,15 +1000,13 @@ export default function HealthPassportPage() {
                 <Typography variant="subtitle2">{event.title}</Typography>
                 <Typography variant="caption" color="text.secondary">{event.date} · {event.type}</Typography>
                 {event.subtitle && <Typography variant="body2">{event.subtitle}</Typography>}
-                {event.type === 'VET_VISIT' && (
-                  <Button
-                    size="small"
-                    sx={{ mt: 1 }}
-                    onClick={() => openVisitDetail(event.id.replace('visit-', ''))}
-                  >
-                    Detail záznamu
-                  </Button>
-                )}
+                <Button
+                  size="small"
+                  sx={{ mt: 1 }}
+                  onClick={() => openTimelineRecordDetail(event)}
+                >
+                  Detail záznamu
+                </Button>
               </Box>
             ))}
           </Stack>
@@ -1001,6 +1199,119 @@ export default function HealthPassportPage() {
             <Button variant="contained" onClick={saveVisitDetail}>
               Uložiť zmeny
             </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(selectedTimelineRecord)}
+        onClose={() => {
+          setSelectedTimelineRecord(null);
+          setIsEditingTimelineRecord(false);
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Detail záznamu</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.5} sx={{ mt: 1 }}>
+            {selectedTimelineRecord?.type === 'VACCINATION' && selectedVaccination && (
+              <>
+                <TextField label="Názov vakcíny" value={vaccinationDraft.name} onChange={(e) => setVaccinationDraft((prev) => ({ ...prev, name: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <FormControl disabled={!isEditingTimelineRecord}>
+                  <InputLabel>Typ vakcíny</InputLabel>
+                  <Select value={vaccinationDraft.type} label="Typ vakcíny" onChange={(e) => setVaccinationDraft((prev) => ({ ...prev, type: e.target.value as any }))}>
+                    <MenuItem value="RABIES">RABIES</MenuItem>
+                    <MenuItem value="COMBINED">COMBINED</MenuItem>
+                    <MenuItem value="OTHER">OTHER</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField label="Dátum podania" type="date" InputLabelProps={{ shrink: true }} value={vaccinationDraft.dateApplied} onChange={(e) => setVaccinationDraft((prev) => ({ ...prev, dateApplied: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Platnosť do" type="date" InputLabelProps={{ shrink: true }} value={vaccinationDraft.validUntil} onChange={(e) => setVaccinationDraft((prev) => ({ ...prev, validUntil: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Šarža (voliteľné)" value={vaccinationDraft.batchNumber} onChange={(e) => setVaccinationDraft((prev) => ({ ...prev, batchNumber: e.target.value }))} disabled={!isEditingTimelineRecord} />
+              </>
+            )}
+
+            {selectedTimelineRecord?.type === 'DEWORMING' && selectedDeworming && (
+              <>
+                <TextField label="Produkt" value={dewormingDraft.productName} onChange={(e) => setDewormingDraft((prev) => ({ ...prev, productName: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Dátum podania" type="date" InputLabelProps={{ shrink: true }} value={dewormingDraft.dateGiven} onChange={(e) => setDewormingDraft((prev) => ({ ...prev, dateGiven: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Interval dní" type="number" value={dewormingDraft.intervalDays} onChange={(e) => setDewormingDraft((prev) => ({ ...prev, intervalDays: Number(e.target.value) }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Ďalší termín" type="date" InputLabelProps={{ shrink: true }} value={dewormingDraft.nextDueDate} onChange={(e) => setDewormingDraft((prev) => ({ ...prev, nextDueDate: e.target.value }))} disabled={!isEditingTimelineRecord} />
+              </>
+            )}
+
+            {selectedTimelineRecord?.type === 'ECTOPARASITE' && selectedEcto && (
+              <>
+                <TextField label="Produkt" value={ectoDraft.productName} onChange={(e) => setEctoDraft((prev) => ({ ...prev, productName: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <FormControl disabled={!isEditingTimelineRecord}>
+                  <InputLabel>Forma</InputLabel>
+                  <Select value={ectoDraft.form} label="Forma" onChange={(e) => setEctoDraft((prev) => ({ ...prev, form: e.target.value as any }))}>
+                    <MenuItem value="TABLET">tablet</MenuItem>
+                    <MenuItem value="SPOT_ON">spotOn</MenuItem>
+                    <MenuItem value="COLLAR">collar</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField label="Dátum podania" type="date" InputLabelProps={{ shrink: true }} value={ectoDraft.dateGiven} onChange={(e) => setEctoDraft((prev) => ({ ...prev, dateGiven: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Interval dní" type="number" value={ectoDraft.intervalDays} onChange={(e) => setEctoDraft((prev) => ({ ...prev, intervalDays: Number(e.target.value) }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Ďalší termín" type="date" InputLabelProps={{ shrink: true }} value={ectoDraft.nextDueDate} onChange={(e) => setEctoDraft((prev) => ({ ...prev, nextDueDate: e.target.value }))} disabled={!isEditingTimelineRecord} />
+              </>
+            )}
+
+            {selectedTimelineRecord?.type === 'MEDICATION' && selectedMedication && (
+              <>
+                <TextField label="Názov lieku" value={medicationDraft.name} onChange={(e) => setMedicationDraft((prev) => ({ ...prev, name: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Dôvod" value={medicationDraft.reason} onChange={(e) => setMedicationDraft((prev) => ({ ...prev, reason: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Dávkovanie" value={medicationDraft.dose} onChange={(e) => setMedicationDraft((prev) => ({ ...prev, dose: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Frekvencia" value={medicationDraft.frequency} onChange={(e) => setMedicationDraft((prev) => ({ ...prev, frequency: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Začiatok" type="date" InputLabelProps={{ shrink: true }} value={medicationDraft.startDate} onChange={(e) => setMedicationDraft((prev) => ({ ...prev, startDate: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Koniec (voliteľné)" type="date" InputLabelProps={{ shrink: true }} value={medicationDraft.endDate} onChange={(e) => setMedicationDraft((prev) => ({ ...prev, endDate: e.target.value }))} disabled={!isEditingTimelineRecord} />
+              </>
+            )}
+
+            {selectedTimelineRecord?.type === 'DIET' && selectedDiet && (
+              <>
+                <TextField label="Krmivo" value={dietDraft.foodName} onChange={(e) => setDietDraft((prev) => ({ ...prev, foodName: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Začiatok diéty" type="date" InputLabelProps={{ shrink: true }} value={dietDraft.startedAt} onChange={(e) => setDietDraft((prev) => ({ ...prev, startedAt: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Koniec diéty (voliteľné)" type="date" InputLabelProps={{ shrink: true }} value={dietDraft.endedAt} onChange={(e) => setDietDraft((prev) => ({ ...prev, endedAt: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <FormControl disabled={!isEditingTimelineRecord}>
+                  <InputLabel>Hodnotenie</InputLabel>
+                  <Select value={dietDraft.suitabilityStatus} label="Hodnotenie" onChange={(e) => setDietDraft((prev) => ({ ...prev, suitabilityStatus: e.target.value as any }))}>
+                    <MenuItem value="SUITABLE">SUITABLE</MenuItem>
+                    <MenuItem value="RISKY">RISKY</MenuItem>
+                    <MenuItem value="UNSUITABLE">UNSUITABLE</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField label="Reakcia" value={dietDraft.reactionNotes} onChange={(e) => setDietDraft((prev) => ({ ...prev, reactionNotes: e.target.value }))} disabled={!isEditingTimelineRecord} />
+              </>
+            )}
+
+            {selectedTimelineRecord?.type === 'EXPENSE' && selectedExpense && (
+              <>
+                <TextField label="Dátum" type="date" InputLabelProps={{ shrink: true }} value={expenseDraft.date} onChange={(e) => setExpenseDraft((prev) => ({ ...prev, date: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Suma" type="number" value={expenseDraft.amount} onChange={(e) => setExpenseDraft((prev) => ({ ...prev, amount: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Mena" value={expenseDraft.currency} onChange={(e) => setExpenseDraft((prev) => ({ ...prev, currency: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <FormControl disabled={!isEditingTimelineRecord}>
+                  <InputLabel>Kategória</InputLabel>
+                  <Select value={expenseDraft.category} label="Kategória" onChange={(e) => setExpenseDraft((prev) => ({ ...prev, category: e.target.value as ExpenseCategory }))}>
+                    <MenuItem value="VET_VISIT">VET_VISIT</MenuItem>
+                    <MenuItem value="MEDICATION">MEDICATION</MenuItem>
+                    <MenuItem value="FOOD">FOOD</MenuItem>
+                    <MenuItem value="OTHER">OTHER</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField label="Poznámka" value={expenseDraft.note} onChange={(e) => setExpenseDraft((prev) => ({ ...prev, note: e.target.value }))} disabled={!isEditingTimelineRecord} />
+              </>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button color="error" onClick={deleteTimelineRecord}>Zmazať</Button>
+          <Button onClick={() => setSelectedTimelineRecord(null)}>Zavrieť</Button>
+          {!isEditingTimelineRecord ? (
+            <Button variant="outlined" onClick={() => setIsEditingTimelineRecord(true)}>Editovať</Button>
+          ) : (
+            <Button variant="contained" onClick={saveTimelineRecordDetail}>Uložiť zmeny</Button>
           )}
         </DialogActions>
       </Dialog>
