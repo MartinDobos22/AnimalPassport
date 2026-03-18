@@ -214,6 +214,13 @@ export default function HealthPassportPage() {
   const [attachmentPreviewUrl, setAttachmentPreviewUrl] = useState('');
   const [attachmentError, setAttachmentError] = useState('');
   const [pendingAttachment, setPendingAttachment] = useState<{ fileName: string; mimeType: string; base64Data: string } | null>(null);
+  const [aiRecordDraft, setAiRecordDraft] = useState({
+    date: today(),
+    clinicName: '',
+    diagnosis: '',
+    recommendations: '',
+  });
+  const [aiRecordFeedback, setAiRecordFeedback] = useState<string | null>(null);
   const { analyzeFile, fileResult, loadingFile, error: fileAnalyzeError } = useAnalyze();
 
   const handleAttachmentFileChange = (file: File | null) => {
@@ -438,6 +445,52 @@ export default function HealthPassportPage() {
 
   const [timelineFilter, setTimelineFilter] = useState<'ALL' | TimelineEvent['type']>('ALL');
   const visibleTimeline = timelineFilter === 'ALL' ? timeline : timeline.filter((x) => x.type === timelineFilter);
+  const canCreateAiRecord = Boolean(selectedDogId && aiRecordDraft.clinicName.trim() && (selectedVisitSubcategory || fileResult?.examAnalysis?.examType));
+
+  const saveAiRecord = () => {
+    if (!canCreateAiRecord || !fileResult?.examAnalysis) return;
+
+    const reasonSource = selectedVisitSubcategory || fileResult.examAnalysis.examType;
+    const reason = [selectedVisitMainCategory, reasonSource].filter(Boolean).join(' · ');
+    const attachmentUrl = attachmentPreviewUrl || wizard.attachmentUrl;
+    const attachment = wizard.attachmentLabel || attachmentUrl || attachmentFile
+      ? [{
+          id: uid(),
+          label: wizard.attachmentLabel || attachmentFile?.name || 'AI analyzovaný dokument',
+          imageUrl: attachmentUrl || undefined,
+          fileName: attachmentFile?.name || undefined,
+          createdAt: new Date().toISOString(),
+        }]
+      : undefined;
+
+    const aiSummary = [
+      fileResult.contextAnalysis?.summary ? `Kontext: ${fileResult.contextAnalysis.summary}` : '',
+      fileResult.examAnalysis.analysis ? `AI analýza: ${fileResult.examAnalysis.analysis}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
+    setVisits((prev) => [...prev, {
+      id: uid(),
+      dogId: selectedDogId,
+      date: aiRecordDraft.date,
+      clinicName: aiRecordDraft.clinicName.trim(),
+      reason: reason || 'AI analýza dokumentu',
+      findings: aiSummary,
+      diagnosis: aiRecordDraft.diagnosis.trim() || undefined,
+      recommendations: aiRecordDraft.recommendations.trim() || undefined,
+      medicationIds: [],
+      attachments: attachment,
+    }]);
+
+    setAiRecordFeedback('AI výsledok bol uložený ako zdravotný záznam v timeline.');
+    setAiRecordDraft({
+      date: today(),
+      clinicName: '',
+      diagnosis: '',
+      recommendations: '',
+    });
+  };
 
   if (!dogProfiles.length) {
     return <Alert severity="info">Najprv si vytvorte profil psa v sekcii Profily.</Alert>;
@@ -547,6 +600,55 @@ export default function HealthPassportPage() {
                 AI analýza vyšetrenia (<strong>{fileResult.examAnalysis.examType}</strong>)
                 <AiFormattedText text={fileResult.examAnalysis.analysis} />
               </Alert>
+            )}
+            {fileResult?.examAnalysis && (
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                    Uložiť AI výsledok ako lekársky záznam
+                  </Typography>
+                  <Stack spacing={1.5}>
+                    <Typography variant="body2" color="text.secondary">
+                      Po kontrole AI výsledku môžete jedným klikom pridať záznam priamo do dashboard timeline.
+                    </Typography>
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+                      <TextField
+                        fullWidth
+                        label="Dátum záznamu"
+                        type="date"
+                        InputLabelProps={{ shrink: true }}
+                        value={aiRecordDraft.date}
+                        onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, date: e.target.value }))}
+                      />
+                      <TextField
+                        fullWidth
+                        required
+                        label="Klinika / veterinár"
+                        value={aiRecordDraft.clinicName}
+                        onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, clinicName: e.target.value }))}
+                      />
+                    </Stack>
+                    <TextField
+                      label="Diagnóza (voliteľné)"
+                      value={aiRecordDraft.diagnosis}
+                      onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, diagnosis: e.target.value }))}
+                    />
+                    <TextField
+                      label="Odporúčanie (voliteľné)"
+                      value={aiRecordDraft.recommendations}
+                      onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, recommendations: e.target.value }))}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={saveAiRecord}
+                      disabled={!canCreateAiRecord}
+                    >
+                      Pridať AI záznam do dashboardu
+                    </Button>
+                    {aiRecordFeedback && <Alert severity="success">{aiRecordFeedback}</Alert>}
+                  </Stack>
+                </CardContent>
+              </Card>
             )}
             {fileResult?.healthPassportInterpretation && (
               <Card variant="outlined">
