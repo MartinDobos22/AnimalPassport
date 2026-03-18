@@ -82,6 +82,37 @@ const VISIT_CATEGORY_OPTIONS = [
     sub: ['Dedičné ochorenia', 'Plemenné testy'],
   },
 ] as const;
+const EXAM_SUBCATEGORY_TO_ALIAS: Record<string, string> = {
+  'Krvné testy': 'krvne_testy',
+  'Vyšetrenie moču': 'vysetrenie_mocu',
+  'Vyšetrenie stolice': 'vysetrenie_stolice',
+  'Mikrobiológia (kultivácie)': 'mikrobiologia',
+  Cytológia: 'cytologia',
+  'Biopsia / histológia': 'biopsia_histologia',
+  'Kožné scrapings': 'kozne_scrapings',
+  'Kožné stery / pásikové testy': 'kozne_stery',
+  'Alergologické krvné testy': 'alergologicke_krvne_testy',
+  'Intradermálne alergotesty': 'intradermalne_alergotesty',
+  'Röntgen (RTG)': 'rtg',
+  'Ultrazvuk (USG)': 'ultrazvuk',
+  CT: 'ct',
+  MRI: 'mri',
+  Endoskopia: 'endoskopia',
+  EKG: 'ekg',
+  'Meranie krvného tlaku': 'krvny_tlak',
+  Echokardiografia: 'echo',
+  'Röntgen hrudníka': 'rtg_hrudnika',
+  'Vyšetrenie oka': 'vysetrenie_oka',
+  'Meranie vnútroočného tlaku': 'vnutoocny_tlak',
+  'Test slzivosti': 'test_slzivosti',
+  'Farbiace testy rohovky': 'farbiace_testy_rohovky',
+  'Klinické neuro vyšetrenie': 'klinicke_neuro',
+  'Pokročilé zobrazovanie (MRI/CT)': 'pokrocile_zobrazovanie',
+  'Rýchlotesty (napr. parvo, FeLV/FIV, srdcový červ)': 'rychlotesty',
+  'Sérologické panely': 'serologicke_panely',
+  'Dedičné ochorenia': 'dedicne_ochorenia',
+  'Plemenné testy': 'plemenne_testy',
+};
 
 function statusByDate(targetDate: string, soonDays: number): ValidityStatus {
   const now = new Date(today());
@@ -233,8 +264,8 @@ export default function HealthPassportPage() {
   };
 
   const handleAnalyzeAttachment = async () => {
-    if (!pendingAttachment) return;
-    await analyzeFile(pendingAttachment);
+    if (!pendingAttachment || !selectedExamAlias) return;
+    await analyzeFile(pendingAttachment, selectedExamAlias);
   };
 
   const todaysDoseLogs = doseLogs.filter((x) => x.dogId === selectedDogId && x.date === today());
@@ -257,6 +288,7 @@ export default function HealthPassportPage() {
 
   const currentDiet = [...dogDiet].sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
   const selectedVisitSubcategoryOptions = VISIT_CATEGORY_OPTIONS.find((item) => item.main === selectedVisitMainCategory)?.sub ?? [];
+  const selectedExamAlias = selectedVisitSubcategory ? EXAM_SUBCATEGORY_TO_ALIAS[selectedVisitSubcategory] : '';
 
   const saveWizard = () => {
     if (!selectedDogId || !wizard.clinicName.trim() || !selectedVisitMainCategory || !selectedVisitSubcategory) return;
@@ -438,6 +470,10 @@ export default function HealthPassportPage() {
                 onChange={(e) => {
                   setSelectedVisitMainCategory(e.target.value);
                   setSelectedVisitSubcategory('');
+                  setAttachmentFile(null);
+                  setAttachmentPreviewUrl('');
+                  setAttachmentError('');
+                  setPendingAttachment(null);
                 }}
               >
                 {VISIT_CATEGORY_OPTIONS.map((item) => (
@@ -450,7 +486,13 @@ export default function HealthPassportPage() {
               <Select
                 value={selectedVisitSubcategory}
                 label="Podkategória"
-                onChange={(e) => setSelectedVisitSubcategory(e.target.value)}
+                onChange={(e) => {
+                  setSelectedVisitSubcategory(e.target.value);
+                  setAttachmentFile(null);
+                  setAttachmentPreviewUrl('');
+                  setAttachmentError('');
+                  setPendingAttachment(null);
+                }}
               >
                 {selectedVisitSubcategoryOptions.map((sub) => (
                   <MenuItem key={sub} value={sub}>{sub}</MenuItem>
@@ -470,19 +512,21 @@ export default function HealthPassportPage() {
               value={wizard.attachmentLabel}
               onChange={(e) => setWizard({ ...wizard, attachmentLabel: e.target.value })}
             />
-            <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
-              Vybrať PDF alebo fotku
-              <input
-                type="file"
-                hidden
-                accept="application/pdf,image/jpeg,image/png,image/webp"
-                onChange={(e) => handleAttachmentFileChange(e.target.files?.[0] ?? null)}
-              />
-            </Button>
+            {selectedExamAlias && (
+              <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
+                Add file
+                <input
+                  type="file"
+                  hidden
+                  accept="application/pdf,image/jpeg,image/png,image/webp"
+                  onChange={(e) => handleAttachmentFileChange(e.target.files?.[0] ?? null)}
+                />
+              </Button>
+            )}
             <Button
               variant="contained"
               onClick={handleAnalyzeAttachment}
-              disabled={loadingFile || !pendingAttachment || Boolean(attachmentError)}
+              disabled={loadingFile || !selectedExamAlias || !pendingAttachment || Boolean(attachmentError)}
               startIcon={loadingFile ? <CircularProgress size={16} color="inherit" /> : undefined}
             >
               {loadingFile ? 'Analyzujem súbor...' : 'Analyzovať súbor'}
@@ -495,6 +539,13 @@ export default function HealthPassportPage() {
                 Typ dokumentu: <strong>{fileResult.contextAnalysis.documentType}</strong> ({fileResult.contextAnalysis.confidence})
                 <br />
                 {fileResult.contextAnalysis.summary}
+              </Alert>
+            )}
+            {fileResult?.examAnalysis && (
+              <Alert severity="info">
+                AI analýza vyšetrenia (<strong>{fileResult.examAnalysis.examType}</strong>)
+                <br />
+                {fileResult.examAnalysis.analysis}
               </Alert>
             )}
             {fileResult?.healthPassportInterpretation && (
