@@ -214,6 +214,25 @@ export default function HealthPassportPage() {
   const [attachmentPreviewUrl, setAttachmentPreviewUrl] = useState('');
   const [attachmentError, setAttachmentError] = useState('');
   const [pendingAttachment, setPendingAttachment] = useState<{ fileName: string; mimeType: string; base64Data: string } | null>(null);
+  const [aiRecordDraft, setAiRecordDraft] = useState({
+    date: today(),
+    clinicName: '',
+    diagnosis: '',
+    recommendations: '',
+  });
+  const [aiRecordFeedback, setAiRecordFeedback] = useState<string | null>(null);
+  const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
+  const [isEditingVisit, setIsEditingVisit] = useState(false);
+  const [visitDraft, setVisitDraft] = useState({
+    date: '',
+    clinicName: '',
+    vetName: '',
+    reason: '',
+    findings: '',
+    diagnosis: '',
+    recommendations: '',
+    nextCheckDate: '',
+  });
   const { analyzeFile, fileResult, loadingFile, error: fileAnalyzeError } = useAnalyze();
 
   const handleAttachmentFileChange = (file: File | null) => {
@@ -438,6 +457,101 @@ export default function HealthPassportPage() {
 
   const [timelineFilter, setTimelineFilter] = useState<'ALL' | TimelineEvent['type']>('ALL');
   const visibleTimeline = timelineFilter === 'ALL' ? timeline : timeline.filter((x) => x.type === timelineFilter);
+  const canCreateAiRecord = Boolean(selectedDogId && aiRecordDraft.clinicName.trim() && (selectedVisitSubcategory || fileResult?.examAnalysis?.examType));
+  const selectedVisit = selectedVisitId ? dogVisits.find((visit) => visit.id === selectedVisitId) : undefined;
+
+  const saveAiRecord = () => {
+    if (!canCreateAiRecord || !fileResult?.examAnalysis) return;
+    const examAnalysis = fileResult.examAnalysis;
+
+    const reasonSource = selectedVisitSubcategory || examAnalysis.examType;
+    const reason = [selectedVisitMainCategory, reasonSource].filter(Boolean).join(' · ');
+    const attachmentUrl = attachmentPreviewUrl || wizard.attachmentUrl;
+    const attachment = wizard.attachmentLabel || attachmentUrl || attachmentFile
+      ? [{
+          id: uid(),
+          label: wizard.attachmentLabel || attachmentFile?.name || 'AI analyzovaný dokument',
+          imageUrl: attachmentUrl || undefined,
+          fileName: attachmentFile?.name || undefined,
+          createdAt: new Date().toISOString(),
+        }]
+      : undefined;
+
+    const aiSummary = [
+      fileResult.contextAnalysis?.summary ? `Kontext: ${fileResult.contextAnalysis.summary}` : '',
+      fileResult.examAnalysis.analysis ? `AI analýza: ${fileResult.examAnalysis.analysis}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
+    setVisits((prev) => [...prev, {
+      id: uid(),
+      dogId: selectedDogId,
+      date: aiRecordDraft.date,
+      clinicName: aiRecordDraft.clinicName.trim(),
+      reason: reason || 'AI analýza dokumentu',
+      findings: aiSummary,
+      diagnosis: aiRecordDraft.diagnosis.trim() || undefined,
+      recommendations: aiRecordDraft.recommendations.trim() || undefined,
+      aiExtractedText: fileResult.extractedText || undefined,
+      aiExamType: examAnalysis.examType,
+      medicationIds: [],
+      attachments: attachment,
+    }]);
+
+    setAiRecordFeedback('AI výsledok bol uložený ako zdravotný záznam v timeline.');
+    setAiRecordDraft({
+      date: today(),
+      clinicName: '',
+      diagnosis: '',
+      recommendations: '',
+    });
+  };
+
+  const openVisitDetail = (visitId: string) => {
+    const visit = dogVisits.find((item) => item.id === visitId);
+    if (!visit) return;
+
+    setSelectedVisitId(visit.id);
+    setIsEditingVisit(false);
+    setVisitDraft({
+      date: visit.date,
+      clinicName: visit.clinicName,
+      vetName: visit.vetName ?? '',
+      reason: visit.reason,
+      findings: visit.findings ?? '',
+      diagnosis: visit.diagnosis ?? '',
+      recommendations: visit.recommendations ?? '',
+      nextCheckDate: visit.nextCheckDate ?? '',
+    });
+  };
+
+  const saveVisitDetail = () => {
+    if (!selectedVisitId || !visitDraft.clinicName.trim() || !visitDraft.reason.trim()) return;
+
+    setVisits((prev) => prev.map((visit) => {
+      if (visit.id !== selectedVisitId) return visit;
+      return {
+        ...visit,
+        date: visitDraft.date,
+        clinicName: visitDraft.clinicName.trim(),
+        vetName: visitDraft.vetName.trim() || undefined,
+        reason: visitDraft.reason.trim(),
+        findings: visitDraft.findings.trim() || undefined,
+        diagnosis: visitDraft.diagnosis.trim() || undefined,
+        recommendations: visitDraft.recommendations.trim() || undefined,
+        nextCheckDate: visitDraft.nextCheckDate || undefined,
+      };
+    }));
+    setIsEditingVisit(false);
+  };
+
+  const deleteSelectedVisit = () => {
+    if (!selectedVisitId) return;
+    setVisits((prev) => prev.filter((visit) => visit.id !== selectedVisitId));
+    setSelectedVisitId(null);
+    setIsEditingVisit(false);
+  };
 
   if (!dogProfiles.length) {
     return <Alert severity="info">Najprv si vytvorte profil psa v sekcii Profily.</Alert>;
@@ -548,6 +662,55 @@ export default function HealthPassportPage() {
                 <AiFormattedText text={fileResult.examAnalysis.analysis} />
               </Alert>
             )}
+            {fileResult?.examAnalysis && (
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                    Uložiť AI výsledok ako lekársky záznam
+                  </Typography>
+                  <Stack spacing={1.5}>
+                    <Typography variant="body2" color="text.secondary">
+                      Po kontrole AI výsledku môžete jedným klikom pridať záznam priamo do dashboard timeline.
+                    </Typography>
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+                      <TextField
+                        fullWidth
+                        label="Dátum záznamu"
+                        type="date"
+                        InputLabelProps={{ shrink: true }}
+                        value={aiRecordDraft.date}
+                        onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, date: e.target.value }))}
+                      />
+                      <TextField
+                        fullWidth
+                        required
+                        label="Klinika / veterinár"
+                        value={aiRecordDraft.clinicName}
+                        onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, clinicName: e.target.value }))}
+                      />
+                    </Stack>
+                    <TextField
+                      label="Diagnóza (voliteľné)"
+                      value={aiRecordDraft.diagnosis}
+                      onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, diagnosis: e.target.value }))}
+                    />
+                    <TextField
+                      label="Odporúčanie (voliteľné)"
+                      value={aiRecordDraft.recommendations}
+                      onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, recommendations: e.target.value }))}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={saveAiRecord}
+                      disabled={!canCreateAiRecord}
+                    >
+                      Pridať AI záznam do dashboardu
+                    </Button>
+                    {aiRecordFeedback && <Alert severity="success">{aiRecordFeedback}</Alert>}
+                  </Stack>
+                </CardContent>
+              </Card>
+            )}
             {fileResult?.healthPassportInterpretation && (
               <Card variant="outlined">
                 <CardContent>
@@ -641,6 +804,15 @@ export default function HealthPassportPage() {
                 <Typography variant="subtitle2">{event.title}</Typography>
                 <Typography variant="caption" color="text.secondary">{event.date} · {event.type}</Typography>
                 {event.subtitle && <Typography variant="body2">{event.subtitle}</Typography>}
+                {event.type === 'VET_VISIT' && (
+                  <Button
+                    size="small"
+                    sx={{ mt: 1 }}
+                    onClick={() => openVisitDetail(event.id.replace('visit-', ''))}
+                  >
+                    Detail záznamu
+                  </Button>
+                )}
               </Box>
             ))}
           </Stack>
@@ -703,6 +875,137 @@ export default function HealthPassportPage() {
           <Button onClick={() => setWizardOpen(false)}>Zrušiť</Button>
           {wizardStep > 0 && <Button onClick={() => setWizardStep((s) => s - 1)}>Späť</Button>}
           {wizardStep < 2 ? <Button variant="contained" onClick={() => setWizardStep((s) => s + 1)}>Pokračovať</Button> : <Button variant="contained" onClick={saveWizard}>Uložiť všetko</Button>}
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(selectedVisitId && selectedVisit)}
+        onClose={() => {
+          setSelectedVisitId(null);
+          setIsEditingVisit(false);
+        }}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Detail veterinárneho záznamu</DialogTitle>
+        <DialogContent>
+          {!selectedVisit ? null : (
+            <Stack spacing={1.5} sx={{ mt: 1 }}>
+              <TextField
+                label="Dátum"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={visitDraft.date}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, date: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Klinika"
+                value={visitDraft.clinicName}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, clinicName: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Veterinár (voliteľné)"
+                value={visitDraft.vetName}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, vetName: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Dôvod návštevy"
+                value={visitDraft.reason}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, reason: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Nález"
+                multiline
+                minRows={3}
+                value={visitDraft.findings}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, findings: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Diagnóza"
+                value={visitDraft.diagnosis}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, diagnosis: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Odporúčania"
+                multiline
+                minRows={2}
+                value={visitDraft.recommendations}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, recommendations: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Ďalšia kontrola"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={visitDraft.nextCheckDate}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, nextCheckDate: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              {selectedVisit.aiExamType && (
+                <Alert severity="info">Zdroj AI záznamu: {selectedVisit.aiExamType}</Alert>
+              )}
+              {selectedVisit.aiExtractedText && (
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      Originál extrahovaný text zo súboru
+                    </Typography>
+                    <TextField
+                      multiline
+                      fullWidth
+                      minRows={6}
+                      value={selectedVisit.aiExtractedText}
+                      InputProps={{ readOnly: true }}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+              {selectedVisit.attachments?.length ? (
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      Prílohy
+                    </Typography>
+                    <Stack spacing={0.5}>
+                      {selectedVisit.attachments.map((attachment) => (
+                        <Typography key={attachment.id} variant="body2">
+                          • {attachment.label} {attachment.fileName ? `(${attachment.fileName})` : ''}
+                        </Typography>
+                      ))}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ) : null}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            color="error"
+            onClick={deleteSelectedVisit}
+          >
+            Zmazať
+          </Button>
+          <Button
+            onClick={() => setSelectedVisitId(null)}
+          >
+            Zavrieť
+          </Button>
+          {!isEditingVisit ? (
+            <Button variant="outlined" onClick={() => setIsEditingVisit(true)}>
+              Editovať
+            </Button>
+          ) : (
+            <Button variant="contained" onClick={saveVisitDetail}>
+              Uložiť zmeny
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 
