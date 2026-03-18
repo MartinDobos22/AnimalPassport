@@ -25,6 +25,7 @@ import { UploadFile as UploadFileIcon } from '@mui/icons-material';
 import type { PetProfile } from '../types';
 import { useAnalyze } from '../hooks/useAnalyze';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import AiFormattedText from '../components/AiFormattedText';
 import type {
   DewormingRecord,
   DietEntry,
@@ -544,8 +545,7 @@ export default function HealthPassportPage() {
             {fileResult?.examAnalysis && (
               <Alert severity="info">
                 AI analýza vyšetrenia (<strong>{fileResult.examAnalysis.examType}</strong>)
-                <br />
-                {fileResult.examAnalysis.analysis}
+                <AiFormattedText text={fileResult.examAnalysis.analysis} />
               </Alert>
             )}
             {fileResult?.healthPassportInterpretation && (
