@@ -79,6 +79,8 @@ export interface VetVisitRecord {
   recommendations?: string;
   dietChange?: string;
   nextCheckDate?: string;
+  aiExtractedText?: string;
+  aiExamType?: string;
   medicationIds: string[];
   attachments?: AttachmentRef[];
 }

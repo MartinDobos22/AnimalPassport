@@ -743,6 +743,15 @@ export default function HealthPassportPage() {
                 <Typography variant="subtitle2">{event.title}</Typography>
                 <Typography variant="caption" color="text.secondary">{event.date} · {event.type}</Typography>
                 {event.subtitle && <Typography variant="body2">{event.subtitle}</Typography>}
+                {event.type === 'VET_VISIT' && (
+                  <Button
+                    size="small"
+                    sx={{ mt: 1 }}
+                    onClick={() => openVisitDetail(event.id.replace('visit-', ''))}
+                  >
+                    Detail záznamu
+                  </Button>
+                )}
               </Box>
             ))}
           </Stack>
@@ -805,6 +814,137 @@ export default function HealthPassportPage() {
           <Button onClick={() => setWizardOpen(false)}>Zrušiť</Button>
           {wizardStep > 0 && <Button onClick={() => setWizardStep((s) => s - 1)}>Späť</Button>}
           {wizardStep < 2 ? <Button variant="contained" onClick={() => setWizardStep((s) => s + 1)}>Pokračovať</Button> : <Button variant="contained" onClick={saveWizard}>Uložiť všetko</Button>}
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(selectedVisitId && selectedVisit)}
+        onClose={() => {
+          setSelectedVisitId(null);
+          setIsEditingVisit(false);
+        }}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Detail veterinárneho záznamu</DialogTitle>
+        <DialogContent>
+          {!selectedVisit ? null : (
+            <Stack spacing={1.5} sx={{ mt: 1 }}>
+              <TextField
+                label="Dátum"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={visitDraft.date}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, date: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Klinika"
+                value={visitDraft.clinicName}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, clinicName: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Veterinár (voliteľné)"
+                value={visitDraft.vetName}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, vetName: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Dôvod návštevy"
+                value={visitDraft.reason}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, reason: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Nález"
+                multiline
+                minRows={3}
+                value={visitDraft.findings}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, findings: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Diagnóza"
+                value={visitDraft.diagnosis}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, diagnosis: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Odporúčania"
+                multiline
+                minRows={2}
+                value={visitDraft.recommendations}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, recommendations: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              <TextField
+                label="Ďalšia kontrola"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={visitDraft.nextCheckDate}
+                onChange={(e) => setVisitDraft((prev) => ({ ...prev, nextCheckDate: e.target.value }))}
+                disabled={!isEditingVisit}
+              />
+              {selectedVisit.aiExamType && (
+                <Alert severity="info">Zdroj AI záznamu: {selectedVisit.aiExamType}</Alert>
+              )}
+              {selectedVisit.aiExtractedText && (
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      Originál extrahovaný text zo súboru
+                    </Typography>
+                    <TextField
+                      multiline
+                      fullWidth
+                      minRows={6}
+                      value={selectedVisit.aiExtractedText}
+                      InputProps={{ readOnly: true }}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+              {selectedVisit.attachments?.length ? (
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      Prílohy
+                    </Typography>
+                    <Stack spacing={0.5}>
+                      {selectedVisit.attachments.map((attachment) => (
+                        <Typography key={attachment.id} variant="body2">
+                          • {attachment.label} {attachment.fileName ? `(${attachment.fileName})` : ''}
+                        </Typography>
+                      ))}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ) : null}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            color="error"
+            onClick={deleteSelectedVisit}
+          >
+            Zmazať
+          </Button>
+          <Button
+            onClick={() => setSelectedVisitId(null)}
+          >
+            Zavrieť
+          </Button>
+          {!isEditingVisit ? (
+            <Button variant="outlined" onClick={() => setIsEditingVisit(true)}>
+              Editovať
+            </Button>
+          ) : (
+            <Button variant="contained" onClick={saveVisitDetail}>
+              Uložiť zmeny
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 
