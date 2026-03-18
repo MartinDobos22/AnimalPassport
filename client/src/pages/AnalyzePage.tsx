@@ -25,6 +25,7 @@ import ProsConsCard from '../components/ProsConsCard';
 import RecommendationChip from '../components/RecommendationChip';
 import AllergenWarningBanner from '../components/AllergenWarningBanner';
 import PersonalizedVerdictCard from '../components/PersonalizedVerdictCard';
+import AiFormattedText from '../components/AiFormattedText';
 import type { SavedAnalysis, PetProfile } from '../types';
 
 const SUPPORTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
@@ -297,8 +298,7 @@ export default function AnalyzePage() {
           {fileResult.examAnalysis && (
             <Alert severity="info" sx={{ borderRadius: 3 }}>
               <strong>AI analýza vyšetrenia ({fileResult.examAnalysis.examType}):</strong>
-              <br />
-              {fileResult.examAnalysis.analysis}
+              <AiFormattedText text={fileResult.examAnalysis.analysis} />
             </Alert>
           )}
           <Button variant="text" onClick={() => setComposition(fileResult.extractedText)}>
