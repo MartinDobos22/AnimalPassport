@@ -49,7 +49,14 @@ export function useAnalyze() {
     try {
       const data = await analyzeAttachment(attachment, examAlias);
       setFileResult(data);
-      logger.info('Hook useAnalyze prijal výsledok súborovej analýzy', { source: data.source });
+      logger.info('Hook useAnalyze prijal výsledok súborovej analýzy z backendu', {
+        source: data.source,
+        contextDocumentType: data.contextAnalysis?.documentType ?? null,
+        examAlias: data.examAnalysis?.examAlias ?? examAlias ?? null,
+        examType: data.examAnalysis?.examType ?? null,
+        hasFeedAnalysis: Boolean(data.feedAnalysis),
+        hasHealthPassportInterpretation: Boolean(data.healthPassportInterpretation),
+      });
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Neočakávaná chyba pri analýze súboru';

@@ -19,6 +19,7 @@ import { Science as ScienceIcon, Save as SaveIcon, UploadFile as UploadFileIcon 
 import { useNavigate } from 'react-router-dom';
 import { useAnalyze } from '../hooks/useAnalyze';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { logger } from '../utils/logger';
 import ScoreCard from '../components/ScoreCard';
 import ProsConsCard from '../components/ProsConsCard';
 import RecommendationChip from '../components/RecommendationChip';
@@ -204,7 +205,13 @@ export default function AnalyzePage() {
             value={selectedExamAlias}
             label="Typ vyšetrenia"
             onChange={(e) => {
-              setSelectedExamAlias(e.target.value);
+              const nextAlias = e.target.value;
+              const selectedOption = EXAM_TYPE_OPTIONS.find((option) => option.value === nextAlias);
+              logger.info('Používateľ vybral typ dokumentu na FE', {
+                examAlias: nextAlias || null,
+                examLabel: selectedOption?.label ?? null,
+              });
+              setSelectedExamAlias(nextAlias);
               setAttachmentName('');
               setAttachmentError('');
               setPendingAttachment(null);
