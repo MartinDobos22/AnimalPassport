@@ -221,18 +221,6 @@ export default function HealthPassportPage() {
     recommendations: '',
   });
   const [aiRecordFeedback, setAiRecordFeedback] = useState<string | null>(null);
-  const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
-  const [isEditingVisit, setIsEditingVisit] = useState(false);
-  const [visitDraft, setVisitDraft] = useState({
-    date: '',
-    clinicName: '',
-    vetName: '',
-    reason: '',
-    findings: '',
-    diagnosis: '',
-    recommendations: '',
-    nextCheckDate: '',
-  });
   const { analyzeFile, fileResult, loadingFile, error: fileAnalyzeError } = useAnalyze();
 
   const handleAttachmentFileChange = (file: File | null) => {
@@ -458,13 +446,11 @@ export default function HealthPassportPage() {
   const [timelineFilter, setTimelineFilter] = useState<'ALL' | TimelineEvent['type']>('ALL');
   const visibleTimeline = timelineFilter === 'ALL' ? timeline : timeline.filter((x) => x.type === timelineFilter);
   const canCreateAiRecord = Boolean(selectedDogId && aiRecordDraft.clinicName.trim() && (selectedVisitSubcategory || fileResult?.examAnalysis?.examType));
-  const selectedVisit = selectedVisitId ? dogVisits.find((visit) => visit.id === selectedVisitId) : undefined;
 
   const saveAiRecord = () => {
     if (!canCreateAiRecord || !fileResult?.examAnalysis) return;
-    const examAnalysis = fileResult.examAnalysis;
 
-    const reasonSource = selectedVisitSubcategory || examAnalysis.examType;
+    const reasonSource = selectedVisitSubcategory || fileResult.examAnalysis.examType;
     const reason = [selectedVisitMainCategory, reasonSource].filter(Boolean).join(' · ');
     const attachmentUrl = attachmentPreviewUrl || wizard.attachmentUrl;
     const attachment = wizard.attachmentLabel || attachmentUrl || attachmentFile
@@ -493,8 +479,6 @@ export default function HealthPassportPage() {
       findings: aiSummary,
       diagnosis: aiRecordDraft.diagnosis.trim() || undefined,
       recommendations: aiRecordDraft.recommendations.trim() || undefined,
-      aiExtractedText: fileResult.extractedText || undefined,
-      aiExamType: examAnalysis.examType,
       medicationIds: [],
       attachments: attachment,
     }]);
@@ -506,51 +490,6 @@ export default function HealthPassportPage() {
       diagnosis: '',
       recommendations: '',
     });
-  };
-
-  const openVisitDetail = (visitId: string) => {
-    const visit = dogVisits.find((item) => item.id === visitId);
-    if (!visit) return;
-
-    setSelectedVisitId(visit.id);
-    setIsEditingVisit(false);
-    setVisitDraft({
-      date: visit.date,
-      clinicName: visit.clinicName,
-      vetName: visit.vetName ?? '',
-      reason: visit.reason,
-      findings: visit.findings ?? '',
-      diagnosis: visit.diagnosis ?? '',
-      recommendations: visit.recommendations ?? '',
-      nextCheckDate: visit.nextCheckDate ?? '',
-    });
-  };
-
-  const saveVisitDetail = () => {
-    if (!selectedVisitId || !visitDraft.clinicName.trim() || !visitDraft.reason.trim()) return;
-
-    setVisits((prev) => prev.map((visit) => {
-      if (visit.id !== selectedVisitId) return visit;
-      return {
-        ...visit,
-        date: visitDraft.date,
-        clinicName: visitDraft.clinicName.trim(),
-        vetName: visitDraft.vetName.trim() || undefined,
-        reason: visitDraft.reason.trim(),
-        findings: visitDraft.findings.trim() || undefined,
-        diagnosis: visitDraft.diagnosis.trim() || undefined,
-        recommendations: visitDraft.recommendations.trim() || undefined,
-        nextCheckDate: visitDraft.nextCheckDate || undefined,
-      };
-    }));
-    setIsEditingVisit(false);
-  };
-
-  const deleteSelectedVisit = () => {
-    if (!selectedVisitId) return;
-    setVisits((prev) => prev.filter((visit) => visit.id !== selectedVisitId));
-    setSelectedVisitId(null);
-    setIsEditingVisit(false);
   };
 
   if (!dogProfiles.length) {
