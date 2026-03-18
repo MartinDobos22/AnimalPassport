@@ -371,6 +371,40 @@ async function analyzeExamDocumentWithOpenAI(text: string, examAlias: ExamAlias)
   return response.choices[0]?.message?.content?.trim() ?? 'Nepodarilo sa vytvoriť analýzu dokumentu.';
 }
 
+export async function analyzeVetFile(
+  alias: ExamAlias,
+  imageUrls: string[],
+  extraNote?: string,
+): Promise<string | null> {
+  const client = getOpenAIClient();
+  if (!client) {
+    throw new Error('OpenAI API kľúč nie je dostupný.');
+  }
+
+  const systemPrompt = EXAM_ALIAS_PROMPTS[alias];
+  const imageContents = imageUrls.map((url) => ({
+    type: 'image_url' as const,
+    image_url: { url },
+  }));
+
+  const userText =
+    extraNote ??
+    'Tu sú fotky stránok z veterinárneho pasu môjho zvieraťa. Prosím prečítaj ich a zhrň záznamy.';
+
+  const completion = await client.chat.completions.create({
+    model: 'gpt-4.1-mini',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      {
+        role: 'user',
+        content: [{ type: 'text', text: userText }, ...imageContents],
+      },
+    ],
+  });
+
+  return completion.choices[0]?.message?.content ?? null;
+}
+
 
 function looksLikeHealthPassport(text: string): boolean {
   const lowered = text.toLowerCase();

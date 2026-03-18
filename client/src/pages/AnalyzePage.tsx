@@ -56,6 +56,7 @@ const EXAM_TYPE_OPTIONS = [
   { value: 'serologicke_panely', label: 'Serologické panely' },
   { value: 'dedicne_ochorenia', label: 'Genetika - dedičné ochorenia' },
   { value: 'plemenne_testy', label: 'Genetika - plemenné testy' },
+  { value: 'veterinarny_pas', label: 'Záznam z veterinárneho pasu' },
 ] as const;
 
 export default function AnalyzePage() {
