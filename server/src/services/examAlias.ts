@@ -39,7 +39,8 @@ export type ExamAlias =
     | 'serologicke_panely'
     | 'geneticke_testy'
     | 'dedicne_ochorenia'
-    | 'plemenne_testy';
+    | 'plemenne_testy'
+    | 'veterinarny_pas';
 
 export const EXAM_ALIAS_TO_TYPE: Record<ExamAlias, ExamType> = {
     laboratorne_vysetrenia: 'blood_tests',
@@ -86,6 +87,7 @@ export const EXAM_ALIAS_TO_TYPE: Record<ExamAlias, ExamType> = {
     geneticke_testy: 'genetics',
     dedicne_ochorenia: 'genetics',
     plemenne_testy: 'genetics',
+    veterinarny_pas: 'vet_pass',
 };
 
 export const EXAM_ALIASES = Object.keys(EXAM_ALIAS_TO_TYPE) as ExamAlias[];

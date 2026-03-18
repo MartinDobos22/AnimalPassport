@@ -94,6 +94,10 @@ const VISIT_CATEGORY_OPTIONS = [
     main: 'Genetické testy',
     sub: ['Dedičné ochorenia', 'Plemenné testy'],
   },
+  {
+    main: 'Veterinárny pas',
+    sub: ['Záznam z veterinárneho pasu'],
+  },
 ] as const;
 const EXAM_SUBCATEGORY_TO_ALIAS: Record<string, string> = {
   'Krvné testy': 'krvne_testy',
@@ -125,6 +129,7 @@ const EXAM_SUBCATEGORY_TO_ALIAS: Record<string, string> = {
   'Sérologické panely': 'serologicke_panely',
   'Dedičné ochorenia': 'dedicne_ochorenia',
   'Plemenné testy': 'plemenne_testy',
+  'Záznam z veterinárneho pasu': 'veterinarny_pas',
 };
 const TIMELINE_FILTER_OPTIONS: Array<{ value: 'ALL' | TimelineEvent['type']; label: string }> = [
   { value: 'ALL', label: 'Všetko' },

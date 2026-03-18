@@ -13,4 +13,5 @@ export type ExamType =
     | 'ophthalmology'
     | 'neurology'
     | 'infectious_diseases'
-    | 'genetics';
+    | 'genetics'
+    | 'vet_pass';
