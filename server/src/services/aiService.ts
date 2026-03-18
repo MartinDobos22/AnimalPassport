@@ -3,6 +3,7 @@ import { AnalysisResult, FileExtractionResult, Ingredient, PetProfile } from '..
 import type { ExamAlias } from './examAlias';
 import { EXAM_ALIAS_TO_TYPE } from './examAlias';
 import { EXAM_ALIAS_PROMPTS } from './examAliasPrompts';
+import { logger } from '../utils/logger';
 
 interface AttachmentInput {
   fileName: string;
@@ -314,7 +315,7 @@ Formát:
     if (!content) return null;
     const parsed = JSON.parse(content) as Record<string, unknown>;
 
-    return {
+    const analysis: DocumentContextAnalysis = {
       documentType: typeof parsed.documentType === 'string' ? parsed.documentType : 'ine',
       confidence:
         parsed.confidence === 'high' || parsed.confidence === 'medium' || parsed.confidence === 'low'
@@ -326,6 +327,14 @@ Formát:
         ? parsed.recommendedActions.filter((x): x is string => typeof x === 'string')
         : [],
     };
+
+    logger.info('OpenAI určilo kontext dokumentu', {
+      documentType: analysis.documentType,
+      confidence: analysis.confidence,
+      summaryPreview: analysis.summary.slice(0, 160),
+    });
+
+    return analysis;
   } catch (error) {
     console.error('[AI Service] Document context analysis failed:', error);
     return null;
@@ -343,6 +352,12 @@ async function analyzeExamDocumentWithOpenAI(text: string, examAlias: ExamAlias)
   }
 
   const examPrompt = EXAM_ALIAS_PROMPTS[examAlias];
+  logger.info('Vyberám prompt pre analýzu vyšetrenia', {
+    examAlias,
+    examType: EXAM_ALIAS_TO_TYPE[examAlias],
+    promptLength: examPrompt.length,
+    promptPreview: examPrompt.slice(0, 160),
+  });
 
   const response = await client.chat.completions.create({
     model: 'gpt-4o',
@@ -477,6 +492,15 @@ export async function extractTextFromAttachment(
         }
       : undefined;
 
+    logger.info('Backend spracoval PDF prílohu', {
+      source: normalizedPdfText !== pdfText.trim() ? 'openai' : 'pdf-parser',
+      contextDocumentType: contextAnalysis?.documentType ?? null,
+      examAlias: examAnalysis?.examAlias ?? null,
+      examType: examAnalysis?.examType ?? null,
+      hasFeedAnalysis: shouldRunFeedAnalysis,
+      hasHealthPassportInterpretation: Boolean(healthPassportInterpretation),
+    });
+
     return {
       extractedText: normalizedPdfText,
       source: normalizedPdfText !== pdfText.trim() ? 'openai' : 'pdf-parser',
@@ -511,7 +535,16 @@ export async function extractTextFromAttachment(
         examType: EXAM_ALIAS_TO_TYPE[examAlias],
         analysis: await analyzeExamDocumentWithOpenAI(normalizedText, examAlias),
       }
-    : undefined;
+      : undefined;
+
+  logger.info('Backend spracoval obrázkovú prílohu', {
+    source: textFromVision && textFromOpenAIImage ? 'google-vision+openai' : textFromVision ? 'google-vision' : 'openai',
+    contextDocumentType: contextAnalysis?.documentType ?? null,
+    examAlias: examAnalysis?.examAlias ?? null,
+    examType: examAnalysis?.examType ?? null,
+    hasFeedAnalysis: shouldRunFeedAnalysis,
+    hasHealthPassportInterpretation: Boolean(healthPassportInterpretation),
+  });
 
   return {
     extractedText: normalizedText,
