@@ -221,6 +221,18 @@ export default function HealthPassportPage() {
     recommendations: '',
   });
   const [aiRecordFeedback, setAiRecordFeedback] = useState<string | null>(null);
+  const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
+  const [isEditingVisit, setIsEditingVisit] = useState(false);
+  const [visitDraft, setVisitDraft] = useState({
+    date: '',
+    clinicName: '',
+    vetName: '',
+    reason: '',
+    findings: '',
+    diagnosis: '',
+    recommendations: '',
+    nextCheckDate: '',
+  });
   const { analyzeFile, fileResult, loadingFile, error: fileAnalyzeError } = useAnalyze();
 
   const handleAttachmentFileChange = (file: File | null) => {
@@ -446,6 +458,51 @@ export default function HealthPassportPage() {
   const [timelineFilter, setTimelineFilter] = useState<'ALL' | TimelineEvent['type']>('ALL');
   const visibleTimeline = timelineFilter === 'ALL' ? timeline : timeline.filter((x) => x.type === timelineFilter);
   const canCreateAiRecord = Boolean(selectedDogId && aiRecordDraft.clinicName.trim() && (selectedVisitSubcategory || fileResult?.examAnalysis?.examType));
+  const selectedVisit = selectedVisitId ? dogVisits.find((visit) => visit.id === selectedVisitId) ?? null : null;
+
+  const openVisitDetail = (visitId: string) => {
+    const visit = dogVisits.find((item) => item.id === visitId);
+    if (!visit) return;
+    setSelectedVisitId(visitId);
+    setIsEditingVisit(false);
+    setVisitDraft({
+      date: visit.date,
+      clinicName: visit.clinicName,
+      vetName: visit.vetName ?? '',
+      reason: visit.reason,
+      findings: visit.findings ?? '',
+      diagnosis: visit.diagnosis ?? '',
+      recommendations: visit.recommendations ?? '',
+      nextCheckDate: visit.nextCheckDate ?? '',
+    });
+  };
+
+  const saveVisitDetail = () => {
+    if (!selectedVisitId) return;
+    setVisits((prev) => prev.map((visit) => (
+      visit.id !== selectedVisitId
+        ? visit
+        : {
+            ...visit,
+            date: visitDraft.date,
+            clinicName: visitDraft.clinicName,
+            vetName: visitDraft.vetName.trim() || undefined,
+            reason: visitDraft.reason,
+            findings: visitDraft.findings.trim() || undefined,
+            diagnosis: visitDraft.diagnosis.trim() || undefined,
+            recommendations: visitDraft.recommendations.trim() || undefined,
+            nextCheckDate: visitDraft.nextCheckDate || undefined,
+          }
+    )));
+    setIsEditingVisit(false);
+  };
+
+  const deleteSelectedVisit = () => {
+    if (!selectedVisitId) return;
+    setVisits((prev) => prev.filter((visit) => visit.id !== selectedVisitId));
+    setSelectedVisitId(null);
+    setIsEditingVisit(false);
+  };
 
   const saveAiRecord = () => {
     if (!canCreateAiRecord || !fileResult?.examAnalysis) return;
