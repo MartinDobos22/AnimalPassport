@@ -181,6 +181,12 @@ interface AiDetectedDraftRecord {
 const KNOWN_DEWORMING_KEYWORDS = ['drontal', 'milbemax', 'milprazon', 'caniverm', 'deworm', 'odcerv'];
 const KNOWN_ECTOPARASITE_KEYWORDS = ['simparica', 'bravecto', 'advantix', 'nexgard', 'ecto', 'parazit', 'klie', 'blch'];
 const KNOWN_RABIES_KEYWORDS = ['rabies', 'besnot', 'nobivac rabies'];
+const escapeHtml = (value: string) => value
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
 
 const normalizeDateInput = (value: string) => {
   if (!value) return today();
@@ -622,6 +628,65 @@ export default function HealthPassportPage() {
       return acc;
     }, {});
   }, [visibleTimeline]);
+  const timelineStatusSummary = [
+    `Očkovanie: ${lastVaccinationStatus}`,
+    `Odčervenie: ${lastDewormingStatus}`,
+    `Kliešte/blchy: ${lastEctoStatus}`,
+  ].join(' | ');
+  const handleTimelinePdfExport = () => {
+    if (!dog) return;
+    const printableTimeline = visibleTimeline.length ? visibleTimeline : timeline;
+    if (!printableTimeline.length) return;
+
+    const rows = printableTimeline
+      .map((event) => {
+        const label = TIMELINE_TYPE_META[event.type].label;
+        const subtitle = event.subtitle ? ` (${event.subtitle})` : '';
+        return `<tr><td>${escapeHtml(event.date)}</td><td>${escapeHtml(label)}</td><td>${escapeHtml(event.title + subtitle)}</td></tr>`;
+      })
+      .join('');
+    const reportTitle = `Zdravotná timeline - ${dog.name}`;
+    const html = `<!doctype html>
+<html lang="sk">
+  <head>
+    <meta charset="utf-8" />
+    <title>${escapeHtml(reportTitle)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; color: #1f2937; padding: 24px; }
+      h1 { margin: 0 0 10px; font-size: 24px; }
+      p { margin: 4px 0; }
+      .meta { margin-bottom: 16px; }
+      .muted { color: #6b7280; font-size: 13px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+      th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; vertical-align: top; }
+      th { background: #f3f4f6; }
+    </style>
+  </head>
+  <body>
+    <h1>${escapeHtml(reportTitle)}</h1>
+    <div class="meta">
+      <p><strong>Meno psa:</strong> ${escapeHtml(dog.name)}</p>
+      <p><strong>Plemeno:</strong> ${escapeHtml(dog.breed || '–')} | <strong>Váha:</strong> ${escapeHtml(dog.weightKg ? `${dog.weightKg} kg` : '–')}</p>
+      <p><strong>Súhrn stavu:</strong> ${escapeHtml(timelineStatusSummary)}</p>
+      <p class="muted">Vygenerované: ${escapeHtml(new Date().toLocaleString('sk-SK'))} | Počet záznamov: ${printableTimeline.length}</p>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Dátum</th><th>Typ</th><th>Detail</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </body>
+</html>`;
+
+    const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1100,height=800');
+    if (!printWindow) return;
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
   const hasSelectedAiDetectedRecords = aiDetectedRecords.some((item) => item.targetType !== 'SKIP');
   const canCreateAiRecord = Boolean(
     selectedDogId
@@ -1302,13 +1367,22 @@ export default function HealthPassportPage() {
                 Rýchly prehľad po dňoch, s filtrovaním a vyhľadávaním.
               </Typography>
             </Box>
-            <TextField
-              size="small"
-              label="Hľadať v záznamoch"
-              value={timelineSearch}
-              onChange={(e) => setTimelineSearch(e.target.value)}
-              sx={{ minWidth: { xs: '100%', md: 280 } }}
-            />
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ width: { xs: '100%', md: 'auto' } }}>
+              <TextField
+                size="small"
+                label="Hľadať v záznamoch"
+                value={timelineSearch}
+                onChange={(e) => setTimelineSearch(e.target.value)}
+                sx={{ minWidth: { xs: '100%', md: 280 } }}
+              />
+              <Button
+                variant="outlined"
+                onClick={handleTimelinePdfExport}
+                disabled={!timeline.length}
+              >
+                Export timeline PDF
+              </Button>
+            </Stack>
           </Stack>
           <Tabs value={timelineFilter} onChange={(_e, val) => setTimelineFilter(val)} variant="scrollable" scrollButtons="auto" sx={{ mb: 1.5 }}>
             {TIMELINE_FILTER_OPTIONS.map((option) => <Tab key={option.value} value={option.value} label={option.label} />)}
