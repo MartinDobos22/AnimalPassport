@@ -38,6 +38,7 @@ import type { PetProfile } from '../types';
 import { useAnalyze } from '../hooks/useAnalyze';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import AiFormattedText from '../components/AiFormattedText';
+import { VetVisitHelper } from '../utils/vetVisitHelper';
 import type {
   DewormingRecord,
   DietEntry,
@@ -491,131 +492,30 @@ export default function HealthPassportPage() {
 
   const saveWizard = () => {
     if (!selectedDogId || !wizard.clinicName.trim() || !selectedVisitMainCategory || !selectedVisitSubcategory) return;
-    const visitReason = [selectedVisitMainCategory, selectedVisitSubcategory, wizard.reason.trim()].filter(Boolean).join(' · ');
-    const visitId = uid();
-    const attachmentUrl = attachmentPreviewUrl || wizard.attachmentUrl;
-    const attachment = wizard.attachmentLabel || attachmentUrl || attachmentFile
-      ? [{
-          id: uid(),
-          label: wizard.attachmentLabel || attachmentFile?.name || 'Doklad',
-          imageUrl: attachmentUrl || undefined,
-          fileName: attachmentFile?.name || undefined,
-          createdAt: new Date().toISOString(),
-        }]
-      : undefined;
-
-    const createdMedicationIds: string[] = [];
-
-    setVisits((prev) => [...prev, {
-      id: visitId,
+    const visitBundle = VetVisitHelper.createWizardVisitBundle({
       dogId: selectedDogId,
-      date: wizard.date,
-      clinicName: wizard.clinicName,
-      reason: visitReason,
-      findings: wizard.findings,
-      diagnosis: wizard.diagnosis,
-      recommendations: wizard.recommendations,
-      nextCheckDate: wizard.nextCheckDate || undefined,
-      medicationIds: createdMedicationIds,
-      attachments: attachment,
-    }]);
+      draft: wizard,
+      mainCategory: selectedVisitMainCategory,
+      subcategory: selectedVisitSubcategory,
+      attachmentDraft: {
+        attachmentLabel: wizard.attachmentLabel,
+        attachmentUrl: wizard.attachmentUrl,
+        attachmentPreviewUrl,
+        attachmentFileName: attachmentFile?.name,
+      },
+      currentDietEntryId: dogDiet[0]?.id,
+      plusDays,
+      uid,
+    });
 
-    if (wizard.addVaccination && wizard.vaccineName.trim()) {
-      setVaccinations((prev) => [...prev, {
-        id: uid(),
-        dogId: selectedDogId,
-        type: wizard.vaccineType,
-        name: wizard.vaccineName,
-        dateApplied: wizard.date,
-        validUntil: wizard.vaccineValidUntil,
-        attachments: attachment,
-      }]);
-    }
-    if (wizard.addDeworming && wizard.dewormProduct.trim()) {
-      setDewormings((prev) => [...prev, {
-        id: uid(),
-        dogId: selectedDogId,
-        productName: wizard.dewormProduct,
-        dateGiven: wizard.date,
-        intervalDays: wizard.dewormInterval,
-        nextDueDate: plusDays(wizard.date, wizard.dewormInterval),
-        attachments: attachment,
-      }]);
-    }
-    if (wizard.addEcto && wizard.ectoProduct.trim()) {
-      setEctos((prev) => [...prev, {
-        id: uid(),
-        dogId: selectedDogId,
-        productName: wizard.ectoProduct,
-        form: wizard.ectoForm,
-        dateGiven: wizard.date,
-        intervalDays: wizard.ectoInterval,
-        nextDueDate: plusDays(wizard.date, wizard.ectoInterval),
-        attachments: attachment,
-      }]);
-    }
-    if (wizard.addMedication && wizard.medName.trim()) {
-      const medId = uid();
-      createdMedicationIds.push(medId);
-      setMedications((prev) => [...prev, {
-        id: medId,
-        dogId: selectedDogId,
-        name: wizard.medName,
-        reason: wizard.medReason,
-        dose: wizard.medDose,
-        frequency: wizard.medFrequency,
-        startDate: wizard.date,
-        endDate: wizard.medEndDate || undefined,
-        fromVetVisitId: visitId,
-      }]);
-      setDoseLogs((prev) => [...prev, { id: uid(), dogId: selectedDogId, medicationId: medId, date: wizard.date, taken: false }]);
-    }
-    if (wizard.addDiet && wizard.foodName.trim()) {
-      setDietEntries((prev) => [...prev, {
-        id: uid(),
-        dogId: selectedDogId,
-        foodName: wizard.foodName,
-        startedAt: wizard.date,
-        reactionNotes: wizard.reactionNotes,
-        suitabilityStatus: wizard.suitabilityStatus,
-        suitabilityReasons: wizard.suitabilityStatus === 'SUITABLE' ? ['Bez konfliktu s alergiami a diagnózami'] : ['Skontrolovať zloženie voči alergénom'],
-      }]);
-    }
-
-    if (wizard.totalExpense) {
-      setExpenses((prev) => [...prev, {
-        id: uid(),
-        dogId: selectedDogId,
-        date: wizard.date,
-        amount: Number(wizard.totalExpense),
-        currency: 'EUR',
-        category: 'VET_VISIT',
-        relatedVetVisitId: visitId,
-      }]);
-    }
-    if (wizard.extraMedicationExpense) {
-      setExpenses((prev) => [...prev, {
-        id: uid(),
-        dogId: selectedDogId,
-        date: wizard.date,
-        amount: Number(wizard.extraMedicationExpense),
-        currency: 'EUR',
-        category: 'MEDICATION',
-        relatedVetVisitId: visitId,
-      }]);
-    }
-    if (wizard.extraFoodExpense) {
-      setExpenses((prev) => [...prev, {
-        id: uid(),
-        dogId: selectedDogId,
-        date: wizard.date,
-        amount: Number(wizard.extraFoodExpense),
-        currency: 'EUR',
-        category: 'FOOD',
-        relatedVetVisitId: visitId,
-        relatedDietEntryId: dogDiet[0]?.id,
-      }]);
-    }
+    setVisits((prev) => [...prev, visitBundle.visit]);
+    if (visitBundle.vaccinations.length) setVaccinations((prev) => [...prev, ...visitBundle.vaccinations]);
+    if (visitBundle.dewormings.length) setDewormings((prev) => [...prev, ...visitBundle.dewormings]);
+    if (visitBundle.ectos.length) setEctos((prev) => [...prev, ...visitBundle.ectos]);
+    if (visitBundle.medications.length) setMedications((prev) => [...prev, ...visitBundle.medications]);
+    if (visitBundle.doseLogs.length) setDoseLogs((prev) => [...prev, ...visitBundle.doseLogs]);
+    if (visitBundle.dietEntries.length) setDietEntries((prev) => [...prev, ...visitBundle.dietEntries]);
+    if (visitBundle.expenses.length) setExpenses((prev) => [...prev, ...visitBundle.expenses]);
 
     setWizardOpen(false);
     setWizardStep(0);
@@ -914,19 +814,6 @@ export default function HealthPassportPage() {
   const saveAiRecord = () => {
     if (!canCreateAiRecord || !selectedDogId) return;
 
-    const reasonSource = selectedVisitSubcategory || fileResult?.examAnalysis?.examType || 'AI import zdravotného pasu';
-    const reason = [selectedVisitMainCategory, reasonSource].filter(Boolean).join(' · ');
-    const attachmentUrl = attachmentPreviewUrl || wizard.attachmentUrl;
-    const attachment = wizard.attachmentLabel || attachmentUrl || attachmentFile
-      ? [{
-          id: uid(),
-          label: wizard.attachmentLabel || attachmentFile?.name || 'AI analyzovaný dokument',
-          imageUrl: attachmentUrl || undefined,
-          fileName: attachmentFile?.name || undefined,
-          createdAt: new Date().toISOString(),
-        }]
-      : undefined;
-
     const aiSummary = [
       fileResult?.contextAnalysis?.summary ? `Kontext: ${fileResult.contextAnalysis.summary}` : '',
       fileResult?.examAnalysis?.analysis ? `AI analýza: ${fileResult.examAnalysis.analysis}` : '',
@@ -934,85 +821,30 @@ export default function HealthPassportPage() {
       .filter(Boolean)
       .join('\n\n');
 
-    const visitId = uid();
     const selectedRecords = aiDetectedRecords.filter((item) => item.targetType !== 'SKIP');
-    const createdMedicationIds = selectedRecords
-      .filter((item) => item.targetType === 'MEDICATION')
-      .map(() => uid());
-    let medicationIndex = 0;
-
-    setVisits((prev) => [...prev, {
-      id: visitId,
+    const visitBundle = VetVisitHelper.createAiVisitBundle({
       dogId: selectedDogId,
-      date: aiRecordDraft.date,
-      clinicName: aiRecordDraft.clinicName.trim(),
-      reason: reason || 'AI analýza dokumentu',
-      findings: [aiSummary, selectedRecords.length ? `AI import záznamov: ${selectedRecords.length}` : '']
-        .filter(Boolean)
-        .join('\n\n'),
-      diagnosis: aiRecordDraft.diagnosis.trim() || undefined,
-      recommendations: aiRecordDraft.recommendations.trim() || undefined,
-      medicationIds: createdMedicationIds,
-      attachments: attachment,
-    }]);
-
-    selectedRecords.forEach((record) => {
-      if (record.targetType === 'VACCINATION') {
-        const vaccineType: VaccinationRecord['type'] = KNOWN_RABIES_KEYWORDS.some((keyword) => (
-          `${record.productName} ${record.sourceDisease ?? ''}`.toLowerCase().includes(keyword)
-        ))
-          ? 'RABIES'
-          : 'OTHER';
-        setVaccinations((prev) => [...prev, {
-          id: uid(),
-          dogId: selectedDogId,
-          type: vaccineType,
-          name: record.productName,
-          dateApplied: record.date,
-          validUntil: record.validUntil || plusDays(record.date, 365),
-          batchNumber: record.batchNumber || undefined,
-          attachments: attachment,
-        }]);
-      }
-      if (record.targetType === 'DEWORMING') {
-        setDewormings((prev) => [...prev, {
-          id: uid(),
-          dogId: selectedDogId,
-          productName: record.productName,
-          dateGiven: record.date,
-          intervalDays: record.intervalDays,
-          nextDueDate: plusDays(record.date, record.intervalDays),
-          attachments: attachment,
-        }]);
-      }
-      if (record.targetType === 'ECTOPARASITE') {
-        setEctos((prev) => [...prev, {
-          id: uid(),
-          dogId: selectedDogId,
-          productName: record.productName,
-          form: 'TABLET',
-          dateGiven: record.date,
-          intervalDays: record.intervalDays,
-          nextDueDate: plusDays(record.date, record.intervalDays),
-          attachments: attachment,
-        }]);
-      }
-      if (record.targetType === 'MEDICATION') {
-        const medicationId = createdMedicationIds[medicationIndex];
-        medicationIndex += 1;
-        if (!medicationId) return;
-        setMedications((prev) => [...prev, {
-          id: medicationId,
-          dogId: selectedDogId,
-          name: record.productName,
-          reason: record.sourceDisease || 'AI import zo zdravotného pasu',
-          dose: 'Neuvedené',
-          frequency: 'Podľa odporúčania veterinára',
-          startDate: record.date,
-          fromVetVisitId: visitId,
-        }]);
-      }
+      draft: aiRecordDraft,
+      selectedVisitMainCategory,
+      selectedVisitSubcategory,
+      examType: fileResult?.examAnalysis?.examType,
+      aiSummary,
+      selectedRecords,
+      attachmentDraft: {
+        attachmentLabel: wizard.attachmentLabel,
+        attachmentUrl: wizard.attachmentUrl,
+        attachmentPreviewUrl,
+        attachmentFileName: attachmentFile?.name,
+      },
+      plusDays,
+      uid,
     });
+
+    setVisits((prev) => [...prev, visitBundle.visit]);
+    if (visitBundle.vaccinations.length) setVaccinations((prev) => [...prev, ...visitBundle.vaccinations]);
+    if (visitBundle.dewormings.length) setDewormings((prev) => [...prev, ...visitBundle.dewormings]);
+    if (visitBundle.ectos.length) setEctos((prev) => [...prev, ...visitBundle.ectos]);
+    if (visitBundle.medications.length) setMedications((prev) => [...prev, ...visitBundle.medications]);
 
     setAiRecordFeedback('AI výsledok bol uložený ako zdravotný záznam v timeline.');
     setAiRecordDraft({
