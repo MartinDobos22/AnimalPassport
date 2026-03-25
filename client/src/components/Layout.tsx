@@ -53,7 +53,9 @@ export default function Layout({ children, darkMode, onToggleTheme }: LayoutProp
   const navigate = useNavigate();
   const location = useLocation();
 
-  const currentNavIndex = NAV_ITEMS.findIndex((item) => item.path === location.pathname);
+  const currentNavIndex = NAV_ITEMS.findIndex((item) => item.path === '/zdravotny-pas'
+    ? location.pathname.startsWith('/zdravotny-pas')
+    : item.path === location.pathname);
 
   const handleNav = (path: string) => {
     navigate(path);
@@ -78,7 +80,7 @@ export default function Layout({ children, darkMode, onToggleTheme }: LayoutProp
         {NAV_ITEMS.map((item) => (
           <ListItemButton
             key={item.path}
-            selected={location.pathname === item.path}
+            selected={item.path === '/zdravotny-pas' ? location.pathname.startsWith('/zdravotny-pas') : location.pathname === item.path}
             onClick={() => handleNav(item.path)}
             sx={{
               borderRadius: 2,
@@ -91,13 +93,13 @@ export default function Layout({ children, darkMode, onToggleTheme }: LayoutProp
               },
             }}
           >
-            <ListItemIcon sx={{ minWidth: 40, color: location.pathname === item.path ? 'primary.main' : undefined }}>
+            <ListItemIcon sx={{ minWidth: 40, color: (item.path === '/zdravotny-pas' ? location.pathname.startsWith('/zdravotny-pas') : location.pathname === item.path) ? 'primary.main' : undefined }}>
               {item.icon}
             </ListItemIcon>
             <ListItemText
               primary={item.label}
               primaryTypographyProps={{
-                fontWeight: location.pathname === item.path ? 600 : 400,
+                fontWeight: (item.path === '/zdravotny-pas' ? location.pathname.startsWith('/zdravotny-pas') : location.pathname === item.path) ? 600 : 400,
               }}
             />
           </ListItemButton>

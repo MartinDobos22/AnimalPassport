@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -221,6 +222,10 @@ function statusByDate(targetDate: string, soonDays: number): ValidityStatus {
 }
 
 export default function HealthPassportPage() {
+  const location = useLocation();
+  const entrySectionRef = useRef<HTMLDivElement | null>(null);
+  const overviewSectionRef = useRef<HTMLDivElement | null>(null);
+  const timelineSectionRef = useRef<HTMLDivElement | null>(null);
   const [profiles] = useLocalStorage<PetProfile[]>('granule-check-pet-profiles', []);
   const dogProfiles = useMemo(() => profiles.filter((p) => p.animalType === 'dog'), [profiles]);
   const [selectedDogId, setSelectedDogId] = useState(dogProfiles[0]?.id ?? '');
@@ -375,6 +380,18 @@ export default function HealthPassportPage() {
     note: '',
   });
   const { analyzeFile, fileResult, loadingFile, error: fileAnalyzeError } = useAnalyze();
+
+  useEffect(() => {
+    if (location.pathname.endsWith('/novy-zaznam')) {
+      entrySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (location.pathname.endsWith('/zaznamy')) {
+      timelineSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    overviewSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!fileResult?.healthPassportInterpretation?.vaccinations) {
@@ -1014,7 +1031,7 @@ export default function HealthPassportPage() {
   return (
     <Box>
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>Dashboard psa</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>Zdravotný pas psa</Typography>
         <Stack direction="row" spacing={1}>
           <FormControl size="small" sx={{ minWidth: 220 }}>
             <InputLabel>Pes</InputLabel>
@@ -1022,11 +1039,22 @@ export default function HealthPassportPage() {
               {dogProfiles.map((p) => <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>)}
             </Select>
           </FormControl>
-          <Button variant="contained" onClick={() => setWizardOpen(true)}>Pridať návštevu</Button>
+          <Button variant="contained" onClick={() => setWizardOpen(true)}>Pridať záznam</Button>
           <Button variant="outlined" href="/karta-pre-veterinara">Karta pre veterinára</Button>
         </Stack>
       </Stack>
 
+      <Card sx={{ mb: 2 }}>
+        <CardContent>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <Button variant={location.pathname.endsWith('/zaznamy') || location.pathname.endsWith('/novy-zaznam') ? 'outlined' : 'contained'} component={Link} to="/zdravotny-pas">Prehľad</Button>
+            <Button variant={location.pathname.endsWith('/zaznamy') ? 'contained' : 'outlined'} component={Link} to="/zdravotny-pas/zaznamy">Záznamy a timeline</Button>
+            <Button variant={location.pathname.endsWith('/novy-zaznam') ? 'contained' : 'outlined'} component={Link} to="/zdravotny-pas/novy-zaznam">Nový záznam / AI import</Button>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      <Box ref={entrySectionRef}>
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Typography variant="h6" sx={{ mb: 1 }}>Vyšetrenia pre zdravotný pas</Typography>
@@ -1314,7 +1342,9 @@ export default function HealthPassportPage() {
           </Stack>
         </CardContent>
       </Card>
+      </Box>
 
+      <Box ref={overviewSectionRef}>
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: 'repeat(4, 1fr)' }, mb: 2 }}>
         <Card><CardContent><Typography variant="body2">Očkovanie</Typography><Chip label={lastVaccinationStatus} color={lastVaccinationStatus === 'VALID' ? 'success' : lastVaccinationStatus === 'EXPIRING_SOON' ? 'warning' : 'error'} /></CardContent></Card>
         <Card><CardContent><Typography variant="body2">Odčervenie</Typography><Chip label={lastDewormingStatus} color={lastDewormingStatus === 'VALID' ? 'success' : lastDewormingStatus === 'EXPIRING_SOON' ? 'warning' : 'error'} /></CardContent></Card>
@@ -1353,7 +1383,9 @@ export default function HealthPassportPage() {
           </CardContent>
         </Card>
       </Box>
+      </Box>
 
+      <Box ref={timelineSectionRef}>
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Stack
@@ -1430,6 +1462,7 @@ export default function HealthPassportPage() {
           )}
         </CardContent>
       </Card>
+      </Box>
 
       <Dialog open={wizardOpen} onClose={() => setWizardOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Po návšteve veterinára ({wizardStep + 1}/3)</DialogTitle>
