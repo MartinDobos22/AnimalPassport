@@ -1054,294 +1054,10 @@ export default function HealthPassportPage() {
         </CardContent>
       </Card>
 
-      <Box ref={entrySectionRef}>
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 1 }}>Vyšetrenia pre zdravotný pas</Typography>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <FormControl fullWidth>
-              <InputLabel>Hlavná kategória</InputLabel>
-              <Select
-                value={selectedVisitMainCategory}
-                label="Hlavná kategória"
-                onChange={(e) => {
-                  setSelectedVisitMainCategory(e.target.value);
-                  setSelectedVisitSubcategory('');
-                  setAttachmentFile(null);
-                  setAttachmentPreviewUrl('');
-                  setAttachmentError('');
-                  setPendingAttachment(null);
-                }}
-              >
-                {VISIT_CATEGORY_OPTIONS.map((item) => (
-                  <MenuItem key={item.main} value={item.main}>{item.main}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth disabled={!selectedVisitMainCategory}>
-              <InputLabel>Podkategória</InputLabel>
-              <Select
-                value={selectedVisitSubcategory}
-                label="Podkategória"
-                onChange={(e) => {
-                  setSelectedVisitSubcategory(e.target.value);
-                  setAttachmentFile(null);
-                  setAttachmentPreviewUrl('');
-                  setAttachmentError('');
-                  setPendingAttachment(null);
-                }}
-              >
-                {selectedVisitSubcategoryOptions.map((sub) => (
-                  <MenuItem key={sub} value={sub}>{sub}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
-        </CardContent>
-      </Card>
-
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 1 }}>Príloha do zdravotného pasu</Typography>
-          <Stack spacing={1.5}>
-            <TextField
-              label="Popis prílohy (napr. pas strana 4)"
-              value={wizard.attachmentLabel}
-              onChange={(e) => setWizard({ ...wizard, attachmentLabel: e.target.value })}
-            />
-            {selectedExamAlias && (
-              <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
-                Add file
-                <input
-                  type="file"
-                  hidden
-                  accept="application/pdf,image/jpeg,image/png,image/webp"
-                  onChange={(e) => handleAttachmentFileChange(e.target.files?.[0] ?? null)}
-                />
-              </Button>
-            )}
-            <Button
-              variant="contained"
-              onClick={handleAnalyzeAttachment}
-              disabled={loadingFile || !selectedExamAlias || !pendingAttachment || Boolean(attachmentError)}
-              startIcon={loadingFile ? <CircularProgress size={16} color="inherit" /> : undefined}
-            >
-              {loadingFile ? 'Analyzujem súbor...' : 'Analyzovať súbor'}
-            </Button>
-            {attachmentFile && <Chip label={`${attachmentFile.name} (${Math.round(attachmentFile.size / 1024)} kB)`} />}
-            {attachmentError && <Alert severity="warning">{attachmentError}</Alert>}
-            {fileAnalyzeError && <Alert severity="error">{fileAnalyzeError}</Alert>}
-            {fileResult?.contextAnalysis && (
-              <Alert severity="info">
-                Typ dokumentu: <strong>{fileResult.contextAnalysis.documentType}</strong> ({fileResult.contextAnalysis.confidence})
-                <br />
-                {fileResult.contextAnalysis.summary}
-              </Alert>
-            )}
-            {fileResult?.examAnalysis && (
-              <Alert severity="info">
-                AI analýza vyšetrenia (<strong>{fileResult.examAnalysis.examType}</strong>)
-                <AiFormattedText text={fileResult.examAnalysis.analysis} />
-              </Alert>
-            )}
-            {fileResult?.examAnalysis && (
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-                    Uložiť AI výsledok ako lekársky záznam
-                  </Typography>
-                  <Stack spacing={1.5}>
-                    <Typography variant="body2" color="text.secondary">
-                      Po kontrole AI výsledku môžete jedným klikom pridať záznam priamo do dashboard timeline.
-                    </Typography>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-                      <TextField
-                        fullWidth
-                        label="Dátum záznamu"
-                        type="date"
-                        InputLabelProps={{ shrink: true }}
-                        value={aiRecordDraft.date}
-                        onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, date: e.target.value }))}
-                      />
-                      <TextField
-                        fullWidth
-                        required
-                        label="Klinika / veterinár"
-                        value={aiRecordDraft.clinicName}
-                        onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, clinicName: e.target.value }))}
-                      />
-                    </Stack>
-                    <TextField
-                      label="Diagnóza (voliteľné)"
-                      value={aiRecordDraft.diagnosis}
-                      onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, diagnosis: e.target.value }))}
-                    />
-                    <TextField
-                      label="Odporúčanie (voliteľné)"
-                      value={aiRecordDraft.recommendations}
-                      onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, recommendations: e.target.value }))}
-                    />
-                    {aiDetectedRecords.length > 0 && (
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
-                            AI rozpoznané záznamy (vyberte kam sa majú uložiť)
-                          </Typography>
-                          <Stack spacing={1.25}>
-                            {aiDetectedRecords.map((item) => (
-                              <Box key={item.id} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, p: 1 }}>
-                                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-                                  <FormControl fullWidth size="small">
-                                    <InputLabel>Typ záznamu</InputLabel>
-                                    <Select
-                                      label="Typ záznamu"
-                                      value={item.targetType}
-                                      onChange={(e) => {
-                                        const nextType = e.target.value as AiDetectedRecordType;
-                                        setAiDetectedRecords((prev) => prev.map((entry) => (
-                                          entry.id === item.id ? { ...entry, targetType: nextType } : entry
-                                        )));
-                                      }}
-                                    >
-                                      <MenuItem value="VACCINATION">Očkovanie</MenuItem>
-                                      <MenuItem value="DEWORMING">Odčervenie</MenuItem>
-                                      <MenuItem value="ECTOPARASITE">Antiparazitikum</MenuItem>
-                                      <MenuItem value="MEDICATION">Liek / tabletka</MenuItem>
-                                      <MenuItem value="NOTE">Iba poznámka návštevy</MenuItem>
-                                      <MenuItem value="SKIP">Neukladať</MenuItem>
-                                    </Select>
-                                  </FormControl>
-                                  <TextField
-                                    fullWidth
-                                    size="small"
-                                    label="Názov prípravku"
-                                    value={item.productName}
-                                    onChange={(e) => {
-                                      const nextName = e.target.value;
-                                      setAiDetectedRecords((prev) => prev.map((entry) => (
-                                        entry.id === item.id ? { ...entry, productName: nextName } : entry
-                                      )));
-                                    }}
-                                  />
-                                </Stack>
-                                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ mt: 1 }}>
-                                  <TextField
-                                    size="small"
-                                    label="Dátum"
-                                    type="date"
-                                    InputLabelProps={{ shrink: true }}
-                                    value={item.date}
-                                    onChange={(e) => {
-                                      const nextDate = e.target.value;
-                                      setAiDetectedRecords((prev) => prev.map((entry) => (
-                                        entry.id === item.id ? { ...entry, date: nextDate } : entry
-                                      )));
-                                    }}
-                                  />
-                                  <TextField
-                                    size="small"
-                                    label="Platnosť do"
-                                    type="date"
-                                    InputLabelProps={{ shrink: true }}
-                                    value={item.validUntil}
-                                    onChange={(e) => {
-                                      const nextDate = e.target.value;
-                                      setAiDetectedRecords((prev) => prev.map((entry) => (
-                                        entry.id === item.id ? { ...entry, validUntil: nextDate } : entry
-                                      )));
-                                    }}
-                                  />
-                                  <TextField
-                                    size="small"
-                                    label="Šarža"
-                                    value={item.batchNumber}
-                                    onChange={(e) => {
-                                      const nextBatch = e.target.value;
-                                      setAiDetectedRecords((prev) => prev.map((entry) => (
-                                        entry.id === item.id ? { ...entry, batchNumber: nextBatch } : entry
-                                      )));
-                                    }}
-                                  />
-                                  {(item.targetType === 'DEWORMING' || item.targetType === 'ECTOPARASITE') && (
-                                    <TextField
-                                      size="small"
-                                      label="Interval (dni)"
-                                      type="number"
-                                      value={item.intervalDays}
-                                      onChange={(e) => {
-                                        const interval = Number(e.target.value || 0);
-                                        setAiDetectedRecords((prev) => prev.map((entry) => (
-                                          entry.id === item.id ? { ...entry, intervalDays: Math.max(1, interval || 30) } : entry
-                                        )));
-                                      }}
-                                    />
-                                  )}
-                                </Stack>
-                                <Chip
-                                  size="small"
-                                  sx={{ mt: 1 }}
-                                  label={`AI istota: ${item.sourceConfidence}`}
-                                  color={item.sourceConfidence === 'high' ? 'success' : item.sourceConfidence === 'medium' ? 'warning' : 'default'}
-                                />
-                              </Box>
-                            ))}
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    )}
-                    <Button
-                      variant="contained"
-                      onClick={saveAiRecord}
-                      disabled={!canCreateAiRecord}
-                    >
-                      Pridať AI záznam do dashboardu
-                    </Button>
-                    {aiRecordFeedback && <Alert severity="success">{aiRecordFeedback}</Alert>}
-                  </Stack>
-                </CardContent>
-              </Card>
-            )}
-            {fileResult?.healthPassportInterpretation && (
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-                    Detailný rozbor zdravotného pasu (AI)
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    {fileResult.healthPassportInterpretation.summary}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
-                    Ako to AI chápe: {fileResult.healthPassportInterpretation.aiUnderstanding}
-                  </Typography>
-                  <Stack spacing={1}>
-                    {fileResult.healthPassportInterpretation.vaccinations.map((vac, index) => (
-                      <Box key={`${vac.vaccineName}-${vac.dateAdministered}-${index}`} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, p: 1 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {vac.disease || 'Nešpecifikované ochorenie'}
-                        </Typography>
-                        <Typography variant="caption" display="block">Vakcína: {vac.vaccineName || 'neznáme'}</Typography>
-                        <Typography variant="caption" display="block">Podané: {vac.dateAdministered || 'neznámy dátum'}</Typography>
-                        {vac.validUntil && <Typography variant="caption" display="block">Platnosť do: {vac.validUntil}</Typography>}
-                        {vac.batchNumber && <Typography variant="caption" display="block">Šarža: {vac.batchNumber}</Typography>}
-                        {vac.manufacturer && <Typography variant="caption" display="block">Výrobca: {vac.manufacturer}</Typography>}
-                        {vac.veterinarian && <Typography variant="caption" display="block">Veterinár/klinika: {vac.veterinarian}</Typography>}
-                        {vac.notes && <Typography variant="caption" display="block">Poznámka: {vac.notes}</Typography>}
-                        <Chip size="small" sx={{ mt: 0.5 }} label={`Istota AI: ${vac.confidence}`} color={vac.confidence === 'high' ? 'success' : vac.confidence === 'medium' ? 'warning' : 'default'} />
-                      </Box>
-                    ))}
-                  </Stack>
-                </CardContent>
-              </Card>
-            )}
-            <TextField
-              label="URL fotky stránky / bločku (voliteľné)"
-              value={wizard.attachmentUrl}
-              onChange={(e) => setWizard({ ...wizard, attachmentUrl: e.target.value })}
-              helperText="Ak vyberiete súbor, použije sa nahratý súbor pri ukladaní návštevy."
-            />
-          </Stack>
-        </CardContent>
-      </Card>
+      <Box ref={entrySectionRef} sx={{ mb: 2 }}>
+        <Alert severity="info">
+          Vyšetrenie pre zdravotný pas a prílohu teraz pridáte priamo v krokoch „Pridať záznam“.
+        </Alert>
       </Box>
 
       <Box ref={overviewSectionRef}>
@@ -1469,9 +1185,49 @@ export default function HealthPassportPage() {
         <DialogContent>
           {wizardStep === 0 && (
             <Stack spacing={2} sx={{ mt: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Vyšetrenie pre zdravotný pas</Typography>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                <FormControl fullWidth>
+                  <InputLabel>Hlavná kategória</InputLabel>
+                  <Select
+                    value={selectedVisitMainCategory}
+                    label="Hlavná kategória"
+                    onChange={(e) => {
+                      setSelectedVisitMainCategory(e.target.value);
+                      setSelectedVisitSubcategory('');
+                      setAttachmentFile(null);
+                      setAttachmentPreviewUrl('');
+                      setAttachmentError('');
+                      setPendingAttachment(null);
+                    }}
+                  >
+                    {VISIT_CATEGORY_OPTIONS.map((item) => (
+                      <MenuItem key={item.main} value={item.main}>{item.main}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth disabled={!selectedVisitMainCategory}>
+                  <InputLabel>Podkategória</InputLabel>
+                  <Select
+                    value={selectedVisitSubcategory}
+                    label="Podkategória"
+                    onChange={(e) => {
+                      setSelectedVisitSubcategory(e.target.value);
+                      setAttachmentFile(null);
+                      setAttachmentPreviewUrl('');
+                      setAttachmentError('');
+                      setPendingAttachment(null);
+                    }}
+                  >
+                    {selectedVisitSubcategoryOptions.map((sub) => (
+                      <MenuItem key={sub} value={sub}>{sub}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
               <TextField label="Dátum" type="date" InputLabelProps={{ shrink: true }} value={wizard.date} onChange={(e) => setWizard({ ...wizard, date: e.target.value })} />
               <TextField label="Klinika" value={wizard.clinicName} onChange={(e) => setWizard({ ...wizard, clinicName: e.target.value })} />
-              <TextField label="Poznámka k dôvodu (voliteľné)" value={wizard.reason} onChange={(e) => setWizard({ ...wizard, reason: e.target.value })} helperText="Kategória a podkategória sa berú z výberu na hlavnej stránke." />
+              <TextField label="Poznámka k dôvodu (voliteľné)" value={wizard.reason} onChange={(e) => setWizard({ ...wizard, reason: e.target.value })} helperText="Kategória a podkategória sa berú z výberu vyššie." />
               <TextField label="Nález / diagnóza" value={wizard.diagnosis} onChange={(e) => setWizard({ ...wizard, diagnosis: e.target.value })} />
               <TextField label="Odporúčania" value={wizard.recommendations} onChange={(e) => setWizard({ ...wizard, recommendations: e.target.value })} />
               <TextField label="Ďalšia kontrola" type="date" InputLabelProps={{ shrink: true }} value={wizard.nextCheckDate} onChange={(e) => setWizard({ ...wizard, nextCheckDate: e.target.value })} />
@@ -1497,18 +1253,232 @@ export default function HealthPassportPage() {
           )}
           {wizardStep === 2 && (
             <Stack spacing={2} sx={{ mt: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Príloha do zdravotného pasu</Typography>
               <TextField label="Popis prílohy (napr. pas strana 4)" value={wizard.attachmentLabel} onChange={(e) => setWizard({ ...wizard, attachmentLabel: e.target.value })} />
-              <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
-                Vybrať PDF alebo fotku
-                <input
-                  type="file"
-                  hidden
-                  accept="application/pdf,image/jpeg,image/png,image/webp"
-                  onChange={(e) => handleAttachmentFileChange(e.target.files?.[0] ?? null)}
-                />
+              {selectedExamAlias && (
+                <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
+                  Vybrať PDF alebo fotku
+                  <input
+                    type="file"
+                    hidden
+                    accept="application/pdf,image/jpeg,image/png,image/webp"
+                    onChange={(e) => handleAttachmentFileChange(e.target.files?.[0] ?? null)}
+                  />
+                </Button>
+              )}
+              <Button
+                variant="contained"
+                onClick={handleAnalyzeAttachment}
+                disabled={loadingFile || !selectedExamAlias || !pendingAttachment || Boolean(attachmentError)}
+                startIcon={loadingFile ? <CircularProgress size={16} color="inherit" /> : undefined}
+              >
+                {loadingFile ? 'Analyzujem súbor...' : 'Analyzovať súbor'}
               </Button>
               {attachmentFile && <Chip label={`${attachmentFile.name} (${Math.round(attachmentFile.size / 1024)} kB)`} />}
               {attachmentError && <Alert severity="warning">{attachmentError}</Alert>}
+              {fileAnalyzeError && <Alert severity="error">{fileAnalyzeError}</Alert>}
+              {fileResult?.contextAnalysis && (
+                <Alert severity="info">
+                  Typ dokumentu: <strong>{fileResult.contextAnalysis.documentType}</strong> ({fileResult.contextAnalysis.confidence})
+                  <br />
+                  {fileResult.contextAnalysis.summary}
+                </Alert>
+              )}
+              {fileResult?.examAnalysis && (
+                <Alert severity="info">
+                  AI analýza vyšetrenia (<strong>{fileResult.examAnalysis.examType}</strong>)
+                  <AiFormattedText text={fileResult.examAnalysis.analysis} />
+                </Alert>
+              )}
+              {fileResult?.examAnalysis && (
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                      Uložiť AI výsledok ako lekársky záznam
+                    </Typography>
+                    <Stack spacing={1.5}>
+                      <Typography variant="body2" color="text.secondary">
+                        Po kontrole AI výsledku môžete jedným klikom pridať záznam priamo do dashboard timeline.
+                      </Typography>
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+                        <TextField
+                          fullWidth
+                          label="Dátum záznamu"
+                          type="date"
+                          InputLabelProps={{ shrink: true }}
+                          value={aiRecordDraft.date}
+                          onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, date: e.target.value }))}
+                        />
+                        <TextField
+                          fullWidth
+                          required
+                          label="Klinika / veterinár"
+                          value={aiRecordDraft.clinicName}
+                          onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, clinicName: e.target.value }))}
+                        />
+                      </Stack>
+                      <TextField
+                        label="Diagnóza (voliteľné)"
+                        value={aiRecordDraft.diagnosis}
+                        onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, diagnosis: e.target.value }))}
+                      />
+                      <TextField
+                        label="Odporúčanie (voliteľné)"
+                        value={aiRecordDraft.recommendations}
+                        onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, recommendations: e.target.value }))}
+                      />
+                      {aiDetectedRecords.length > 0 && (
+                        <Card variant="outlined">
+                          <CardContent>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+                              AI rozpoznané záznamy (vyberte kam sa majú uložiť)
+                            </Typography>
+                            <Stack spacing={1.25}>
+                              {aiDetectedRecords.map((item) => (
+                                <Box key={item.id} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, p: 1 }}>
+                                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+                                    <FormControl fullWidth size="small">
+                                      <InputLabel>Typ záznamu</InputLabel>
+                                      <Select
+                                        label="Typ záznamu"
+                                        value={item.targetType}
+                                        onChange={(e) => {
+                                          const nextType = e.target.value as AiDetectedRecordType;
+                                          setAiDetectedRecords((prev) => prev.map((entry) => (
+                                            entry.id === item.id ? { ...entry, targetType: nextType } : entry
+                                          )));
+                                        }}
+                                      >
+                                        <MenuItem value="VACCINATION">Očkovanie</MenuItem>
+                                        <MenuItem value="DEWORMING">Odčervenie</MenuItem>
+                                        <MenuItem value="ECTOPARASITE">Antiparazitikum</MenuItem>
+                                        <MenuItem value="MEDICATION">Liek / tabletka</MenuItem>
+                                        <MenuItem value="NOTE">Iba poznámka návštevy</MenuItem>
+                                        <MenuItem value="SKIP">Neukladať</MenuItem>
+                                      </Select>
+                                    </FormControl>
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      label="Názov prípravku"
+                                      value={item.productName}
+                                      onChange={(e) => {
+                                        const nextName = e.target.value;
+                                        setAiDetectedRecords((prev) => prev.map((entry) => (
+                                          entry.id === item.id ? { ...entry, productName: nextName } : entry
+                                        )));
+                                      }}
+                                    />
+                                  </Stack>
+                                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ mt: 1 }}>
+                                    <TextField
+                                      size="small"
+                                      label="Dátum"
+                                      type="date"
+                                      InputLabelProps={{ shrink: true }}
+                                      value={item.date}
+                                      onChange={(e) => {
+                                        const nextDate = e.target.value;
+                                        setAiDetectedRecords((prev) => prev.map((entry) => (
+                                          entry.id === item.id ? { ...entry, date: nextDate } : entry
+                                        )));
+                                      }}
+                                    />
+                                    <TextField
+                                      size="small"
+                                      label="Platnosť do"
+                                      type="date"
+                                      InputLabelProps={{ shrink: true }}
+                                      value={item.validUntil}
+                                      onChange={(e) => {
+                                        const nextDate = e.target.value;
+                                        setAiDetectedRecords((prev) => prev.map((entry) => (
+                                          entry.id === item.id ? { ...entry, validUntil: nextDate } : entry
+                                        )));
+                                      }}
+                                    />
+                                    <TextField
+                                      size="small"
+                                      label="Šarža"
+                                      value={item.batchNumber}
+                                      onChange={(e) => {
+                                        const nextBatch = e.target.value;
+                                        setAiDetectedRecords((prev) => prev.map((entry) => (
+                                          entry.id === item.id ? { ...entry, batchNumber: nextBatch } : entry
+                                        )));
+                                      }}
+                                    />
+                                    {(item.targetType === 'DEWORMING' || item.targetType === 'ECTOPARASITE') && (
+                                      <TextField
+                                        size="small"
+                                        label="Interval (dni)"
+                                        type="number"
+                                        value={item.intervalDays}
+                                        onChange={(e) => {
+                                          const interval = Number(e.target.value || 0);
+                                          setAiDetectedRecords((prev) => prev.map((entry) => (
+                                            entry.id === item.id ? { ...entry, intervalDays: Math.max(1, interval || 30) } : entry
+                                          )));
+                                        }}
+                                      />
+                                    )}
+                                  </Stack>
+                                  <Chip
+                                    size="small"
+                                    sx={{ mt: 1 }}
+                                    label={`AI istota: ${item.sourceConfidence}`}
+                                    color={item.sourceConfidence === 'high' ? 'success' : item.sourceConfidence === 'medium' ? 'warning' : 'default'}
+                                  />
+                                </Box>
+                              ))}
+                            </Stack>
+                          </CardContent>
+                        </Card>
+                      )}
+                      <Button
+                        variant="contained"
+                        onClick={saveAiRecord}
+                        disabled={!canCreateAiRecord}
+                      >
+                        Pridať AI záznam do dashboardu
+                      </Button>
+                      {aiRecordFeedback && <Alert severity="success">{aiRecordFeedback}</Alert>}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              )}
+              {fileResult?.healthPassportInterpretation && (
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                      Detailný rozbor zdravotného pasu (AI)
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 1 }}>
+                      {fileResult.healthPassportInterpretation.summary}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
+                      Ako to AI chápe: {fileResult.healthPassportInterpretation.aiUnderstanding}
+                    </Typography>
+                    <Stack spacing={1}>
+                      {fileResult.healthPassportInterpretation.vaccinations.map((vac, index) => (
+                        <Box key={`${vac.vaccineName}-${vac.dateAdministered}-${index}`} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, p: 1 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {vac.disease || 'Nešpecifikované ochorenie'}
+                          </Typography>
+                          <Typography variant="caption" display="block">Vakcína: {vac.vaccineName || 'neznáme'}</Typography>
+                          <Typography variant="caption" display="block">Podané: {vac.dateAdministered || 'neznámy dátum'}</Typography>
+                          {vac.validUntil && <Typography variant="caption" display="block">Platnosť do: {vac.validUntil}</Typography>}
+                          {vac.batchNumber && <Typography variant="caption" display="block">Šarža: {vac.batchNumber}</Typography>}
+                          {vac.manufacturer && <Typography variant="caption" display="block">Výrobca: {vac.manufacturer}</Typography>}
+                          {vac.veterinarian && <Typography variant="caption" display="block">Veterinár/klinika: {vac.veterinarian}</Typography>}
+                          {vac.notes && <Typography variant="caption" display="block">Poznámka: {vac.notes}</Typography>}
+                          <Chip size="small" sx={{ mt: 0.5 }} label={`Istota AI: ${vac.confidence}`} color={vac.confidence === 'high' ? 'success' : vac.confidence === 'medium' ? 'warning' : 'default'} />
+                        </Box>
+                      ))}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              )}
               <TextField label="URL fotky stránky / bločku (voliteľné)" value={wizard.attachmentUrl} onChange={(e) => setWizard({ ...wizard, attachmentUrl: e.target.value })} helperText="Ak vyberiete súbor, použije sa nahratý súbor." />
               <TextField label="Výdavok návštevy" type="number" value={wizard.totalExpense} onChange={(e) => setWizard({ ...wizard, totalExpense: e.target.value })} />
               <TextField label="Výdavok lieky" type="number" value={wizard.extraMedicationExpense} onChange={(e) => setWizard({ ...wizard, extraMedicationExpense: e.target.value })} />
