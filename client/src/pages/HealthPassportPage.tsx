@@ -1082,7 +1082,6 @@ export default function HealthPassportPage() {
               </Stack>
               <TextField label="Dátum" type="date" InputLabelProps={{ shrink: true }} value={wizard.date} onChange={(e) => setWizard({ ...wizard, date: e.target.value })} />
               <TextField label="Klinika" value={wizard.clinicName} onChange={(e) => setWizard({ ...wizard, clinicName: e.target.value })} />
-              <TextField label="Poznámka k dôvodu (voliteľné)" value={wizard.reason} onChange={(e) => setWizard({ ...wizard, reason: e.target.value })} helperText="Kategória a podkategória sa berú z výberu vyššie." />
               {shouldShowDiagnosisAndRecommendations && (
                 <>
                   <TextField label="Nález / diagnóza" value={wizard.diagnosis} onChange={(e) => setWizard({ ...wizard, diagnosis: e.target.value })} />
@@ -1119,26 +1118,30 @@ export default function HealthPassportPage() {
           {wizardStep === 0 && (
             <Stack spacing={2} sx={{ mt: 1 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Príloha do zdravotného pasu</Typography>
-              <TextField label="Popis prílohy (napr. pas strana 4)" value={wizard.attachmentLabel} onChange={(e) => setWizard({ ...wizard, attachmentLabel: e.target.value })} />
-              {selectedExamAlias && (
-                <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
-                  Vybrať PDF alebo fotku
-                  <input
-                    type="file"
-                    hidden
-                    accept="application/pdf,image/jpeg,image/png,image/webp"
-                    onChange={(e) => handleAttachmentFileChange(e.target.files?.[0] ?? null)}
-                  />
-                </Button>
+              {selectedExamAlias ? (
+                <>
+                  <TextField label="Popis prílohy (napr. pas strana 4)" value={wizard.attachmentLabel} onChange={(e) => setWizard({ ...wizard, attachmentLabel: e.target.value })} />
+                  <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
+                    Vybrať PDF alebo fotku
+                    <input
+                      type="file"
+                      hidden
+                      accept="application/pdf,image/jpeg,image/png,image/webp"
+                      onChange={(e) => handleAttachmentFileChange(e.target.files?.[0] ?? null)}
+                    />
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={handleAnalyzeAttachment}
+                    disabled={loadingFile || !pendingAttachment || Boolean(attachmentError)}
+                    startIcon={loadingFile ? <CircularProgress size={16} color="inherit" /> : undefined}
+                  >
+                    {loadingFile ? 'Analyzujem súbor...' : 'Analyzovať súbor'}
+                  </Button>
+                </>
+              ) : (
+                <Alert severity="info">Najprv vyberte hlavnú kategóriu a podkategóriu vyšetrenia.</Alert>
               )}
-              <Button
-                variant="contained"
-                onClick={handleAnalyzeAttachment}
-                disabled={loadingFile || !selectedExamAlias || !pendingAttachment || Boolean(attachmentError)}
-                startIcon={loadingFile ? <CircularProgress size={16} color="inherit" /> : undefined}
-              >
-                {loadingFile ? 'Analyzujem súbor...' : 'Analyzovať súbor'}
-              </Button>
               {attachmentFile && <Chip label={`${attachmentFile.name} (${Math.round(attachmentFile.size / 1024)} kB)`} />}
               {attachmentError && <Alert severity="warning">{attachmentError}</Alert>}
               {fileAnalyzeError && <Alert severity="error">{fileAnalyzeError}</Alert>}
@@ -1344,7 +1347,6 @@ export default function HealthPassportPage() {
                   </CardContent>
                 </Card>
               )}
-              <TextField label="URL fotky stránky / bločku (voliteľné)" value={wizard.attachmentUrl} onChange={(e) => setWizard({ ...wizard, attachmentUrl: e.target.value })} helperText="Ak vyberiete súbor, použije sa nahratý súbor." />
             </Stack>
           )}
           {wizardStep === 1 && (
