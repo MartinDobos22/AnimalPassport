@@ -58,7 +58,7 @@ export interface AiDetectedRecordInput {
   date: string;
   validUntil: string;
   batchNumber: string;
-  intervalDays: number;
+  intervalDays?: number;
 }
 
 export interface AiVisitDraftInput {
@@ -104,6 +104,16 @@ export interface VisitBundle {
 }
 
 const KNOWN_RABIES_KEYWORDS = ['rabies', 'besnot', 'nobivac rabies'];
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+const computeIntervalDays = (date: string, validUntil: string, fallback: number) => {
+  if (!validUntil) return fallback;
+  const start = new Date(date).getTime();
+  const end = new Date(validUntil).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end)) return fallback;
+  const days = Math.ceil((end - start) / DAY_MS);
+  return Math.max(1, days || fallback);
+};
 
 export class VetVisitHelper {
   static buildVisitReason(mainCategory: string, subcategory: string, customReason: string): string {
@@ -291,26 +301,28 @@ export class VetVisitHelper {
       }
 
       if (record.targetType === 'DEWORMING') {
+        const intervalDays = computeIntervalDays(record.date, record.validUntil, record.intervalDays ?? 90);
         dewormings.push({
           id: uid(),
           dogId,
           productName: record.productName,
           dateGiven: record.date,
-          intervalDays: record.intervalDays,
-          nextDueDate: plusDays(record.date, record.intervalDays),
+          intervalDays,
+          nextDueDate: record.validUntil || plusDays(record.date, intervalDays),
           attachments,
         });
       }
 
       if (record.targetType === 'ECTOPARASITE') {
+        const intervalDays = computeIntervalDays(record.date, record.validUntil, record.intervalDays ?? 30);
         ectos.push({
           id: uid(),
           dogId,
           productName: record.productName,
           form: 'TABLET',
           dateGiven: record.date,
-          intervalDays: record.intervalDays,
-          nextDueDate: plusDays(record.date, record.intervalDays),
+          intervalDays,
+          nextDueDate: record.validUntil || plusDays(record.date, intervalDays),
           attachments,
         });
       }
