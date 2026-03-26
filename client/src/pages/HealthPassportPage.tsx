@@ -1013,7 +1013,7 @@ export default function HealthPassportPage() {
       </Box>
 
       <Dialog open={wizardOpen} onClose={() => setWizardOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Po návšteve veterinára ({wizardStep + 1}/3)</DialogTitle>
+        <DialogTitle>Po návšteve veterinára ({wizardStep + 1}/2)</DialogTitle>
         <DialogContent>
           {wizardStep === 0 && (
             <Stack spacing={2} sx={{ mt: 1 }}>
@@ -1062,10 +1062,9 @@ export default function HealthPassportPage() {
               <TextField label="Poznámka k dôvodu (voliteľné)" value={wizard.reason} onChange={(e) => setWizard({ ...wizard, reason: e.target.value })} helperText="Kategória a podkategória sa berú z výberu vyššie." />
               <TextField label="Nález / diagnóza" value={wizard.diagnosis} onChange={(e) => setWizard({ ...wizard, diagnosis: e.target.value })} />
               <TextField label="Odporúčania" value={wizard.recommendations} onChange={(e) => setWizard({ ...wizard, recommendations: e.target.value })} />
-              <TextField label="Ďalšia kontrola" type="date" InputLabelProps={{ shrink: true }} value={wizard.nextCheckDate} onChange={(e) => setWizard({ ...wizard, nextCheckDate: e.target.value })} />
             </Stack>
           )}
-          {wizardStep === 1 && (
+          {wizardStep === 0 && (
             <Stack spacing={2} sx={{ mt: 1 }}>
               <Button variant={wizard.addVaccination ? 'contained' : 'outlined'} onClick={() => setWizard({ ...wizard, addVaccination: !wizard.addVaccination })}>Očkovanie</Button>
               {wizard.addVaccination && <Stack spacing={1}><TextField label="Názov vakcíny" value={wizard.vaccineName} onChange={(e) => setWizard({ ...wizard, vaccineName: e.target.value })} /><FormControl><InputLabel>Typ</InputLabel><Select value={wizard.vaccineType} label="Typ" onChange={(e) => setWizard({ ...wizard, vaccineType: e.target.value as any })}><MenuItem value="RABIES">RABIES</MenuItem><MenuItem value="COMBINED">COMBINED</MenuItem><MenuItem value="OTHER">OTHER</MenuItem></Select></FormControl><TextField label="Platné do" type="date" InputLabelProps={{ shrink: true }} value={wizard.vaccineValidUntil} onChange={(e) => setWizard({ ...wizard, vaccineValidUntil: e.target.value })} /></Stack>}
@@ -1083,7 +1082,7 @@ export default function HealthPassportPage() {
               {wizard.addDiet && <Stack spacing={1}><TextField label="Granule / krmivo" value={wizard.foodName} onChange={(e) => setWizard({ ...wizard, foodName: e.target.value })} /><FormControl><InputLabel>Hodnotenie</InputLabel><Select value={wizard.suitabilityStatus} label="Hodnotenie" onChange={(e) => setWizard({ ...wizard, suitabilityStatus: e.target.value as any })}><MenuItem value="SUITABLE">SUITABLE</MenuItem><MenuItem value="RISKY">RISKY</MenuItem><MenuItem value="UNSUITABLE">UNSUITABLE</MenuItem></Select></FormControl><TextField label="Reakcia" value={wizard.reactionNotes} onChange={(e) => setWizard({ ...wizard, reactionNotes: e.target.value })} /></Stack>}
             </Stack>
           )}
-          {wizardStep === 2 && (
+          {wizardStep === 0 && (
             <Stack spacing={2} sx={{ mt: 1 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Príloha do zdravotného pasu</Typography>
               <TextField label="Popis prílohy (napr. pas strana 4)" value={wizard.attachmentLabel} onChange={(e) => setWizard({ ...wizard, attachmentLabel: e.target.value })} />
@@ -1312,6 +1311,12 @@ export default function HealthPassportPage() {
                 </Card>
               )}
               <TextField label="URL fotky stránky / bločku (voliteľné)" value={wizard.attachmentUrl} onChange={(e) => setWizard({ ...wizard, attachmentUrl: e.target.value })} helperText="Ak vyberiete súbor, použije sa nahratý súbor." />
+            </Stack>
+          )}
+          {wizardStep === 1 && (
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Výdavky a ďalšia návšteva</Typography>
+              <TextField label="Ďalšia kontrola" type="date" InputLabelProps={{ shrink: true }} value={wizard.nextCheckDate} onChange={(e) => setWizard({ ...wizard, nextCheckDate: e.target.value })} />
               <TextField label="Výdavok návštevy" type="number" value={wizard.totalExpense} onChange={(e) => setWizard({ ...wizard, totalExpense: e.target.value })} />
               <TextField label="Výdavok lieky" type="number" value={wizard.extraMedicationExpense} onChange={(e) => setWizard({ ...wizard, extraMedicationExpense: e.target.value })} />
               <TextField label="Výdavok krmivo" type="number" value={wizard.extraFoodExpense} onChange={(e) => setWizard({ ...wizard, extraFoodExpense: e.target.value })} />
@@ -1321,7 +1326,7 @@ export default function HealthPassportPage() {
         <DialogActions>
           <Button onClick={() => setWizardOpen(false)}>Zrušiť</Button>
           {wizardStep > 0 && <Button onClick={() => setWizardStep((s) => s - 1)}>Späť</Button>}
-          {wizardStep < 2 ? <Button variant="contained" onClick={() => setWizardStep((s) => s + 1)}>Pokračovať</Button> : <Button variant="contained" onClick={saveWizard}>Uložiť všetko</Button>}
+          {wizardStep < 1 ? <Button variant="contained" onClick={() => setWizardStep((s) => s + 1)}>Pokračovať</Button> : <Button variant="contained" onClick={saveWizard}>Uložiť všetko</Button>}
         </DialogActions>
       </Dialog>
 
