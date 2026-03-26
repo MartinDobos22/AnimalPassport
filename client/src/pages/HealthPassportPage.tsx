@@ -37,7 +37,6 @@ import {
 import type { PetProfile } from '../types';
 import { useAnalyze } from '../hooks/useAnalyze';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import AiFormattedText from '../components/AiFormattedText';
 import { VetVisitHelper } from '../utils/vetVisitHelper';
 import type {
   DewormingRecord,
@@ -63,6 +62,7 @@ const plusDays = (date: string, days: number) => {
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const SUPPORTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const EXAM_TYPE_OPTIONS = ['Očkovanie', 'Odčervenie', 'Antiparazitárna ochrana', 'Preventívna kontrola', 'Iné'] as const;
 const VISIT_CATEGORY_OPTIONS = [
   {
     main: 'Laboratórne vyšetrenia',
@@ -166,52 +166,12 @@ const timelineIconByType: Record<TimelineEvent['type'], JSX.Element> = {
   NOTE: <EventNoteIcon fontSize="small" />,
 };
 
-type AiDetectedRecordType = 'VACCINATION' | 'DEWORMING' | 'ECTOPARASITE' | 'MEDICATION' | 'NOTE' | 'SKIP';
-
-interface AiDetectedDraftRecord {
-  id: string;
-  sourceConfidence: 'high' | 'medium' | 'low';
-  sourceDisease?: string;
-  targetType: AiDetectedRecordType;
-  productName: string;
-  date: string;
-  validUntil: string;
-  batchNumber: string;
-  intervalDays: number;
-}
-
-const KNOWN_DEWORMING_KEYWORDS = ['drontal', 'milbemax', 'milprazon', 'caniverm', 'deworm', 'odcerv'];
-const KNOWN_ECTOPARASITE_KEYWORDS = ['simparica', 'bravecto', 'advantix', 'nexgard', 'ecto', 'parazit', 'klie', 'blch'];
-const KNOWN_RABIES_KEYWORDS = ['rabies', 'besnot', 'nobivac rabies'];
 const escapeHtml = (value: string) => value
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
   .replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
-
-const normalizeDateInput = (value: string) => {
-  if (!value) return today();
-  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (isoMatch) return value;
-  const dottedMatch = value.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})$/);
-  if (dottedMatch) {
-    const day = dottedMatch[1].padStart(2, '0');
-    const month = dottedMatch[2].padStart(2, '0');
-    const yearRaw = dottedMatch[3];
-    const year = yearRaw.length === 2 ? `20${yearRaw}` : yearRaw;
-    return `${year}-${month}-${day}`;
-  }
-  return today();
-};
-
-const inferAiTargetType = (disease: string, vaccineName: string): AiDetectedRecordType => {
-  const value = `${disease} ${vaccineName}`.toLowerCase();
-  if (KNOWN_DEWORMING_KEYWORDS.some((keyword) => value.includes(keyword))) return 'DEWORMING';
-  if (KNOWN_ECTOPARASITE_KEYWORDS.some((keyword) => value.includes(keyword))) return 'ECTOPARASITE';
-  if (KNOWN_RABIES_KEYWORDS.some((keyword) => value.includes(keyword))) return 'VACCINATION';
-  return 'VACCINATION';
-};
 
 function statusByDate(targetDate: string, soonDays: number): ValidityStatus {
   const now = new Date(today());
@@ -274,56 +234,23 @@ export default function HealthPassportPage() {
 
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
+  const [selectedExamType, setSelectedExamType] = useState('');
   const [selectedVisitMainCategory, setSelectedVisitMainCategory] = useState('');
   const [selectedVisitSubcategory, setSelectedVisitSubcategory] = useState('');
   const [wizard, setWizard] = useState({
     date: today(),
     clinicName: '',
     reason: '',
-    findings: '',
-    diagnosis: '',
-    recommendations: '',
     nextCheckDate: '',
-    addVaccination: false,
-    vaccineName: '',
-    vaccineType: 'RABIES' as 'RABIES' | 'COMBINED' | 'OTHER',
-    vaccineValidUntil: plusDays(today(), 365),
-    addDeworming: false,
-    dewormProduct: '',
-    dewormInterval: 90,
-    addEcto: false,
-    ectoProduct: '',
-    ectoForm: 'TABLET' as 'TABLET' | 'SPOT_ON' | 'COLLAR',
-    ectoInterval: 30,
-    addMedication: false,
-    medName: '',
-    medReason: '',
-    medDose: '',
-    medFrequency: '2x denne',
-    medEndDate: '',
-    addDiet: false,
-    foodName: '',
-    reactionNotes: '',
-    suitabilityStatus: 'SUITABLE' as 'SUITABLE' | 'RISKY' | 'UNSUITABLE',
     attachmentLabel: '',
     attachmentUrl: '',
     totalExpense: '',
-    extraMedicationExpense: '',
-    extraFoodExpense: '',
   });
 
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [attachmentPreviewUrl, setAttachmentPreviewUrl] = useState('');
   const [attachmentError, setAttachmentError] = useState('');
   const [pendingAttachment, setPendingAttachment] = useState<{ fileName: string; mimeType: string; base64Data: string } | null>(null);
-  const [aiRecordDraft, setAiRecordDraft] = useState({
-    date: today(),
-    clinicName: '',
-    diagnosis: '',
-    recommendations: '',
-  });
-  const [aiRecordFeedback, setAiRecordFeedback] = useState<string | null>(null);
-  const [aiDetectedRecords, setAiDetectedRecords] = useState<AiDetectedDraftRecord[]>([]);
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
   const [isEditingVisit, setIsEditingVisit] = useState(false);
   const [selectedTimelineRecord, setSelectedTimelineRecord] = useState<{ id: string; type: TimelineEvent['type'] } | null>(null);
@@ -380,7 +307,7 @@ export default function HealthPassportPage() {
     category: 'OTHER' as ExpenseCategory,
     note: '',
   });
-  const { analyzeFile, fileResult, loadingFile, error: fileAnalyzeError } = useAnalyze();
+  const { analyzeFile, loadingFile, error: fileAnalyzeError } = useAnalyze();
 
   useEffect(() => {
     if (location.pathname.endsWith('/novy-zaznam')) {
@@ -393,27 +320,6 @@ export default function HealthPassportPage() {
     }
     overviewSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [location.pathname]);
-
-  useEffect(() => {
-    if (!fileResult?.healthPassportInterpretation?.vaccinations) {
-      setAiDetectedRecords([]);
-      return;
-    }
-
-    const records = fileResult.healthPassportInterpretation.vaccinations.map((item, index) => ({
-      id: `${Date.now()}-${index}`,
-      sourceConfidence: item.confidence,
-      sourceDisease: item.disease,
-      targetType: inferAiTargetType(item.disease, item.vaccineName),
-      productName: item.vaccineName || item.disease || 'Neznámy záznam',
-      date: normalizeDateInput(item.dateAdministered),
-      validUntil: normalizeDateInput(item.validUntil ?? plusDays(today(), 365)),
-      batchNumber: item.batchNumber ?? '',
-      intervalDays: 90,
-    }));
-
-    setAiDetectedRecords(records);
-  }, [fileResult]);
 
   const handleAttachmentFileChange = (file: File | null) => {
     if (!file) {
@@ -491,10 +397,13 @@ export default function HealthPassportPage() {
   const selectedExamAlias = selectedVisitSubcategory ? EXAM_SUBCATEGORY_TO_ALIAS[selectedVisitSubcategory] : '';
 
   const saveWizard = () => {
-    if (!selectedDogId || !wizard.clinicName.trim() || !selectedVisitMainCategory || !selectedVisitSubcategory) return;
+    if (!selectedDogId || !selectedExamType || !wizard.clinicName.trim() || !selectedVisitMainCategory || !selectedVisitSubcategory) return;
     const visitBundle = VetVisitHelper.createWizardVisitBundle({
       dogId: selectedDogId,
-      draft: wizard,
+      draft: {
+        ...wizard,
+        reason: [selectedExamType, wizard.reason.trim()].filter(Boolean).join(' · '),
+      },
       mainCategory: selectedVisitMainCategory,
       subcategory: selectedVisitSubcategory,
       attachmentDraft: {
@@ -503,8 +412,6 @@ export default function HealthPassportPage() {
         attachmentPreviewUrl,
         attachmentFileName: attachmentFile?.name,
       },
-      currentDietEntryId: dogDiet[0]?.id,
-      plusDays,
       uid,
     });
 
@@ -519,14 +426,15 @@ export default function HealthPassportPage() {
 
     setWizardOpen(false);
     setWizardStep(0);
+    setSelectedExamType('');
     setWizard({
-      date: today(), clinicName: '', reason: '', findings: '', diagnosis: '', recommendations: '', nextCheckDate: '',
-      addVaccination: false, vaccineName: '', vaccineType: 'RABIES', vaccineValidUntil: plusDays(today(), 365),
-      addDeworming: false, dewormProduct: '', dewormInterval: 90,
-      addEcto: false, ectoProduct: '', ectoForm: 'TABLET', ectoInterval: 30,
-      addMedication: false, medName: '', medReason: '', medDose: '', medFrequency: '2x denne', medEndDate: '',
-      addDiet: false, foodName: '', reactionNotes: '', suitabilityStatus: 'SUITABLE',
-      attachmentLabel: '', attachmentUrl: '', totalExpense: '', extraMedicationExpense: '', extraFoodExpense: '',
+      date: today(),
+      clinicName: '',
+      reason: '',
+      nextCheckDate: '',
+      attachmentLabel: '',
+      attachmentUrl: '',
+      totalExpense: '',
     });
     setAttachmentFile(null);
     setAttachmentPreviewUrl('');
@@ -604,12 +512,6 @@ export default function HealthPassportPage() {
     printWindow.focus();
     printWindow.print();
   };
-  const hasSelectedAiDetectedRecords = aiDetectedRecords.some((item) => item.targetType !== 'SKIP');
-  const canCreateAiRecord = Boolean(
-    selectedDogId
-      && aiRecordDraft.clinicName.trim()
-      && ((selectedVisitSubcategory || fileResult?.examAnalysis?.examType) || hasSelectedAiDetectedRecords),
-  );
   const selectedVisit = selectedVisitId ? dogVisits.find((visit) => visit.id === selectedVisitId) ?? null : null;
   const selectedVaccination = selectedTimelineRecord?.type === 'VACCINATION'
     ? dogVaccinations.find((item) => item.id === selectedTimelineRecord.id) ?? null
@@ -811,54 +713,6 @@ export default function HealthPassportPage() {
     setIsEditingTimelineRecord(false);
   };
 
-  const saveAiRecord = () => {
-    if (!canCreateAiRecord || !selectedDogId) return;
-
-    const aiSummary = [
-      fileResult?.contextAnalysis?.summary ? `Kontext: ${fileResult.contextAnalysis.summary}` : '',
-      fileResult?.examAnalysis?.analysis ? `AI analýza: ${fileResult.examAnalysis.analysis}` : '',
-    ]
-      .filter(Boolean)
-      .join('\n\n');
-
-    const selectedRecords = aiDetectedRecords.filter((item) => item.targetType !== 'SKIP');
-    const visitBundle = VetVisitHelper.createAiVisitBundle({
-      dogId: selectedDogId,
-      draft: aiRecordDraft,
-      selectedVisitMainCategory,
-      selectedVisitSubcategory,
-      examType: fileResult?.examAnalysis?.examType,
-      aiSummary,
-      selectedRecords,
-      attachmentDraft: {
-        attachmentLabel: wizard.attachmentLabel,
-        attachmentUrl: wizard.attachmentUrl,
-        attachmentPreviewUrl,
-        attachmentFileName: attachmentFile?.name,
-      },
-      plusDays,
-      uid,
-    });
-
-    setVisits((prev) => [...prev, visitBundle.visit]);
-    if (visitBundle.vaccinations.length) setVaccinations((prev) => [...prev, ...visitBundle.vaccinations]);
-    if (visitBundle.dewormings.length) setDewormings((prev) => [...prev, ...visitBundle.dewormings]);
-    if (visitBundle.ectos.length) setEctos((prev) => [...prev, ...visitBundle.ectos]);
-    if (visitBundle.medications.length) setMedications((prev) => [...prev, ...visitBundle.medications]);
-
-    setAiRecordFeedback('AI výsledok bol uložený ako zdravotný záznam v timeline.');
-    setAiRecordDraft({
-      date: today(),
-      clinicName: '',
-      diagnosis: '',
-      recommendations: '',
-    });
-    setAiDetectedRecords((prev) => prev.map((item) => ({ ...item, targetType: 'SKIP' })));
-  };
-
-  if (!dogProfiles.length) {
-    return <Alert severity="info">Najprv si vytvorte profil psa v sekcii Profily.</Alert>;
-  }
 
   return (
     <Box>
@@ -1013,11 +867,31 @@ export default function HealthPassportPage() {
       </Box>
 
       <Dialog open={wizardOpen} onClose={() => setWizardOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Po návšteve veterinára ({wizardStep + 1}/3)</DialogTitle>
+        <DialogTitle>Nový záznam do zdravotného pasu ({wizardStep + 1}/3)</DialogTitle>
         <DialogContent>
           {wizardStep === 0 && (
             <Stack spacing={2} sx={{ mt: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Vyšetrenie pre zdravotný pas</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>1) Základné údaje o vyšetrení</Typography>
+              <FormControl fullWidth>
+                <InputLabel>Vyšetrenie</InputLabel>
+                <Select
+                  value={selectedExamType}
+                  label="Vyšetrenie"
+                  onChange={(e) => setSelectedExamType(e.target.value)}
+                >
+                  {EXAM_TYPE_OPTIONS.map((item) => (
+                    <MenuItem key={item} value={item}>{item}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField label="Dátum" type="date" InputLabelProps={{ shrink: true }} value={wizard.date} onChange={(e) => setWizard({ ...wizard, date: e.target.value })} />
+              <TextField label="Klinika" value={wizard.clinicName} onChange={(e) => setWizard({ ...wizard, clinicName: e.target.value })} />
+              <TextField label="Poznámka" value={wizard.reason} onChange={(e) => setWizard({ ...wizard, reason: e.target.value })} multiline minRows={2} />
+            </Stack>
+          )}
+          {wizardStep === 1 && (
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>2) Kategória a súbor na analýzu</Typography>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
                 <FormControl fullWidth>
                   <InputLabel>Hlavná kategória</InputLabel>
@@ -1057,35 +931,6 @@ export default function HealthPassportPage() {
                   </Select>
                 </FormControl>
               </Stack>
-              <TextField label="Dátum" type="date" InputLabelProps={{ shrink: true }} value={wizard.date} onChange={(e) => setWizard({ ...wizard, date: e.target.value })} />
-              <TextField label="Klinika" value={wizard.clinicName} onChange={(e) => setWizard({ ...wizard, clinicName: e.target.value })} />
-              <TextField label="Poznámka k dôvodu (voliteľné)" value={wizard.reason} onChange={(e) => setWizard({ ...wizard, reason: e.target.value })} helperText="Kategória a podkategória sa berú z výberu vyššie." />
-              <TextField label="Nález / diagnóza" value={wizard.diagnosis} onChange={(e) => setWizard({ ...wizard, diagnosis: e.target.value })} />
-              <TextField label="Odporúčania" value={wizard.recommendations} onChange={(e) => setWizard({ ...wizard, recommendations: e.target.value })} />
-              <TextField label="Ďalšia kontrola" type="date" InputLabelProps={{ shrink: true }} value={wizard.nextCheckDate} onChange={(e) => setWizard({ ...wizard, nextCheckDate: e.target.value })} />
-            </Stack>
-          )}
-          {wizardStep === 1 && (
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <Button variant={wizard.addVaccination ? 'contained' : 'outlined'} onClick={() => setWizard({ ...wizard, addVaccination: !wizard.addVaccination })}>Očkovanie</Button>
-              {wizard.addVaccination && <Stack spacing={1}><TextField label="Názov vakcíny" value={wizard.vaccineName} onChange={(e) => setWizard({ ...wizard, vaccineName: e.target.value })} /><FormControl><InputLabel>Typ</InputLabel><Select value={wizard.vaccineType} label="Typ" onChange={(e) => setWizard({ ...wizard, vaccineType: e.target.value as any })}><MenuItem value="RABIES">RABIES</MenuItem><MenuItem value="COMBINED">COMBINED</MenuItem><MenuItem value="OTHER">OTHER</MenuItem></Select></FormControl><TextField label="Platné do" type="date" InputLabelProps={{ shrink: true }} value={wizard.vaccineValidUntil} onChange={(e) => setWizard({ ...wizard, vaccineValidUntil: e.target.value })} /></Stack>}
-
-              <Button variant={wizard.addDeworming ? 'contained' : 'outlined'} onClick={() => setWizard({ ...wizard, addDeworming: !wizard.addDeworming })}>Odčervenie</Button>
-              {wizard.addDeworming && <Stack spacing={1}><TextField label="Produkt" value={wizard.dewormProduct} onChange={(e) => setWizard({ ...wizard, dewormProduct: e.target.value })} /><TextField label="Interval dní" type="number" value={wizard.dewormInterval} onChange={(e) => setWizard({ ...wizard, dewormInterval: Number(e.target.value) })} /></Stack>}
-
-              <Button variant={wizard.addEcto ? 'contained' : 'outlined'} onClick={() => setWizard({ ...wizard, addEcto: !wizard.addEcto })}>Antiparazitikum</Button>
-              {wizard.addEcto && <Stack spacing={1}><TextField label="Produkt" value={wizard.ectoProduct} onChange={(e) => setWizard({ ...wizard, ectoProduct: e.target.value })} /><FormControl><InputLabel>Forma</InputLabel><Select value={wizard.ectoForm} label="Forma" onChange={(e) => setWizard({ ...wizard, ectoForm: e.target.value as any })}><MenuItem value="TABLET">tablet</MenuItem><MenuItem value="SPOT_ON">spotOn</MenuItem><MenuItem value="COLLAR">collar</MenuItem></Select></FormControl><TextField label="Interval dní" type="number" value={wizard.ectoInterval} onChange={(e) => setWizard({ ...wizard, ectoInterval: Number(e.target.value) })} /></Stack>}
-
-              <Button variant={wizard.addMedication ? 'contained' : 'outlined'} onClick={() => setWizard({ ...wizard, addMedication: !wizard.addMedication })}>Liek</Button>
-              {wizard.addMedication && <Stack spacing={1}><TextField label="Názov" value={wizard.medName} onChange={(e) => setWizard({ ...wizard, medName: e.target.value })} /><TextField label="Dôvod" value={wizard.medReason} onChange={(e) => setWizard({ ...wizard, medReason: e.target.value })} /><TextField label="Dávkovanie" value={wizard.medDose} onChange={(e) => setWizard({ ...wizard, medDose: e.target.value })} /><TextField label="Frekvencia" value={wizard.medFrequency} onChange={(e) => setWizard({ ...wizard, medFrequency: e.target.value })} /><TextField label="Koniec liečby" type="date" InputLabelProps={{ shrink: true }} value={wizard.medEndDate} onChange={(e) => setWizard({ ...wizard, medEndDate: e.target.value })} /></Stack>}
-
-              <Button variant={wizard.addDiet ? 'contained' : 'outlined'} onClick={() => setWizard({ ...wizard, addDiet: !wizard.addDiet })}>Zmena diéty</Button>
-              {wizard.addDiet && <Stack spacing={1}><TextField label="Granule / krmivo" value={wizard.foodName} onChange={(e) => setWizard({ ...wizard, foodName: e.target.value })} /><FormControl><InputLabel>Hodnotenie</InputLabel><Select value={wizard.suitabilityStatus} label="Hodnotenie" onChange={(e) => setWizard({ ...wizard, suitabilityStatus: e.target.value as any })}><MenuItem value="SUITABLE">SUITABLE</MenuItem><MenuItem value="RISKY">RISKY</MenuItem><MenuItem value="UNSUITABLE">UNSUITABLE</MenuItem></Select></FormControl><TextField label="Reakcia" value={wizard.reactionNotes} onChange={(e) => setWizard({ ...wizard, reactionNotes: e.target.value })} /></Stack>}
-            </Stack>
-          )}
-          {wizardStep === 2 && (
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Príloha do zdravotného pasu</Typography>
               <TextField label="Popis prílohy (napr. pas strana 4)" value={wizard.attachmentLabel} onChange={(e) => setWizard({ ...wizard, attachmentLabel: e.target.value })} />
               {selectedExamAlias && (
                 <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
@@ -1109,212 +954,13 @@ export default function HealthPassportPage() {
               {attachmentFile && <Chip label={`${attachmentFile.name} (${Math.round(attachmentFile.size / 1024)} kB)`} />}
               {attachmentError && <Alert severity="warning">{attachmentError}</Alert>}
               {fileAnalyzeError && <Alert severity="error">{fileAnalyzeError}</Alert>}
-              {fileResult?.contextAnalysis && (
-                <Alert severity="info">
-                  Typ dokumentu: <strong>{fileResult.contextAnalysis.documentType}</strong> ({fileResult.contextAnalysis.confidence})
-                  <br />
-                  {fileResult.contextAnalysis.summary}
-                </Alert>
-              )}
-              {fileResult?.examAnalysis && (
-                <Alert severity="info">
-                  AI analýza vyšetrenia (<strong>{fileResult.examAnalysis.examType}</strong>)
-                  <AiFormattedText text={fileResult.examAnalysis.analysis} />
-                </Alert>
-              )}
-              {fileResult?.examAnalysis && (
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-                      Uložiť AI výsledok ako lekársky záznam
-                    </Typography>
-                    <Stack spacing={1.5}>
-                      <Typography variant="body2" color="text.secondary">
-                        Po kontrole AI výsledku môžete jedným klikom pridať záznam priamo do dashboard timeline.
-                      </Typography>
-                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-                        <TextField
-                          fullWidth
-                          label="Dátum záznamu"
-                          type="date"
-                          InputLabelProps={{ shrink: true }}
-                          value={aiRecordDraft.date}
-                          onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, date: e.target.value }))}
-                        />
-                        <TextField
-                          fullWidth
-                          required
-                          label="Klinika / veterinár"
-                          value={aiRecordDraft.clinicName}
-                          onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, clinicName: e.target.value }))}
-                        />
-                      </Stack>
-                      <TextField
-                        label="Diagnóza (voliteľné)"
-                        value={aiRecordDraft.diagnosis}
-                        onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, diagnosis: e.target.value }))}
-                      />
-                      <TextField
-                        label="Odporúčanie (voliteľné)"
-                        value={aiRecordDraft.recommendations}
-                        onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, recommendations: e.target.value }))}
-                      />
-                      {aiDetectedRecords.length > 0 && (
-                        <Card variant="outlined">
-                          <CardContent>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
-                              AI rozpoznané záznamy (vyberte kam sa majú uložiť)
-                            </Typography>
-                            <Stack spacing={1.25}>
-                              {aiDetectedRecords.map((item) => (
-                                <Box key={item.id} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, p: 1 }}>
-                                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-                                    <FormControl fullWidth size="small">
-                                      <InputLabel>Typ záznamu</InputLabel>
-                                      <Select
-                                        label="Typ záznamu"
-                                        value={item.targetType}
-                                        onChange={(e) => {
-                                          const nextType = e.target.value as AiDetectedRecordType;
-                                          setAiDetectedRecords((prev) => prev.map((entry) => (
-                                            entry.id === item.id ? { ...entry, targetType: nextType } : entry
-                                          )));
-                                        }}
-                                      >
-                                        <MenuItem value="VACCINATION">Očkovanie</MenuItem>
-                                        <MenuItem value="DEWORMING">Odčervenie</MenuItem>
-                                        <MenuItem value="ECTOPARASITE">Antiparazitikum</MenuItem>
-                                        <MenuItem value="MEDICATION">Liek / tabletka</MenuItem>
-                                        <MenuItem value="NOTE">Iba poznámka návštevy</MenuItem>
-                                        <MenuItem value="SKIP">Neukladať</MenuItem>
-                                      </Select>
-                                    </FormControl>
-                                    <TextField
-                                      fullWidth
-                                      size="small"
-                                      label="Názov prípravku"
-                                      value={item.productName}
-                                      onChange={(e) => {
-                                        const nextName = e.target.value;
-                                        setAiDetectedRecords((prev) => prev.map((entry) => (
-                                          entry.id === item.id ? { ...entry, productName: nextName } : entry
-                                        )));
-                                      }}
-                                    />
-                                  </Stack>
-                                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ mt: 1 }}>
-                                    <TextField
-                                      size="small"
-                                      label="Dátum"
-                                      type="date"
-                                      InputLabelProps={{ shrink: true }}
-                                      value={item.date}
-                                      onChange={(e) => {
-                                        const nextDate = e.target.value;
-                                        setAiDetectedRecords((prev) => prev.map((entry) => (
-                                          entry.id === item.id ? { ...entry, date: nextDate } : entry
-                                        )));
-                                      }}
-                                    />
-                                    <TextField
-                                      size="small"
-                                      label="Platnosť do"
-                                      type="date"
-                                      InputLabelProps={{ shrink: true }}
-                                      value={item.validUntil}
-                                      onChange={(e) => {
-                                        const nextDate = e.target.value;
-                                        setAiDetectedRecords((prev) => prev.map((entry) => (
-                                          entry.id === item.id ? { ...entry, validUntil: nextDate } : entry
-                                        )));
-                                      }}
-                                    />
-                                    <TextField
-                                      size="small"
-                                      label="Šarža"
-                                      value={item.batchNumber}
-                                      onChange={(e) => {
-                                        const nextBatch = e.target.value;
-                                        setAiDetectedRecords((prev) => prev.map((entry) => (
-                                          entry.id === item.id ? { ...entry, batchNumber: nextBatch } : entry
-                                        )));
-                                      }}
-                                    />
-                                    {(item.targetType === 'DEWORMING' || item.targetType === 'ECTOPARASITE') && (
-                                      <TextField
-                                        size="small"
-                                        label="Interval (dni)"
-                                        type="number"
-                                        value={item.intervalDays}
-                                        onChange={(e) => {
-                                          const interval = Number(e.target.value || 0);
-                                          setAiDetectedRecords((prev) => prev.map((entry) => (
-                                            entry.id === item.id ? { ...entry, intervalDays: Math.max(1, interval || 30) } : entry
-                                          )));
-                                        }}
-                                      />
-                                    )}
-                                  </Stack>
-                                  <Chip
-                                    size="small"
-                                    sx={{ mt: 1 }}
-                                    label={`AI istota: ${item.sourceConfidence}`}
-                                    color={item.sourceConfidence === 'high' ? 'success' : item.sourceConfidence === 'medium' ? 'warning' : 'default'}
-                                  />
-                                </Box>
-                              ))}
-                            </Stack>
-                          </CardContent>
-                        </Card>
-                      )}
-                      <Button
-                        variant="contained"
-                        onClick={saveAiRecord}
-                        disabled={!canCreateAiRecord}
-                      >
-                        Pridať AI záznam do dashboardu
-                      </Button>
-                      {aiRecordFeedback && <Alert severity="success">{aiRecordFeedback}</Alert>}
-                    </Stack>
-                  </CardContent>
-                </Card>
-              )}
-              {fileResult?.healthPassportInterpretation && (
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-                      Detailný rozbor zdravotného pasu (AI)
-                    </Typography>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
-                      {fileResult.healthPassportInterpretation.summary}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
-                      Ako to AI chápe: {fileResult.healthPassportInterpretation.aiUnderstanding}
-                    </Typography>
-                    <Stack spacing={1}>
-                      {fileResult.healthPassportInterpretation.vaccinations.map((vac, index) => (
-                        <Box key={`${vac.vaccineName}-${vac.dateAdministered}-${index}`} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, p: 1 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {vac.disease || 'Nešpecifikované ochorenie'}
-                          </Typography>
-                          <Typography variant="caption" display="block">Vakcína: {vac.vaccineName || 'neznáme'}</Typography>
-                          <Typography variant="caption" display="block">Podané: {vac.dateAdministered || 'neznámy dátum'}</Typography>
-                          {vac.validUntil && <Typography variant="caption" display="block">Platnosť do: {vac.validUntil}</Typography>}
-                          {vac.batchNumber && <Typography variant="caption" display="block">Šarža: {vac.batchNumber}</Typography>}
-                          {vac.manufacturer && <Typography variant="caption" display="block">Výrobca: {vac.manufacturer}</Typography>}
-                          {vac.veterinarian && <Typography variant="caption" display="block">Veterinár/klinika: {vac.veterinarian}</Typography>}
-                          {vac.notes && <Typography variant="caption" display="block">Poznámka: {vac.notes}</Typography>}
-                          <Chip size="small" sx={{ mt: 0.5 }} label={`Istota AI: ${vac.confidence}`} color={vac.confidence === 'high' ? 'success' : vac.confidence === 'medium' ? 'warning' : 'default'} />
-                        </Box>
-                      ))}
-                    </Stack>
-                  </CardContent>
-                </Card>
-              )}
-              <TextField label="URL fotky stránky / bločku (voliteľné)" value={wizard.attachmentUrl} onChange={(e) => setWizard({ ...wizard, attachmentUrl: e.target.value })} helperText="Ak vyberiete súbor, použije sa nahratý súbor." />
+            </Stack>
+          )}
+          {wizardStep === 2 && (
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>3) Výdavok a ďalšia kontrola</Typography>
               <TextField label="Výdavok návštevy" type="number" value={wizard.totalExpense} onChange={(e) => setWizard({ ...wizard, totalExpense: e.target.value })} />
-              <TextField label="Výdavok lieky" type="number" value={wizard.extraMedicationExpense} onChange={(e) => setWizard({ ...wizard, extraMedicationExpense: e.target.value })} />
-              <TextField label="Výdavok krmivo" type="number" value={wizard.extraFoodExpense} onChange={(e) => setWizard({ ...wizard, extraFoodExpense: e.target.value })} />
+              <TextField label="Dátum ďalšej kontroly (voliteľné)" type="date" InputLabelProps={{ shrink: true }} value={wizard.nextCheckDate} onChange={(e) => setWizard({ ...wizard, nextCheckDate: e.target.value })} />
             </Stack>
           )}
         </DialogContent>
