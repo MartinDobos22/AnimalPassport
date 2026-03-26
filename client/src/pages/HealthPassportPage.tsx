@@ -176,7 +176,6 @@ interface AiDetectedDraftRecord {
   date: string;
   validUntil: string;
   batchNumber: string;
-  intervalDays: number;
 }
 
 type WizardAdditionalRecordType = '' | 'VACCINATION' | 'DEWORMING' | 'ECTOPARASITE' | 'MEDICATION';
@@ -385,17 +384,21 @@ export default function HealthPassportPage() {
       return;
     }
 
-    const records = fileResult.healthPassportInterpretation.vaccinations.map((item, index) => ({
-      id: `${Date.now()}-${index}`,
-      sourceConfidence: item.confidence,
-      sourceDisease: item.disease,
-      targetType: inferAiTargetType(item.disease, item.vaccineName),
-      productName: item.vaccineName || item.disease || 'Neznámy záznam',
-      date: normalizeDateInput(item.dateAdministered),
-      validUntil: normalizeDateInput(item.validUntil ?? plusDays(today(), 365)),
-      batchNumber: item.batchNumber ?? '',
-      intervalDays: 90,
-    }));
+    const records = fileResult.healthPassportInterpretation.vaccinations.map((item, index) => {
+      const targetType = inferAiTargetType(item.disease, item.vaccineName);
+      const date = normalizeDateInput(item.dateAdministered);
+      const fallbackValidUntil = targetType === 'VACCINATION' ? plusDays(date, 365) : plusDays(date, 90);
+      return {
+        id: `${Date.now()}-${index}`,
+        sourceConfidence: item.confidence,
+        sourceDisease: item.disease,
+        targetType,
+        productName: item.vaccineName || item.disease || 'Neznámy záznam',
+        date,
+        validUntil: normalizeDateInput(item.validUntil ?? fallbackValidUntil),
+        batchNumber: item.batchNumber ?? '',
+      };
+    });
 
     setAiDetectedRecords(records);
   }, [fileResult]);
@@ -1243,20 +1246,6 @@ export default function HealthPassportPage() {
                                         )));
                                       }}
                                     />
-                                    {(item.targetType === 'DEWORMING' || item.targetType === 'ECTOPARASITE') && (
-                                      <TextField
-                                        size="small"
-                                        label="Interval (dni)"
-                                        type="number"
-                                        value={item.intervalDays}
-                                        onChange={(e) => {
-                                          const interval = Number(e.target.value || 0);
-                                          setAiDetectedRecords((prev) => prev.map((entry) => (
-                                            entry.id === item.id ? { ...entry, intervalDays: Math.max(1, interval || 30) } : entry
-                                          )));
-                                        }}
-                                      />
-                                    )}
                                   </Stack>
                                   <Chip
                                     size="small"
