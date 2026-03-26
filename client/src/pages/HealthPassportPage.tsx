@@ -184,6 +184,7 @@ interface AiDetectedDraftRecord {
   date: string;
   validUntil: string;
   batchNumber: string;
+  intervalDays: number;
 }
 
 type WizardAdditionalRecordType = '' | 'VACCINATION' | 'DEWORMING' | 'ECTOPARASITE' | 'MEDICATION';
@@ -295,10 +296,12 @@ export default function HealthPassportPage() {
     addDeworming: false,
     dewormProduct: '',
     dewormValidUntil: plusDays(today(), 90),
+    dewormInterval: 90,
     addEcto: false,
     ectoProduct: '',
     ectoForm: 'TABLET' as 'TABLET' | 'SPOT_ON' | 'COLLAR',
     ectoValidUntil: plusDays(today(), 30),
+    ectoInterval: 30,
     addMedication: false,
     medName: '',
     medReason: '',
@@ -396,6 +399,7 @@ export default function HealthPassportPage() {
       const targetType = inferAiTargetType(item.disease, item.vaccineName);
       const date = normalizeDateInput(item.dateAdministered);
       const fallbackValidUntil = targetType === 'VACCINATION' ? plusDays(date, 365) : plusDays(date, 90);
+      const intervalDays = targetType === 'ECTOPARASITE' ? 30 : 90;
       return {
         id: `${Date.now()}-${index}`,
         sourceConfidence: item.confidence,
@@ -405,6 +409,7 @@ export default function HealthPassportPage() {
         date,
         validUntil: normalizeDateInput(item.validUntil ?? fallbackValidUntil),
         batchNumber: item.batchNumber ?? '',
+        intervalDays,
       };
     });
 
@@ -539,8 +544,8 @@ export default function HealthPassportPage() {
     setWizard({
       date: today(), clinicName: '', reason: '', findings: '', diagnosis: '', recommendations: '', nextCheckDate: '',
       addVaccination: false, vaccineName: '', vaccineType: 'RABIES', vaccineValidUntil: plusDays(today(), 365),
-      addDeworming: false, dewormProduct: '', dewormValidUntil: plusDays(today(), 90),
-      addEcto: false, ectoProduct: '', ectoForm: 'TABLET', ectoValidUntil: plusDays(today(), 30),
+      addDeworming: false, dewormProduct: '', dewormValidUntil: plusDays(today(), 90), dewormInterval: 90,
+      addEcto: false, ectoProduct: '', ectoForm: 'TABLET', ectoValidUntil: plusDays(today(), 30), ectoInterval: 30,
       addMedication: false, medName: '', medReason: '', medDose: '', medFrequency: '2x denne', medEndDate: '',
       addDiet: false, foodName: '', reactionNotes: '', suitabilityStatus: 'SUITABLE',
       attachmentLabel: '', attachmentUrl: '', totalExpense: '', extraMedicationExpense: '', extraFoodExpense: '',
@@ -853,7 +858,12 @@ export default function HealthPassportPage() {
       .filter(Boolean)
       .join('\n\n');
 
-    const selectedRecords = aiDetectedRecords.filter((item) => item.targetType !== 'SKIP');
+    const selectedRecords = aiDetectedRecords
+      .filter((item) => item.targetType !== 'SKIP')
+      .map((item) => ({
+        ...item,
+        intervalDays: item.intervalDays || (item.targetType === 'ECTOPARASITE' ? 30 : 90),
+      }));
     const visitBundle = VetVisitHelper.createAiVisitBundle({
       dogId: selectedDogId,
       draft: aiRecordDraft,
