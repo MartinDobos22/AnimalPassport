@@ -542,6 +542,8 @@ export default function HealthPassportPage() {
     setAttachmentPreviewUrl('');
     setAttachmentError('');
     setPendingAttachment(null);
+    setSelectedVisitMainCategory('');
+    setSelectedVisitSubcategory('');
   };
 
   const [timelineFilter, setTimelineFilter] = useState<'ALL' | TimelineEvent['type']>('ALL');
