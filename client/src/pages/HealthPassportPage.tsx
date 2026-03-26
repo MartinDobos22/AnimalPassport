@@ -1026,6 +1026,7 @@ export default function HealthPassportPage() {
                       setPendingAttachment(null);
                     }}
                   >
+                    <MenuItem value="">Bez hlavnej kategórie</MenuItem>
                     {VISIT_CATEGORY_OPTIONS.map((item) => (
                       <MenuItem key={item.main} value={item.main}>{item.main}</MenuItem>
                     ))}
@@ -1044,6 +1045,7 @@ export default function HealthPassportPage() {
                       setPendingAttachment(null);
                     }}
                   >
+                    <MenuItem value="">Bez podkategórie</MenuItem>
                     {selectedVisitSubcategoryOptions.map((sub) => (
                       <MenuItem key={sub} value={sub}>{sub}</MenuItem>
                     ))}
