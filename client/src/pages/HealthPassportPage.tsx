@@ -487,6 +487,7 @@ export default function HealthPassportPage() {
           ? 'MEDICATION'
           : '';
   const shouldShowDiagnosisAndRecommendations = Boolean(selectedVisitSubcategory || selectedWizardAdditionalRecord);
+  const canProceedWizard = Boolean(wizard.clinicName.trim());
 
   const handleWizardAdditionalRecordChange = (value: WizardAdditionalRecordType) => {
     setWizard((prev) => ({
@@ -500,7 +501,7 @@ export default function HealthPassportPage() {
   };
 
   const saveWizard = () => {
-    if (!selectedDogId || !wizard.clinicName.trim() || !selectedVisitMainCategory || !selectedVisitSubcategory) return;
+    if (!selectedDogId || !wizard.clinicName.trim()) return;
     const visitBundle = VetVisitHelper.createWizardVisitBundle({
       dogId: selectedDogId,
       draft: wizard,
@@ -1320,7 +1321,9 @@ export default function HealthPassportPage() {
         <DialogActions>
           <Button onClick={() => setWizardOpen(false)}>Zrušiť</Button>
           {wizardStep > 0 && <Button onClick={() => setWizardStep((s) => s - 1)}>Späť</Button>}
-          {wizardStep < 1 ? <Button variant="contained" onClick={() => setWizardStep((s) => s + 1)}>Pokračovať</Button> : <Button variant="contained" onClick={saveWizard}>Uložiť všetko</Button>}
+          {wizardStep < 1
+            ? <Button variant="contained" onClick={() => setWizardStep((s) => s + 1)} disabled={!canProceedWizard}>Pokračovať</Button>
+            : <Button variant="contained" onClick={saveWizard} disabled={!canProceedWizard}>Uložiť všetko</Button>}
         </DialogActions>
       </Dialog>
 
