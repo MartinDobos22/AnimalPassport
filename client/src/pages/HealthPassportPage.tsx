@@ -527,6 +527,7 @@ export default function HealthPassportPage() {
         attachmentFileName: attachmentFile?.name,
       },
       currentDietEntryId: dogDiet[0]?.id,
+      plusDays,
       uid,
     });
 
