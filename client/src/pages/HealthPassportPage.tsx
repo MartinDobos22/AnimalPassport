@@ -500,6 +500,7 @@ export default function HealthPassportPage() {
         : wizard.addMedication
           ? 'MEDICATION'
           : '';
+  const shouldShowDiagnosisAndRecommendations = Boolean(selectedVisitSubcategory || selectedWizardAdditionalRecord);
 
   const handleWizardAdditionalRecordChange = (value: WizardAdditionalRecordType) => {
     setWizard((prev) => ({
@@ -1082,8 +1083,12 @@ export default function HealthPassportPage() {
               <TextField label="Dátum" type="date" InputLabelProps={{ shrink: true }} value={wizard.date} onChange={(e) => setWizard({ ...wizard, date: e.target.value })} />
               <TextField label="Klinika" value={wizard.clinicName} onChange={(e) => setWizard({ ...wizard, clinicName: e.target.value })} />
               <TextField label="Poznámka k dôvodu (voliteľné)" value={wizard.reason} onChange={(e) => setWizard({ ...wizard, reason: e.target.value })} helperText="Kategória a podkategória sa berú z výberu vyššie." />
-              <TextField label="Nález / diagnóza" value={wizard.diagnosis} onChange={(e) => setWizard({ ...wizard, diagnosis: e.target.value })} />
-              <TextField label="Odporúčania" value={wizard.recommendations} onChange={(e) => setWizard({ ...wizard, recommendations: e.target.value })} />
+              {shouldShowDiagnosisAndRecommendations && (
+                <>
+                  <TextField label="Nález / diagnóza" value={wizard.diagnosis} onChange={(e) => setWizard({ ...wizard, diagnosis: e.target.value })} />
+                  <TextField label="Odporúčania" value={wizard.recommendations} onChange={(e) => setWizard({ ...wizard, recommendations: e.target.value })} />
+                </>
+              )}
             </Stack>
           )}
           {wizardStep === 0 && (
