@@ -31,11 +31,11 @@ export interface WizardVisitDraft {
   vaccineValidUntil: string;
   addDeworming: boolean;
   dewormProduct: string;
-  dewormInterval: number;
+  dewormValidUntil: string;
   addEcto: boolean;
   ectoProduct: string;
   ectoForm: EctoparasiteRecord['form'];
-  ectoInterval: number;
+  ectoValidUntil: string;
   addMedication: boolean;
   medName: string;
   medReason: string;
@@ -75,7 +75,6 @@ interface WizardVisitBundleInput {
   subcategory: string;
   attachmentDraft: VisitAttachmentDraft;
   currentDietEntryId?: string;
-  plusDays: (date: string, days: number) => string;
   uid: () => string;
 }
 
@@ -139,7 +138,7 @@ export class VetVisitHelper {
   }
 
   static createWizardVisitBundle(input: WizardVisitBundleInput): VisitBundle {
-    const { dogId, draft, mainCategory, subcategory, attachmentDraft, currentDietEntryId, plusDays, uid } = input;
+    const { dogId, draft, mainCategory, subcategory, attachmentDraft, currentDietEntryId, uid } = input;
     const visitId = uid();
     const createdAt = new Date().toISOString();
     const reason = VetVisitHelper.buildVisitReason(mainCategory, subcategory, draft.reason);
@@ -196,8 +195,8 @@ export class VetVisitHelper {
           dogId,
           productName: draft.dewormProduct,
           dateGiven: draft.date,
-          intervalDays: draft.dewormInterval,
-          nextDueDate: plusDays(draft.date, draft.dewormInterval),
+          intervalDays: computeIntervalDays(draft.date, draft.dewormValidUntil, 90),
+          nextDueDate: draft.dewormValidUntil,
           attachments,
         }]
       : [];
@@ -209,8 +208,8 @@ export class VetVisitHelper {
           productName: draft.ectoProduct,
           form: draft.ectoForm,
           dateGiven: draft.date,
-          intervalDays: draft.ectoInterval,
-          nextDueDate: plusDays(draft.date, draft.ectoInterval),
+          intervalDays: computeIntervalDays(draft.date, draft.ectoValidUntil, 30),
+          nextDueDate: draft.ectoValidUntil,
           attachments,
         }]
       : [];

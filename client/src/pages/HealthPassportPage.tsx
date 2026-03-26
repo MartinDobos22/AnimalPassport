@@ -59,6 +59,14 @@ const plusDays = (date: string, days: number) => {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 };
+const computeIntervalDaysFromDates = (dateGiven: string, validUntil: string, fallback: number) => {
+  if (!validUntil) return fallback;
+  const start = new Date(dateGiven).getTime();
+  const end = new Date(validUntil).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end)) return fallback;
+  const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  return Math.max(1, days || fallback);
+};
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const SUPPORTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -132,6 +140,12 @@ const EXAM_SUBCATEGORY_TO_ALIAS: Record<string, string> = {
   'Plemenné testy': 'plemenne_testy',
   'Záznam z veterinárneho pasu': 'veterinarny_pas',
 };
+const EXAM_TYPE_OPTIONS = VISIT_CATEGORY_OPTIONS.flatMap((category) => category.sub.map((sub) => ({
+  value: EXAM_SUBCATEGORY_TO_ALIAS[sub],
+  label: sub,
+  main: category.main,
+  sub,
+})));
 const TIMELINE_FILTER_OPTIONS: Array<{ value: 'ALL' | TimelineEvent['type']; label: string }> = [
   { value: 'ALL', label: 'Všetko' },
   { value: 'VACCINATION', label: 'Očkovanie' },
@@ -272,6 +286,7 @@ export default function HealthPassportPage() {
   const [wizardStep, setWizardStep] = useState(0);
   const [selectedVisitMainCategory, setSelectedVisitMainCategory] = useState('');
   const [selectedVisitSubcategory, setSelectedVisitSubcategory] = useState('');
+  const [selectedVisitExamAlias, setSelectedVisitExamAlias] = useState('');
   const [wizard, setWizard] = useState({
     date: today(),
     clinicName: '',
@@ -286,11 +301,11 @@ export default function HealthPassportPage() {
     vaccineValidUntil: plusDays(today(), 365),
     addDeworming: false,
     dewormProduct: '',
-    dewormInterval: 90,
+    dewormValidUntil: plusDays(today(), 90),
     addEcto: false,
     ectoProduct: '',
     ectoForm: 'TABLET' as 'TABLET' | 'SPOT_ON' | 'COLLAR',
-    ectoInterval: 30,
+    ectoValidUntil: plusDays(today(), 30),
     addMedication: false,
     medName: '',
     medReason: '',
@@ -476,7 +491,7 @@ export default function HealthPassportPage() {
 
   const currentDiet = [...dogDiet].sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
   const selectedVisitSubcategoryOptions = VISIT_CATEGORY_OPTIONS.find((item) => item.main === selectedVisitMainCategory)?.sub ?? [];
-  const selectedExamAlias = selectedVisitSubcategory ? EXAM_SUBCATEGORY_TO_ALIAS[selectedVisitSubcategory] : '';
+  const selectedExamAlias = selectedVisitExamAlias || (selectedVisitSubcategory ? EXAM_SUBCATEGORY_TO_ALIAS[selectedVisitSubcategory] : '');
   const selectedWizardAdditionalRecord: WizardAdditionalRecordType = wizard.addVaccination
     ? 'VACCINATION'
     : wizard.addDeworming
@@ -514,7 +529,6 @@ export default function HealthPassportPage() {
         attachmentFileName: attachmentFile?.name,
       },
       currentDietEntryId: dogDiet[0]?.id,
-      plusDays,
       uid,
     });
 
@@ -532,8 +546,8 @@ export default function HealthPassportPage() {
     setWizard({
       date: today(), clinicName: '', reason: '', findings: '', diagnosis: '', recommendations: '', nextCheckDate: '',
       addVaccination: false, vaccineName: '', vaccineType: 'RABIES', vaccineValidUntil: plusDays(today(), 365),
-      addDeworming: false, dewormProduct: '', dewormInterval: 90,
-      addEcto: false, ectoProduct: '', ectoForm: 'TABLET', ectoInterval: 30,
+      addDeworming: false, dewormProduct: '', dewormValidUntil: plusDays(today(), 90),
+      addEcto: false, ectoProduct: '', ectoForm: 'TABLET', ectoValidUntil: plusDays(today(), 30),
       addMedication: false, medName: '', medReason: '', medDose: '', medFrequency: '2x denne', medEndDate: '',
       addDiet: false, foodName: '', reactionNotes: '', suitabilityStatus: 'SUITABLE',
       attachmentLabel: '', attachmentUrl: '', totalExpense: '', extraMedicationExpense: '', extraFoodExpense: '',
@@ -544,6 +558,7 @@ export default function HealthPassportPage() {
     setPendingAttachment(null);
     setSelectedVisitMainCategory('');
     setSelectedVisitSubcategory('');
+    setSelectedVisitExamAlias('');
   };
 
   const [timelineFilter, setTimelineFilter] = useState<'ALL' | TimelineEvent['type']>('ALL');
@@ -771,13 +786,26 @@ export default function HealthPassportPage() {
       setDewormings((prev) => prev.map((item) => (
         item.id !== selectedTimelineRecord.id
           ? item
-          : { ...item, productName: dewormingDraft.productName, dateGiven: dewormingDraft.dateGiven, intervalDays: dewormingDraft.intervalDays, nextDueDate: dewormingDraft.nextDueDate }
+          : {
+              ...item,
+              productName: dewormingDraft.productName,
+              dateGiven: dewormingDraft.dateGiven,
+              intervalDays: computeIntervalDaysFromDates(dewormingDraft.dateGiven, dewormingDraft.nextDueDate, 90),
+              nextDueDate: dewormingDraft.nextDueDate,
+            }
       )));
     } else if (selectedTimelineRecord.type === 'ECTOPARASITE') {
       setEctos((prev) => prev.map((item) => (
         item.id !== selectedTimelineRecord.id
           ? item
-          : { ...item, productName: ectoDraft.productName, form: ectoDraft.form, dateGiven: ectoDraft.dateGiven, intervalDays: ectoDraft.intervalDays, nextDueDate: ectoDraft.nextDueDate }
+          : {
+              ...item,
+              productName: ectoDraft.productName,
+              form: ectoDraft.form,
+              dateGiven: ectoDraft.dateGiven,
+              intervalDays: computeIntervalDaysFromDates(ectoDraft.dateGiven, ectoDraft.nextDueDate, 30),
+              nextDueDate: ectoDraft.nextDueDate,
+            }
       )));
     } else if (selectedTimelineRecord.type === 'MEDICATION') {
       setMedications((prev) => prev.map((item) => (
@@ -1023,6 +1051,7 @@ export default function HealthPassportPage() {
                     onChange={(e) => {
                       setSelectedVisitMainCategory(e.target.value);
                       setSelectedVisitSubcategory('');
+                      setSelectedVisitExamAlias('');
                       setAttachmentFile(null);
                       setAttachmentPreviewUrl('');
                       setAttachmentError('');
@@ -1041,7 +1070,9 @@ export default function HealthPassportPage() {
                     value={selectedVisitSubcategory}
                     label="Podkategória"
                     onChange={(e) => {
-                      setSelectedVisitSubcategory(e.target.value);
+                      const nextSubcategory = e.target.value;
+                      setSelectedVisitSubcategory(nextSubcategory);
+                      setSelectedVisitExamAlias(nextSubcategory ? EXAM_SUBCATEGORY_TO_ALIAS[nextSubcategory] : '');
                       setAttachmentFile(null);
                       setAttachmentPreviewUrl('');
                       setAttachmentError('');
@@ -1055,6 +1086,33 @@ export default function HealthPassportPage() {
                   </Select>
                 </FormControl>
               </Stack>
+              <FormControl fullWidth>
+                <InputLabel>Typ vyšetrenia</InputLabel>
+                <Select
+                  value={selectedVisitExamAlias}
+                  label="Typ vyšetrenia"
+                  onChange={(e) => {
+                    const nextAlias = e.target.value;
+                    const selectedOption = EXAM_TYPE_OPTIONS.find((item) => item.value === nextAlias);
+                    setSelectedVisitExamAlias(nextAlias);
+                    if (selectedOption) {
+                      setSelectedVisitMainCategory(selectedOption.main);
+                      setSelectedVisitSubcategory(selectedOption.sub);
+                    }
+                    setAttachmentFile(null);
+                    setAttachmentPreviewUrl('');
+                    setAttachmentError('');
+                    setPendingAttachment(null);
+                  }}
+                >
+                  <MenuItem value="">Bez typu vyšetrenia</MenuItem>
+                  {EXAM_TYPE_OPTIONS.map((option) => (
+                    <MenuItem key={`${option.main}-${option.value}`} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <TextField label="Dátum" type="date" InputLabelProps={{ shrink: true }} value={wizard.date} onChange={(e) => setWizard({ ...wizard, date: e.target.value })} />
               <TextField label="Klinika" value={wizard.clinicName} onChange={(e) => setWizard({ ...wizard, clinicName: e.target.value })} />
               {shouldShowDiagnosisAndRecommendations && (
@@ -1083,9 +1141,9 @@ export default function HealthPassportPage() {
               </FormControl>
               {wizard.addVaccination && <Stack spacing={1}><TextField label="Názov vakcíny" value={wizard.vaccineName} onChange={(e) => setWizard({ ...wizard, vaccineName: e.target.value })} /><FormControl><InputLabel>Typ</InputLabel><Select value={wizard.vaccineType} label="Typ" onChange={(e) => setWizard({ ...wizard, vaccineType: e.target.value as any })}><MenuItem value="RABIES">RABIES</MenuItem><MenuItem value="COMBINED">COMBINED</MenuItem><MenuItem value="OTHER">OTHER</MenuItem></Select></FormControl><TextField label="Platné do" type="date" InputLabelProps={{ shrink: true }} value={wizard.vaccineValidUntil} onChange={(e) => setWizard({ ...wizard, vaccineValidUntil: e.target.value })} /></Stack>}
 
-              {wizard.addDeworming && <Stack spacing={1}><TextField label="Produkt" value={wizard.dewormProduct} onChange={(e) => setWizard({ ...wizard, dewormProduct: e.target.value })} /><TextField label="Interval dní" type="number" value={wizard.dewormInterval} onChange={(e) => setWizard({ ...wizard, dewormInterval: Number(e.target.value) })} /></Stack>}
+              {wizard.addDeworming && <Stack spacing={1}><TextField label="Produkt" value={wizard.dewormProduct} onChange={(e) => setWizard({ ...wizard, dewormProduct: e.target.value })} /><TextField label="Platné do" type="date" InputLabelProps={{ shrink: true }} value={wizard.dewormValidUntil} onChange={(e) => setWizard({ ...wizard, dewormValidUntil: e.target.value })} /></Stack>}
 
-              {wizard.addEcto && <Stack spacing={1}><TextField label="Produkt" value={wizard.ectoProduct} onChange={(e) => setWizard({ ...wizard, ectoProduct: e.target.value })} /><FormControl><InputLabel>Forma</InputLabel><Select value={wizard.ectoForm} label="Forma" onChange={(e) => setWizard({ ...wizard, ectoForm: e.target.value as any })}><MenuItem value="TABLET">tablet</MenuItem><MenuItem value="SPOT_ON">spotOn</MenuItem><MenuItem value="COLLAR">collar</MenuItem></Select></FormControl><TextField label="Interval dní" type="number" value={wizard.ectoInterval} onChange={(e) => setWizard({ ...wizard, ectoInterval: Number(e.target.value) })} /></Stack>}
+              {wizard.addEcto && <Stack spacing={1}><TextField label="Produkt" value={wizard.ectoProduct} onChange={(e) => setWizard({ ...wizard, ectoProduct: e.target.value })} /><FormControl><InputLabel>Forma</InputLabel><Select value={wizard.ectoForm} label="Forma" onChange={(e) => setWizard({ ...wizard, ectoForm: e.target.value as any })}><MenuItem value="TABLET">tablet</MenuItem><MenuItem value="SPOT_ON">spotOn</MenuItem><MenuItem value="COLLAR">collar</MenuItem></Select></FormControl><TextField label="Platné do" type="date" InputLabelProps={{ shrink: true }} value={wizard.ectoValidUntil} onChange={(e) => setWizard({ ...wizard, ectoValidUntil: e.target.value })} /></Stack>}
 
               {wizard.addMedication && <Stack spacing={1}><TextField label="Názov" value={wizard.medName} onChange={(e) => setWizard({ ...wizard, medName: e.target.value })} /><TextField label="Dôvod" value={wizard.medReason} onChange={(e) => setWizard({ ...wizard, medReason: e.target.value })} /><TextField label="Dávkovanie" value={wizard.medDose} onChange={(e) => setWizard({ ...wizard, medDose: e.target.value })} /><TextField label="Frekvencia" value={wizard.medFrequency} onChange={(e) => setWizard({ ...wizard, medFrequency: e.target.value })} /><TextField label="Koniec liečby" type="date" InputLabelProps={{ shrink: true }} value={wizard.medEndDate} onChange={(e) => setWizard({ ...wizard, medEndDate: e.target.value })} /></Stack>}
             </Stack>
@@ -1493,8 +1551,7 @@ export default function HealthPassportPage() {
               <>
                 <TextField label="Produkt" value={dewormingDraft.productName} onChange={(e) => setDewormingDraft((prev) => ({ ...prev, productName: e.target.value }))} disabled={!isEditingTimelineRecord} />
                 <TextField label="Dátum podania" type="date" InputLabelProps={{ shrink: true }} value={dewormingDraft.dateGiven} onChange={(e) => setDewormingDraft((prev) => ({ ...prev, dateGiven: e.target.value }))} disabled={!isEditingTimelineRecord} />
-                <TextField label="Interval dní" type="number" value={dewormingDraft.intervalDays} onChange={(e) => setDewormingDraft((prev) => ({ ...prev, intervalDays: Number(e.target.value) }))} disabled={!isEditingTimelineRecord} />
-                <TextField label="Ďalší termín" type="date" InputLabelProps={{ shrink: true }} value={dewormingDraft.nextDueDate} onChange={(e) => setDewormingDraft((prev) => ({ ...prev, nextDueDate: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Platné do" type="date" InputLabelProps={{ shrink: true }} value={dewormingDraft.nextDueDate} onChange={(e) => setDewormingDraft((prev) => ({ ...prev, nextDueDate: e.target.value }))} disabled={!isEditingTimelineRecord} />
               </>
             )}
 
@@ -1510,8 +1567,7 @@ export default function HealthPassportPage() {
                   </Select>
                 </FormControl>
                 <TextField label="Dátum podania" type="date" InputLabelProps={{ shrink: true }} value={ectoDraft.dateGiven} onChange={(e) => setEctoDraft((prev) => ({ ...prev, dateGiven: e.target.value }))} disabled={!isEditingTimelineRecord} />
-                <TextField label="Interval dní" type="number" value={ectoDraft.intervalDays} onChange={(e) => setEctoDraft((prev) => ({ ...prev, intervalDays: Number(e.target.value) }))} disabled={!isEditingTimelineRecord} />
-                <TextField label="Ďalší termín" type="date" InputLabelProps={{ shrink: true }} value={ectoDraft.nextDueDate} onChange={(e) => setEctoDraft((prev) => ({ ...prev, nextDueDate: e.target.value }))} disabled={!isEditingTimelineRecord} />
+                <TextField label="Platné do" type="date" InputLabelProps={{ shrink: true }} value={ectoDraft.nextDueDate} onChange={(e) => setEctoDraft((prev) => ({ ...prev, nextDueDate: e.target.value }))} disabled={!isEditingTimelineRecord} />
               </>
             )}
 
