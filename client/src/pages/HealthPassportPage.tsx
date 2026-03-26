@@ -140,6 +140,12 @@ const EXAM_SUBCATEGORY_TO_ALIAS: Record<string, string> = {
   'Plemenné testy': 'plemenne_testy',
   'Záznam z veterinárneho pasu': 'veterinarny_pas',
 };
+const EXAM_TYPE_OPTIONS = VISIT_CATEGORY_OPTIONS.flatMap((category) => category.sub.map((sub) => ({
+  value: EXAM_SUBCATEGORY_TO_ALIAS[sub],
+  label: sub,
+  main: category.main,
+  sub,
+})));
 const TIMELINE_FILTER_OPTIONS: Array<{ value: 'ALL' | TimelineEvent['type']; label: string }> = [
   { value: 'ALL', label: 'Všetko' },
   { value: 'VACCINATION', label: 'Očkovanie' },
@@ -280,6 +286,7 @@ export default function HealthPassportPage() {
   const [wizardStep, setWizardStep] = useState(0);
   const [selectedVisitMainCategory, setSelectedVisitMainCategory] = useState('');
   const [selectedVisitSubcategory, setSelectedVisitSubcategory] = useState('');
+  const [selectedVisitExamAlias, setSelectedVisitExamAlias] = useState('');
   const [wizard, setWizard] = useState({
     date: today(),
     clinicName: '',
@@ -484,7 +491,7 @@ export default function HealthPassportPage() {
 
   const currentDiet = [...dogDiet].sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
   const selectedVisitSubcategoryOptions = VISIT_CATEGORY_OPTIONS.find((item) => item.main === selectedVisitMainCategory)?.sub ?? [];
-  const selectedExamAlias = selectedVisitSubcategory ? EXAM_SUBCATEGORY_TO_ALIAS[selectedVisitSubcategory] : '';
+  const selectedExamAlias = selectedVisitExamAlias || (selectedVisitSubcategory ? EXAM_SUBCATEGORY_TO_ALIAS[selectedVisitSubcategory] : '');
   const selectedWizardAdditionalRecord: WizardAdditionalRecordType = wizard.addVaccination
     ? 'VACCINATION'
     : wizard.addDeworming
@@ -549,6 +556,9 @@ export default function HealthPassportPage() {
     setAttachmentPreviewUrl('');
     setAttachmentError('');
     setPendingAttachment(null);
+    setSelectedVisitMainCategory('');
+    setSelectedVisitSubcategory('');
+    setSelectedVisitExamAlias('');
   };
 
   const [timelineFilter, setTimelineFilter] = useState<'ALL' | TimelineEvent['type']>('ALL');
@@ -1041,6 +1051,7 @@ export default function HealthPassportPage() {
                     onChange={(e) => {
                       setSelectedVisitMainCategory(e.target.value);
                       setSelectedVisitSubcategory('');
+                      setSelectedVisitExamAlias('');
                       setAttachmentFile(null);
                       setAttachmentPreviewUrl('');
                       setAttachmentError('');
@@ -1059,7 +1070,9 @@ export default function HealthPassportPage() {
                     value={selectedVisitSubcategory}
                     label="Podkategória"
                     onChange={(e) => {
-                      setSelectedVisitSubcategory(e.target.value);
+                      const nextSubcategory = e.target.value;
+                      setSelectedVisitSubcategory(nextSubcategory);
+                      setSelectedVisitExamAlias(nextSubcategory ? EXAM_SUBCATEGORY_TO_ALIAS[nextSubcategory] : '');
                       setAttachmentFile(null);
                       setAttachmentPreviewUrl('');
                       setAttachmentError('');
@@ -1073,6 +1086,33 @@ export default function HealthPassportPage() {
                   </Select>
                 </FormControl>
               </Stack>
+              <FormControl fullWidth>
+                <InputLabel>Typ vyšetrenia</InputLabel>
+                <Select
+                  value={selectedVisitExamAlias}
+                  label="Typ vyšetrenia"
+                  onChange={(e) => {
+                    const nextAlias = e.target.value;
+                    const selectedOption = EXAM_TYPE_OPTIONS.find((item) => item.value === nextAlias);
+                    setSelectedVisitExamAlias(nextAlias);
+                    if (selectedOption) {
+                      setSelectedVisitMainCategory(selectedOption.main);
+                      setSelectedVisitSubcategory(selectedOption.sub);
+                    }
+                    setAttachmentFile(null);
+                    setAttachmentPreviewUrl('');
+                    setAttachmentError('');
+                    setPendingAttachment(null);
+                  }}
+                >
+                  <MenuItem value="">Bez typu vyšetrenia</MenuItem>
+                  {EXAM_TYPE_OPTIONS.map((option) => (
+                    <MenuItem key={`${option.main}-${option.value}`} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <TextField label="Dátum" type="date" InputLabelProps={{ shrink: true }} value={wizard.date} onChange={(e) => setWizard({ ...wizard, date: e.target.value })} />
               <TextField label="Klinika" value={wizard.clinicName} onChange={(e) => setWizard({ ...wizard, clinicName: e.target.value })} />
               {shouldShowDiagnosisAndRecommendations && (
