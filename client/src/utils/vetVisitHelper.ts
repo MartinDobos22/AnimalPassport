@@ -77,6 +77,7 @@ interface WizardVisitBundleInput {
   subcategory: string;
   attachmentDraft: VisitAttachmentDraft;
   currentDietEntryId?: string;
+  plusDays: (date: string, days: number) => string;
   uid: () => string;
 }
 
@@ -140,7 +141,7 @@ export class VetVisitHelper {
   }
 
   static createWizardVisitBundle(input: WizardVisitBundleInput): VisitBundle {
-    const { dogId, draft, mainCategory, subcategory, attachmentDraft, currentDietEntryId, uid } = input;
+    const { dogId, draft, mainCategory, subcategory, attachmentDraft, currentDietEntryId, plusDays, uid } = input;
     const visitId = uid();
     const createdAt = new Date().toISOString();
     const reason = VetVisitHelper.buildVisitReason(mainCategory, subcategory, draft.reason);
@@ -186,7 +187,7 @@ export class VetVisitHelper {
           type: draft.vaccineType,
           name: draft.vaccineName,
           dateApplied: draft.date,
-          validUntil: draft.vaccineValidUntil,
+          validUntil: draft.vaccineValidUntil || plusDays(draft.date, 365),
           attachments,
         }]
       : [];
@@ -198,7 +199,7 @@ export class VetVisitHelper {
           productName: draft.dewormProduct,
           dateGiven: draft.date,
           intervalDays: computeIntervalDays(draft.date, draft.dewormValidUntil, draft.dewormInterval || 90),
-          nextDueDate: draft.dewormValidUntil,
+          nextDueDate: draft.dewormValidUntil || plusDays(draft.date, draft.dewormInterval || 90),
           attachments,
         }]
       : [];
@@ -211,7 +212,7 @@ export class VetVisitHelper {
           form: draft.ectoForm,
           dateGiven: draft.date,
           intervalDays: computeIntervalDays(draft.date, draft.ectoValidUntil, draft.ectoInterval || 30),
-          nextDueDate: draft.ectoValidUntil,
+          nextDueDate: draft.ectoValidUntil || plusDays(draft.date, draft.ectoInterval || 30),
           attachments,
         }]
       : [];
