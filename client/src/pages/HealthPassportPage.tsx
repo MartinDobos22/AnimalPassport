@@ -180,6 +180,8 @@ interface AiDetectedDraftRecord {
   intervalDays: number;
 }
 
+type WizardAdditionalRecordType = '' | 'VACCINATION' | 'DEWORMING' | 'ECTOPARASITE' | 'MEDICATION';
+
 const KNOWN_DEWORMING_KEYWORDS = ['drontal', 'milbemax', 'milprazon', 'caniverm', 'deworm', 'odcerv'];
 const KNOWN_ECTOPARASITE_KEYWORDS = ['simparica', 'bravecto', 'advantix', 'nexgard', 'ecto', 'parazit', 'klie', 'blch'];
 const KNOWN_RABIES_KEYWORDS = ['rabies', 'besnot', 'nobivac rabies'];
@@ -489,6 +491,26 @@ export default function HealthPassportPage() {
   const currentDiet = [...dogDiet].sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
   const selectedVisitSubcategoryOptions = VISIT_CATEGORY_OPTIONS.find((item) => item.main === selectedVisitMainCategory)?.sub ?? [];
   const selectedExamAlias = selectedVisitSubcategory ? EXAM_SUBCATEGORY_TO_ALIAS[selectedVisitSubcategory] : '';
+  const selectedWizardAdditionalRecord: WizardAdditionalRecordType = wizard.addVaccination
+    ? 'VACCINATION'
+    : wizard.addDeworming
+      ? 'DEWORMING'
+      : wizard.addEcto
+        ? 'ECTOPARASITE'
+        : wizard.addMedication
+          ? 'MEDICATION'
+          : '';
+
+  const handleWizardAdditionalRecordChange = (value: WizardAdditionalRecordType) => {
+    setWizard((prev) => ({
+      ...prev,
+      addVaccination: value === 'VACCINATION',
+      addDeworming: value === 'DEWORMING',
+      addEcto: value === 'ECTOPARASITE',
+      addMedication: value === 'MEDICATION',
+      addDiet: false,
+    }));
+  };
 
   const saveWizard = () => {
     if (!selectedDogId || !wizard.clinicName.trim() || !selectedVisitMainCategory || !selectedVisitSubcategory) return;
@@ -1066,20 +1088,27 @@ export default function HealthPassportPage() {
           )}
           {wizardStep === 0 && (
             <Stack spacing={2} sx={{ mt: 1 }}>
-              <Button variant={wizard.addVaccination ? 'contained' : 'outlined'} onClick={() => setWizard({ ...wizard, addVaccination: !wizard.addVaccination })}>Očkovanie</Button>
+              <FormControl fullWidth>
+                <InputLabel>Doplňujúci záznam</InputLabel>
+                <Select
+                  value={selectedWizardAdditionalRecord}
+                  label="Doplňujúci záznam"
+                  onChange={(e) => handleWizardAdditionalRecordChange(e.target.value as WizardAdditionalRecordType)}
+                >
+                  <MenuItem value="">Bez doplňujúceho záznamu</MenuItem>
+                  <MenuItem value="VACCINATION">Očkovanie</MenuItem>
+                  <MenuItem value="DEWORMING">Odčervenie</MenuItem>
+                  <MenuItem value="ECTOPARASITE">Antiparazitikum</MenuItem>
+                  <MenuItem value="MEDICATION">Liek</MenuItem>
+                </Select>
+              </FormControl>
               {wizard.addVaccination && <Stack spacing={1}><TextField label="Názov vakcíny" value={wizard.vaccineName} onChange={(e) => setWizard({ ...wizard, vaccineName: e.target.value })} /><FormControl><InputLabel>Typ</InputLabel><Select value={wizard.vaccineType} label="Typ" onChange={(e) => setWizard({ ...wizard, vaccineType: e.target.value as any })}><MenuItem value="RABIES">RABIES</MenuItem><MenuItem value="COMBINED">COMBINED</MenuItem><MenuItem value="OTHER">OTHER</MenuItem></Select></FormControl><TextField label="Platné do" type="date" InputLabelProps={{ shrink: true }} value={wizard.vaccineValidUntil} onChange={(e) => setWizard({ ...wizard, vaccineValidUntil: e.target.value })} /></Stack>}
 
-              <Button variant={wizard.addDeworming ? 'contained' : 'outlined'} onClick={() => setWizard({ ...wizard, addDeworming: !wizard.addDeworming })}>Odčervenie</Button>
               {wizard.addDeworming && <Stack spacing={1}><TextField label="Produkt" value={wizard.dewormProduct} onChange={(e) => setWizard({ ...wizard, dewormProduct: e.target.value })} /><TextField label="Interval dní" type="number" value={wizard.dewormInterval} onChange={(e) => setWizard({ ...wizard, dewormInterval: Number(e.target.value) })} /></Stack>}
 
-              <Button variant={wizard.addEcto ? 'contained' : 'outlined'} onClick={() => setWizard({ ...wizard, addEcto: !wizard.addEcto })}>Antiparazitikum</Button>
               {wizard.addEcto && <Stack spacing={1}><TextField label="Produkt" value={wizard.ectoProduct} onChange={(e) => setWizard({ ...wizard, ectoProduct: e.target.value })} /><FormControl><InputLabel>Forma</InputLabel><Select value={wizard.ectoForm} label="Forma" onChange={(e) => setWizard({ ...wizard, ectoForm: e.target.value as any })}><MenuItem value="TABLET">tablet</MenuItem><MenuItem value="SPOT_ON">spotOn</MenuItem><MenuItem value="COLLAR">collar</MenuItem></Select></FormControl><TextField label="Interval dní" type="number" value={wizard.ectoInterval} onChange={(e) => setWizard({ ...wizard, ectoInterval: Number(e.target.value) })} /></Stack>}
 
-              <Button variant={wizard.addMedication ? 'contained' : 'outlined'} onClick={() => setWizard({ ...wizard, addMedication: !wizard.addMedication })}>Liek</Button>
               {wizard.addMedication && <Stack spacing={1}><TextField label="Názov" value={wizard.medName} onChange={(e) => setWizard({ ...wizard, medName: e.target.value })} /><TextField label="Dôvod" value={wizard.medReason} onChange={(e) => setWizard({ ...wizard, medReason: e.target.value })} /><TextField label="Dávkovanie" value={wizard.medDose} onChange={(e) => setWizard({ ...wizard, medDose: e.target.value })} /><TextField label="Frekvencia" value={wizard.medFrequency} onChange={(e) => setWizard({ ...wizard, medFrequency: e.target.value })} /><TextField label="Koniec liečby" type="date" InputLabelProps={{ shrink: true }} value={wizard.medEndDate} onChange={(e) => setWizard({ ...wizard, medEndDate: e.target.value })} /></Stack>}
-
-              <Button variant={wizard.addDiet ? 'contained' : 'outlined'} onClick={() => setWizard({ ...wizard, addDiet: !wizard.addDiet })}>Zmena diéty</Button>
-              {wizard.addDiet && <Stack spacing={1}><TextField label="Granule / krmivo" value={wizard.foodName} onChange={(e) => setWizard({ ...wizard, foodName: e.target.value })} /><FormControl><InputLabel>Hodnotenie</InputLabel><Select value={wizard.suitabilityStatus} label="Hodnotenie" onChange={(e) => setWizard({ ...wizard, suitabilityStatus: e.target.value as any })}><MenuItem value="SUITABLE">SUITABLE</MenuItem><MenuItem value="RISKY">RISKY</MenuItem><MenuItem value="UNSUITABLE">UNSUITABLE</MenuItem></Select></FormControl><TextField label="Reakcia" value={wizard.reactionNotes} onChange={(e) => setWizard({ ...wizard, reactionNotes: e.target.value })} /></Stack>}
             </Stack>
           )}
           {wizardStep === 0 && (
