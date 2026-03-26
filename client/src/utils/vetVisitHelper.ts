@@ -32,10 +32,12 @@ export interface WizardVisitDraft {
   addDeworming: boolean;
   dewormProduct: string;
   dewormValidUntil: string;
+  dewormInterval: number;
   addEcto: boolean;
   ectoProduct: string;
   ectoForm: EctoparasiteRecord['form'];
   ectoValidUntil: string;
+  ectoInterval: number;
   addMedication: boolean;
   medName: string;
   medReason: string;
@@ -195,7 +197,7 @@ export class VetVisitHelper {
           dogId,
           productName: draft.dewormProduct,
           dateGiven: draft.date,
-          intervalDays: computeIntervalDays(draft.date, draft.dewormValidUntil, 90),
+          intervalDays: computeIntervalDays(draft.date, draft.dewormValidUntil, draft.dewormInterval || 90),
           nextDueDate: draft.dewormValidUntil,
           attachments,
         }]
@@ -208,7 +210,7 @@ export class VetVisitHelper {
           productName: draft.ectoProduct,
           form: draft.ectoForm,
           dateGiven: draft.date,
-          intervalDays: computeIntervalDays(draft.date, draft.ectoValidUntil, 30),
+          intervalDays: computeIntervalDays(draft.date, draft.ectoValidUntil, draft.ectoInterval || 30),
           nextDueDate: draft.ectoValidUntil,
           attachments,
         }]
