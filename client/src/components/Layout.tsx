@@ -122,6 +122,7 @@ export default function Layout({ children, darkMode, onToggleTheme }: LayoutProp
               width: DRAWER_WIDTH,
               boxSizing: 'border-box',
               borderRight: `1px solid ${theme.palette.divider}`,
+              displayPrint: 'none',
             },
           }}
         >
