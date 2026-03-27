@@ -19,6 +19,28 @@ const commonOptions: ThemeOptions = {
     borderRadius: 16,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        '@page': {
+          size: 'A4',
+          margin: '10mm',
+        },
+        '@media print': {
+          html: {
+            width: '100%',
+          },
+          body: {
+            width: '100%',
+            margin: 0,
+            WebkitPrintColorAdjust: 'exact',
+            printColorAdjust: 'exact',
+          },
+          '#root': {
+            width: '100%',
+          },
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
