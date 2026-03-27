@@ -2,6 +2,7 @@ import { Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/ma
 import { useMemo } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import type { PetProfile } from '../types';
+import AiFormattedText from '../components/AiFormattedText';
 import type {
   DewormingRecord,
   DietEntry,
@@ -14,6 +15,12 @@ import type {
 } from '../types/dogHealth';
 
 const today = () => new Date().toISOString().slice(0, 10);
+const formatDate = (value?: string) => {
+  if (!value) return '–';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString('sk-SK');
+};
 
 export default function VetCardPage() {
   const [profiles] = useLocalStorage<PetProfile[]>('granule-check-pet-profiles', []);
@@ -50,7 +57,7 @@ export default function VetCardPage() {
       .filter((x) => x.date.slice(0, 4) === today().slice(0, 4))
       .reduce((acc, item) => acc + item.amount, 0);
     const significantEvents = dogVisits
-      .filter((x) => x.diagnosis || x.findings)
+      .filter((x) => x.diagnosis || x.findings || x.recommendations || x.aiExtractedText)
       .sort((a, b) => b.date.localeCompare(a.date))
       .slice(0, 5);
     const timeline: TimelineEvent[] = [
@@ -106,17 +113,67 @@ export default function VetCardPage() {
 
         <Card><CardContent>
           <Typography variant="h6">Očkovania / antiparazitiká</Typography>
-          <Typography>Besnota: {data.rabies ? `${data.rabies.dateApplied} (platné do ${data.rabies.validUntil})` : '–'}</Typography>
-          <Typography>Kombinovaná: {data.combined ? `${data.combined.dateApplied} (platné do ${data.combined.validUntil})` : '–'}</Typography>
-          <Typography>Odčervenie: {data.lastDeworming ? `${data.lastDeworming.dateGiven} (ďalšie ${data.lastDeworming.nextDueDate})` : '–'}</Typography>
-          <Typography>Kliešte/blchy: {data.lastEcto ? `${data.lastEcto.dateGiven} (ďalšie ${data.lastEcto.nextDueDate})` : '–'}</Typography>
+          <Typography>Besnota: {data.rabies ? `${formatDate(data.rabies.dateApplied)} (platné do ${formatDate(data.rabies.validUntil)})` : '–'}</Typography>
+          <Typography>Kombinovaná: {data.combined ? `${formatDate(data.combined.dateApplied)} (platné do ${formatDate(data.combined.validUntil)})` : '–'}</Typography>
+          <Typography>Odčervenie: {data.lastDeworming ? `${formatDate(data.lastDeworming.dateGiven)} (ďalšie ${formatDate(data.lastDeworming.nextDueDate)})` : '–'}</Typography>
+          <Typography>Kliešte/blchy: {data.lastEcto ? `${formatDate(data.lastEcto.dateGiven)} (ďalšie ${formatDate(data.lastEcto.nextDueDate)})` : '–'}</Typography>
         </CardContent></Card>
 
         <Card><CardContent>
           <Typography variant="h6">Nedávne významné udalosti</Typography>
-          {data.significantEvents.length ? data.significantEvents.map((v) => (
-            <Typography key={v.id}>• {v.date} {v.clinicName}: {v.diagnosis || v.findings}</Typography>
-          )) : <Typography>Bez záznamov</Typography>}
+          {data.significantEvents.length ? (
+            <Stack spacing={1.5} sx={{ mt: 1 }}>
+              {data.significantEvents.map((v) => (
+                <Card key={v.id} variant="outlined">
+                  <CardContent sx={{ '&:last-child': { pb: 2 } }}>
+                    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 1 }}>
+                      <Chip size="small" color="primary" label={formatDate(v.date)} />
+                      <Chip size="small" variant="outlined" label={v.clinicName || 'Bez kliniky'} />
+                      {v.aiExamType ? <Chip size="small" color="secondary" variant="outlined" label={v.aiExamType} /> : null}
+                    </Stack>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                      Dôvod návštevy
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 1 }}>
+                      {v.reason || 'Bez uvedenia dôvodu'}
+                    </Typography>
+                    {v.diagnosis ? (
+                      <>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                          Diagnóza
+                        </Typography>
+                        <AiFormattedText text={v.diagnosis} />
+                      </>
+                    ) : null}
+                    {v.findings ? (
+                      <>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mt: 1 }}>
+                          Nález
+                        </Typography>
+                        <AiFormattedText text={v.findings} />
+                      </>
+                    ) : null}
+                    {v.recommendations ? (
+                      <>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mt: 1 }}>
+                          Odporúčania
+                        </Typography>
+                        <AiFormattedText text={v.recommendations} />
+                      </>
+                    ) : null}
+                    {v.aiExtractedText ? (
+                      <>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mt: 1 }}>
+                          AI extrahovaný text
+                        </Typography>
+                        <AiFormattedText text={v.aiExtractedText} />
+                      </>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              ))}
+            </Stack>
+          ) : <Typography>Bez záznamov</Typography>}
         </CardContent></Card>
 
         <Card><CardContent>
@@ -130,9 +187,25 @@ export default function VetCardPage() {
             Stav diéty: {data.latestDiet?.suitabilityStatus ?? 'Bez hodnotenia'} {data.latestDiet?.reactionNotes ? `· Reakcia: ${data.latestDiet.reactionNotes}` : ''}
           </Typography>
           <Typography variant="subtitle2" sx={{ mt: 1 }}>Posledných 10 udalostí:</Typography>
-          {data.recentTimeline.length ? data.recentTimeline.map((item) => (
-            <Typography key={item.id}>• {item.date}: {item.title}{item.subtitle ? ` — ${item.subtitle}` : ''}</Typography>
-          )) : <Typography>Bez záznamov.</Typography>}
+          {data.recentTimeline.length ? (
+            <Stack spacing={1}>
+              {data.recentTimeline.map((item) => (
+                <Box key={item.id} sx={{ borderLeft: '3px solid', borderColor: 'divider', pl: 1.25 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    {formatDate(item.date)}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {item.title}
+                  </Typography>
+                  {item.subtitle ? (
+                    <Typography variant="body2" color="text.secondary">
+                      {item.subtitle}
+                    </Typography>
+                  ) : null}
+                </Box>
+              ))}
+            </Stack>
+          ) : <Typography>Bez záznamov.</Typography>}
         </CardContent></Card>
       </Stack>
     </Box>

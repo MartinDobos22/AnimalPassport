@@ -22,7 +22,8 @@ function renderInlineFormatting(input: string) {
 }
 
 export default function AiFormattedText({ text }: AiFormattedTextProps) {
-  const lines = text.split('\n');
+  const normalizedText = text.replace(/\\n/g, '\n');
+  const lines = normalizedText.split('\n');
 
   return (
     <Box sx={{ mt: 1 }}>
