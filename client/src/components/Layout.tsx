@@ -117,7 +117,7 @@ export default function Layout({ children, darkMode, onToggleTheme }: LayoutProp
           sx={{
             width: DRAWER_WIDTH,
             flexShrink: 0,
-            displayPrint: 'none',
+            display: { print: 'none' },
             '& .MuiDrawer-paper': {
               width: DRAWER_WIDTH,
               boxSizing: 'border-box',
@@ -157,7 +157,7 @@ export default function Layout({ children, darkMode, onToggleTheme }: LayoutProp
             backgroundColor: theme.palette.background.paper,
             color: theme.palette.text.primary,
             borderBottom: `1px solid ${theme.palette.divider}`,
-            displayPrint: 'none',
+            display: { print: 'none' },
           }}
         >
           <Toolbar>
@@ -211,7 +211,7 @@ export default function Layout({ children, darkMode, onToggleTheme }: LayoutProp
               right: 0,
               zIndex: theme.zIndex.appBar,
               borderTop: `1px solid ${theme.palette.divider}`,
-              displayPrint: 'none',
+              display: { print: 'none' },
             }}
           >
             <BottomNavigation
