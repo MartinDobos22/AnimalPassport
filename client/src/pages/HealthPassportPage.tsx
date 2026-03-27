@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   CircularProgress,
   Dialog,
@@ -164,6 +165,7 @@ const TIMELINE_TYPE_META: Record<TimelineEvent['type'], { label: string; color: 
   EXPENSE: { label: 'Výdavok', color: 'error' },
   NOTE: { label: 'Poznámka', color: 'info' },
 };
+const EXPORTABLE_TIMELINE_TYPES: TimelineEvent['type'][] = ['VACCINATION', 'DEWORMING', 'ECTOPARASITE', 'VET_VISIT', 'MEDICATION', 'DIET', 'EXPENSE', 'NOTE'];
 
 const timelineIconByType: Record<TimelineEvent['type'], JSX.Element> = {
   VACCINATION: <VaccinesIcon fontSize="small" />,
@@ -602,8 +604,28 @@ export default function HealthPassportPage() {
 
   const [timelineFilter, setTimelineFilter] = useState<'ALL' | TimelineEvent['type']>('ALL');
   const [timelineSearch, setTimelineSearch] = useState('');
+  const [isPdfExportDialogOpen, setIsPdfExportDialogOpen] = useState(false);
+  const [pdfIncludedTypes, setPdfIncludedTypes] = useState<Record<TimelineEvent['type'], boolean>>({
+    VACCINATION: true,
+    DEWORMING: true,
+    ECTOPARASITE: true,
+    VET_VISIT: true,
+    MEDICATION: true,
+    DIET: true,
+    EXPENSE: true,
+    NOTE: true,
+  });
+  const [pdfIncludedVisitIds, setPdfIncludedVisitIds] = useState<string[]>([]);
   const visibleTimeline = (timelineFilter === 'ALL' ? timeline : timeline.filter((x) => x.type === timelineFilter))
     .filter((x) => (`${x.title} ${x.subtitle ?? ''}`).toLowerCase().includes(timelineSearch.trim().toLowerCase()));
+  const visibleVetVisits = useMemo(() => (
+    visibleTimeline
+      .filter((event) => event.type === 'VET_VISIT')
+      .map((event) => ({ eventId: event.id, visitId: event.id.replace('visit-', ''), title: event.title, subtitle: event.subtitle, date: event.date }))
+  ), [visibleTimeline]);
+  useEffect(() => {
+    setPdfIncludedVisitIds(visibleVetVisits.map((item) => item.visitId));
+  }, [visibleVetVisits]);
   const groupedTimeline = useMemo(() => {
     return visibleTimeline.reduce<Record<string, TimelineEvent[]>>((acc, event) => {
       if (!acc[event.date]) acc[event.date] = [];
@@ -616,16 +638,31 @@ export default function HealthPassportPage() {
     `Odčervenie: ${lastDewormingStatus}`,
     `Kliešte/blchy: ${lastEctoStatus}`,
   ].join(' | ');
+  const togglePdfIncludedType = (type: TimelineEvent['type']) => {
+    setPdfIncludedTypes((prev) => ({ ...prev, [type]: !prev[type] }));
+  };
+  const togglePdfVisitInclusion = (visitId: string) => {
+    setPdfIncludedVisitIds((prev) => (prev.includes(visitId) ? prev.filter((id) => id !== visitId) : [...prev, visitId]));
+  };
   const handleTimelinePdfExport = () => {
     if (!dog) return;
-    const printableTimeline = visibleTimeline.length ? visibleTimeline : timeline;
+    const timelineSource = visibleTimeline.length ? visibleTimeline : timeline;
+    const printableTimeline = timelineSource.filter((event) => {
+      if (!pdfIncludedTypes[event.type]) return false;
+      if (event.type !== 'VET_VISIT') return true;
+      return pdfIncludedVisitIds.includes(event.id.replace('visit-', ''));
+    });
     if (!printableTimeline.length) return;
 
     const rows = printableTimeline
       .map((event) => {
         const label = TIMELINE_TYPE_META[event.type].label;
-        const subtitle = event.subtitle ? ` (${event.subtitle})` : '';
-        return `<tr><td>${escapeHtml(event.date)}</td><td>${escapeHtml(label)}</td><td>${escapeHtml(event.title + subtitle)}</td></tr>`;
+        const subtitle = event.subtitle ? `<div class="event-subtitle">${escapeHtml(event.subtitle)}</div>` : '';
+        return `<tr>
+          <td><span class="date-chip">${escapeHtml(event.date)}</span></td>
+          <td><span class="type-chip type-${event.type.toLowerCase()}">${escapeHtml(label)}</span></td>
+          <td><div class="event-title">${escapeHtml(event.title)}</div>${subtitle}</td>
+        </tr>`;
       })
       .join('');
     const reportTitle = `Zdravotná timeline - ${dog.name}`;
@@ -635,22 +672,53 @@ export default function HealthPassportPage() {
     <meta charset="utf-8" />
     <title>${escapeHtml(reportTitle)}</title>
     <style>
-      body { font-family: Arial, sans-serif; color: #1f2937; padding: 24px; }
-      h1 { margin: 0 0 10px; font-size: 24px; }
+      body { font-family: "Inter", Arial, sans-serif; color: #111827; padding: 28px; background: #f8fafc; }
+      h1 { margin: 0 0 10px; font-size: 28px; color: #0f172a; }
       p { margin: 4px 0; }
-      .meta { margin-bottom: 16px; }
-      .muted { color: #6b7280; font-size: 13px; }
-      table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
-      th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; vertical-align: top; }
-      th { background: #f3f4f6; }
+      .meta { margin-bottom: 18px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+      .meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin-bottom: 10px; }
+      .meta-label { color: #475569; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+      .meta-value { font-size: 14px; font-weight: 600; color: #0f172a; }
+      .muted { color: #64748b; font-size: 12px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; background: #ffffff; border-radius: 12px; overflow: hidden; }
+      th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; vertical-align: top; }
+      th { background: #f1f5f9; color: #0f172a; font-weight: 700; }
+      tbody tr:nth-child(even) { background: #f8fafc; }
+      .date-chip { display: inline-block; background: #e2e8f0; color: #1e293b; border-radius: 999px; padding: 3px 9px; font-weight: 600; font-size: 12px; }
+      .type-chip { display: inline-block; border-radius: 999px; padding: 3px 9px; font-weight: 700; font-size: 11px; letter-spacing: 0.03em; text-transform: uppercase; }
+      .type-vaccination { background: #dcfce7; color: #166534; }
+      .type-deworming { background: #f3e8ff; color: #6b21a8; }
+      .type-ectoparasite { background: #fef3c7; color: #92400e; }
+      .type-vet_visit { background: #dbeafe; color: #1d4ed8; }
+      .type-medication { background: #cffafe; color: #155e75; }
+      .type-diet { background: #dcfce7; color: #166534; }
+      .type-expense { background: #fee2e2; color: #991b1b; }
+      .type-note { background: #e0f2fe; color: #0c4a6e; }
+      .event-title { font-weight: 600; color: #0f172a; margin-bottom: 2px; }
+      .event-subtitle { color: #475569; font-size: 12px; line-height: 1.35; }
     </style>
   </head>
   <body>
     <h1>${escapeHtml(reportTitle)}</h1>
     <div class="meta">
-      <p><strong>Meno psa:</strong> ${escapeHtml(dog.name)}</p>
-      <p><strong>Plemeno:</strong> ${escapeHtml(dog.breed || '–')} | <strong>Váha:</strong> ${escapeHtml(dog.weightKg ? `${dog.weightKg} kg` : '–')}</p>
-      <p><strong>Súhrn stavu:</strong> ${escapeHtml(timelineStatusSummary)}</p>
+      <div class="meta-grid">
+        <div>
+          <div class="meta-label">Meno psa</div>
+          <div class="meta-value">${escapeHtml(dog.name)}</div>
+        </div>
+        <div>
+          <div class="meta-label">Plemeno</div>
+          <div class="meta-value">${escapeHtml(dog.breed || '–')}</div>
+        </div>
+        <div>
+          <div class="meta-label">Váha</div>
+          <div class="meta-value">${escapeHtml(dog.weightKg ? `${dog.weightKg} kg` : '–')}</div>
+        </div>
+        <div>
+          <div class="meta-label">Súhrn stavu</div>
+          <div class="meta-value">${escapeHtml(timelineStatusSummary)}</div>
+        </div>
+      </div>
       <p class="muted">Vygenerované: ${escapeHtml(new Date().toLocaleString('sk-SK'))} | Počet záznamov: ${printableTimeline.length}</p>
     </div>
     <table>
@@ -1033,7 +1101,7 @@ export default function HealthPassportPage() {
               />
               <Button
                 variant="outlined"
-                onClick={handleTimelinePdfExport}
+                onClick={() => setIsPdfExportDialogOpen(true)}
                 disabled={!timeline.length}
               >
                 Export timeline PDF
@@ -1087,6 +1155,61 @@ export default function HealthPassportPage() {
         </CardContent>
       </Card>
       </Box>
+
+      <Dialog open={isPdfExportDialogOpen} onClose={() => setIsPdfExportDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Nastavenie exportu do PDF</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Typography variant="subtitle2">Vyberte typy záznamov, ktoré chcete mať v PDF:</Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 0.5 }}>
+              {EXPORTABLE_TIMELINE_TYPES.map((type) => (
+                <FormControlLabel
+                  key={type}
+                  control={<Checkbox checked={pdfIncludedTypes[type]} onChange={() => togglePdfIncludedType(type)} />}
+                  label={TIMELINE_TYPE_META[type].label}
+                />
+              ))}
+            </Box>
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                Lekárske záznamy (návštevy veterinára):
+              </Typography>
+              {!visibleVetVisits.length ? (
+                <Alert severity="info">V aktuálnom filtrovaní nie sú žiadne návštevy veterinára.</Alert>
+              ) : (
+                <Stack spacing={0.25}>
+                  {visibleVetVisits.map((visit) => (
+                    <FormControlLabel
+                      key={visit.eventId}
+                      control={(
+                        <Checkbox
+                          checked={pdfIncludedVisitIds.includes(visit.visitId)}
+                          onChange={() => togglePdfVisitInclusion(visit.visitId)}
+                          disabled={!pdfIncludedTypes.VET_VISIT}
+                        />
+                      )}
+                      label={`${visit.date} — ${visit.title}${visit.subtitle ? ` (${visit.subtitle})` : ''}`}
+                    />
+                  ))}
+                </Stack>
+              )}
+            </Box>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsPdfExportDialogOpen(false)}>Zrušiť</Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              handleTimelinePdfExport();
+              setIsPdfExportDialogOpen(false);
+            }}
+            disabled={!EXPORTABLE_TIMELINE_TYPES.some((type) => pdfIncludedTypes[type])}
+          >
+            Exportovať PDF
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={wizardOpen} onClose={() => setWizardOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Po návšteve veterinára ({wizardStep + 1}/2)</DialogTitle>
