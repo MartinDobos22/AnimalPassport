@@ -12,10 +12,12 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  FormControlLabel,
   InputLabel,
   MenuItem,
   Select,
   Stack,
+  Switch,
   Tab,
   Tabs,
   TextField,
@@ -329,6 +331,7 @@ export default function HealthPassportPage() {
     diagnosis: '',
     recommendations: '',
   });
+  const [aiRecordUseVisitDetails, setAiRecordUseVisitDetails] = useState(true);
   const [aiRecordFeedback, setAiRecordFeedback] = useState<string | null>(null);
   const [aiDetectedRecords, setAiDetectedRecords] = useState<AiDetectedDraftRecord[]>([]);
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
@@ -630,9 +633,17 @@ export default function HealthPassportPage() {
     printWindow.print();
   };
   const hasSelectedAiDetectedRecords = aiDetectedRecords.some((item) => item.targetType !== 'SKIP');
+  const aiRecordValues = aiRecordUseVisitDetails
+    ? {
+        date: wizard.date,
+        clinicName: wizard.clinicName,
+        diagnosis: wizard.diagnosis,
+        recommendations: wizard.recommendations,
+      }
+    : aiRecordDraft;
   const canCreateAiRecord = Boolean(
     selectedDogId
-      && aiRecordDraft.clinicName.trim()
+      && aiRecordValues.clinicName.trim()
       && ((selectedVisitSubcategory || fileResult?.examAnalysis?.examType) || hasSelectedAiDetectedRecords),
   );
   const selectedVisit = selectedVisitId ? dogVisits.find((visit) => visit.id === selectedVisitId) ?? null : null;
@@ -867,7 +878,7 @@ export default function HealthPassportPage() {
       }));
     const visitBundle = VetVisitHelper.createAiVisitBundle({
       dogId: selectedDogId,
-      draft: aiRecordDraft,
+      draft: aiRecordValues,
       selectedVisitMainCategory,
       selectedVisitSubcategory,
       examType: fileResult?.examAnalysis?.examType,
@@ -1173,33 +1184,50 @@ export default function HealthPassportPage() {
                       <Typography variant="body2" color="text.secondary">
                         Po kontrole AI výsledku môžete jedným klikom pridať záznam priamo do dashboard timeline.
                       </Typography>
-                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-                        <TextField
-                          fullWidth
-                          label="Dátum záznamu"
-                          type="date"
-                          InputLabelProps={{ shrink: true }}
-                          value={aiRecordDraft.date}
-                          onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, date: e.target.value }))}
-                        />
-                        <TextField
-                          fullWidth
-                          required
-                          label="Klinika / veterinár"
-                          value={aiRecordDraft.clinicName}
-                          onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, clinicName: e.target.value }))}
-                        />
-                      </Stack>
-                      <TextField
-                        label="Diagnóza (voliteľné)"
-                        value={aiRecordDraft.diagnosis}
-                        onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, diagnosis: e.target.value }))}
+                      <FormControlLabel
+                        control={(
+                          <Switch
+                            checked={aiRecordUseVisitDetails}
+                            onChange={(e) => setAiRecordUseVisitDetails(e.target.checked)}
+                          />
+                        )}
+                        label="Použiť údaje z vyššie vyplnenej návštevy"
                       />
-                      <TextField
-                        label="Odporúčanie (voliteľné)"
-                        value={aiRecordDraft.recommendations}
-                        onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, recommendations: e.target.value }))}
-                      />
+                      {aiRecordUseVisitDetails ? (
+                        <Alert severity="info">
+                          AI záznam sa uloží s údajmi návštevy: <strong>{wizard.date || 'bez dátumu'}</strong>, klinika <strong>{wizard.clinicName || 'nie je vyplnená'}</strong>.
+                        </Alert>
+                      ) : (
+                        <>
+                          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+                            <TextField
+                              fullWidth
+                              label="Dátum záznamu"
+                              type="date"
+                              InputLabelProps={{ shrink: true }}
+                              value={aiRecordDraft.date}
+                              onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, date: e.target.value }))}
+                            />
+                            <TextField
+                              fullWidth
+                              required
+                              label="Klinika / veterinár"
+                              value={aiRecordDraft.clinicName}
+                              onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, clinicName: e.target.value }))}
+                            />
+                          </Stack>
+                          <TextField
+                            label="Diagnóza (voliteľné)"
+                            value={aiRecordDraft.diagnosis}
+                            onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, diagnosis: e.target.value }))}
+                          />
+                          <TextField
+                            label="Odporúčanie (voliteľné)"
+                            value={aiRecordDraft.recommendations}
+                            onChange={(e) => setAiRecordDraft((prev) => ({ ...prev, recommendations: e.target.value }))}
+                          />
+                        </>
+                      )}
                       {aiDetectedRecords.length > 0 && (
                         <Card variant="outlined">
                           <CardContent>
