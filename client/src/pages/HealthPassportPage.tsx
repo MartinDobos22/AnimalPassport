@@ -1099,13 +1099,6 @@ export default function HealthPassportPage() {
                 onChange={(e) => setTimelineSearch(e.target.value)}
                 sx={{ minWidth: { xs: '100%', md: 280 } }}
               />
-              <Button
-                variant="outlined"
-                onClick={() => setIsPdfExportDialogOpen(true)}
-                disabled={!timeline.length}
-              >
-                Export timeline PDF
-              </Button>
             </Stack>
           </Stack>
           <Tabs value={timelineFilter} onChange={(_e, val) => setTimelineFilter(val)} variant="scrollable" scrollButtons="auto" sx={{ mb: 1.5 }}>
