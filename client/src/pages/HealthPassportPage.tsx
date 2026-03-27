@@ -616,15 +616,22 @@ export default function HealthPassportPage() {
     NOTE: true,
   });
   const [pdfIncludedVisitIds, setPdfIncludedVisitIds] = useState<string[]>([]);
-  const visibleTimeline = (timelineFilter === 'ALL' ? timeline : timeline.filter((x) => x.type === timelineFilter))
-    .filter((x) => (`${x.title} ${x.subtitle ?? ''}`).toLowerCase().includes(timelineSearch.trim().toLowerCase()));
+  const visibleTimeline = useMemo(() => (
+    (timelineFilter === 'ALL' ? timeline : timeline.filter((x) => x.type === timelineFilter))
+      .filter((x) => (`${x.title} ${x.subtitle ?? ''}`).toLowerCase().includes(timelineSearch.trim().toLowerCase()))
+  ), [timeline, timelineFilter, timelineSearch]);
   const visibleVetVisits = useMemo(() => (
     visibleTimeline
       .filter((event) => event.type === 'VET_VISIT')
       .map((event) => ({ eventId: event.id, visitId: event.id.replace('visit-', ''), title: event.title, subtitle: event.subtitle, date: event.date }))
   ), [visibleTimeline]);
   useEffect(() => {
-    setPdfIncludedVisitIds(visibleVetVisits.map((item) => item.visitId));
+    const nextVisitIds = visibleVetVisits.map((item) => item.visitId);
+    setPdfIncludedVisitIds((prev) => (
+      prev.length === nextVisitIds.length && prev.every((id, index) => id === nextVisitIds[index])
+        ? prev
+        : nextVisitIds
+    ));
   }, [visibleVetVisits]);
   const groupedTimeline = useMemo(() => {
     return visibleTimeline.reduce<Record<string, TimelineEvent[]>>((acc, event) => {
