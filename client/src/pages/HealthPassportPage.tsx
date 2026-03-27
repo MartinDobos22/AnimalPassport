@@ -37,6 +37,7 @@ import type { PetProfile } from '../types';
 import { useAnalyze } from '../hooks/useAnalyze';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import AiFormattedText from '../components/AiFormattedText';
+import { logger } from '../utils/logger';
 import { VetVisitHelper } from '../utils/vetVisitHelper';
 import type {
   DewormingRecord,
@@ -418,13 +419,23 @@ export default function HealthPassportPage() {
 
   const handleAttachmentFileChange = (file: File | null) => {
     if (!file) {
+      logger.warn('Používateľ nevybral žiadny súbor na AI analýzu prílohy');
       setAttachmentFile(null);
       setAttachmentPreviewUrl('');
       setAttachmentError('');
       setPendingAttachment(null);
       return;
     }
+    logger.info('Používateľ vybral súbor pre AI analýzu prílohy', {
+      fileName: file.name,
+      mimeType: file.type,
+      sizeBytes: file.size,
+    });
     if (!SUPPORTED_FILE_TYPES.includes(file.type)) {
+      logger.warn('Nepodporovaný typ súboru pri AI analýze prílohy', {
+        fileName: file.name,
+        mimeType: file.type,
+      });
       setAttachmentFile(null);
       setAttachmentPreviewUrl('');
       setAttachmentError('Nepodporovaný typ súboru.');
@@ -432,6 +443,11 @@ export default function HealthPassportPage() {
       return;
     }
     if (file.size > MAX_FILE_SIZE_BYTES) {
+      logger.warn('Súbor presahuje limit veľkosti pri AI analýze prílohy', {
+        fileName: file.name,
+        sizeBytes: file.size,
+        maxSizeBytes: MAX_FILE_SIZE_BYTES,
+      });
       setAttachmentFile(null);
       setAttachmentPreviewUrl('');
       setAttachmentError('Súbor je príliš veľký (max 5 MB).');
@@ -444,6 +460,9 @@ export default function HealthPassportPage() {
       const raw = typeof reader.result === 'string' ? reader.result : '';
       const base64Data = raw.split(',')[1] ?? '';
       if (!base64Data) {
+        logger.error('Nepodarilo sa načítať base64 dáta zo súboru pre AI analýzu prílohy', {
+          fileName: file.name,
+        });
         setAttachmentPreviewUrl('');
         setAttachmentFile(null);
         setAttachmentError('Nepodarilo sa načítať súbor.');
@@ -454,8 +473,15 @@ export default function HealthPassportPage() {
       setAttachmentFile(file);
       setAttachmentError('');
       setPendingAttachment({ fileName: file.name, mimeType: file.type, base64Data });
+      logger.info('Súbor je pripravený na AI analýzu prílohy', {
+        fileName: file.name,
+        mimeType: file.type,
+      });
     };
     reader.onerror = () => {
+      logger.error('FileReader zlyhal pri načítaní súboru pre AI analýzu prílohy', {
+        fileName: file.name,
+      });
       setAttachmentPreviewUrl('');
       setAttachmentFile(null);
       setAttachmentError('Nepodarilo sa načítať súbor.');
@@ -465,7 +491,19 @@ export default function HealthPassportPage() {
   };
 
   const handleAnalyzeAttachment = async () => {
-    if (!pendingAttachment || !selectedExamAlias) return;
+    if (!selectedExamAlias) {
+      logger.warn('AI analýza prílohy nebola spustená, chýba typ vyšetrenia');
+      return;
+    }
+    if (!pendingAttachment) {
+      logger.warn('AI analýza prílohy nebola spustená, chýba vybraný súbor');
+      return;
+    }
+    logger.info('Používateľ spúšťa AI analýzu prílohy zo sprievodcu zdravotného pasu', {
+      fileName: pendingAttachment.fileName,
+      mimeType: pendingAttachment.mimeType,
+      examAlias: selectedExamAlias,
+    });
     await analyzeFile(pendingAttachment, selectedExamAlias);
   };
 
