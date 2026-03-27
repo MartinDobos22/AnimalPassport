@@ -1124,9 +1124,9 @@ export default function HealthPassportPage() {
           )}
           {wizardStep === 0 && (
             <Stack spacing={2} sx={{ mt: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Príloha do zdravotného pasu</Typography>
               {selectedExamAlias ? (
                 <>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Príloha do zdravotného pasu</Typography>
                   <TextField label="Popis prílohy (napr. pas strana 4)" value={wizard.attachmentLabel} onChange={(e) => setWizard({ ...wizard, attachmentLabel: e.target.value })} />
                   <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
                     Vybrať PDF alebo fotku
@@ -1146,9 +1146,7 @@ export default function HealthPassportPage() {
                     {loadingFile ? 'Analyzujem súbor...' : 'Analyzovať súbor'}
                   </Button>
                 </>
-              ) : (
-                <Alert severity="info">Najprv vyberte hlavnú kategóriu a podkategóriu vyšetrenia.</Alert>
-              )}
+              ) : null}
               {attachmentFile && <Chip label={`${attachmentFile.name} (${Math.round(attachmentFile.size / 1024)} kB)`} />}
               {attachmentError && <Alert severity="warning">{attachmentError}</Alert>}
               {fileAnalyzeError && <Alert severity="error">{fileAnalyzeError}</Alert>}
