@@ -109,7 +109,16 @@ export default function Layout({ children, darkMode, onToggleTheme }: LayoutProp
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        '@media print': {
+          display: 'block',
+          minHeight: 'auto',
+        },
+      }}
+    >
       {/* Desktop permanent drawer */}
       {isDesktop && (
         <Drawer
@@ -118,6 +127,9 @@ export default function Layout({ children, darkMode, onToggleTheme }: LayoutProp
             width: DRAWER_WIDTH,
             flexShrink: 0,
             display: { print: 'none' },
+            '@media print': {
+              display: 'none !important',
+            },
             '& .MuiDrawer-paper': {
               width: DRAWER_WIDTH,
               boxSizing: 'border-box',
@@ -194,6 +206,8 @@ export default function Layout({ children, darkMode, onToggleTheme }: LayoutProp
               maxWidth: '100%',
               p: 0,
               pb: 0,
+              mx: 0,
+              minWidth: '100%',
             },
           }}
         >
