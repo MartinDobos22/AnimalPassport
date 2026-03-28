@@ -1,6 +1,6 @@
 // GranuleCheck Service Worker
 // Verzia cache – zmeňte pri každom deployi aby sa cache invalidoval
-const CACHE_VERSION = 'granulecheck-v1';
+const CACHE_VERSION = 'animalPassport-v1';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
