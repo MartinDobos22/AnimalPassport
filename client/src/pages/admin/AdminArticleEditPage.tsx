@@ -24,6 +24,7 @@ import {
   Tab,
   Tabs,
   TextField,
+  Tooltip,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -48,6 +49,7 @@ import PageContainer from '../../components/ui/PageContainer';
 import SectionCardHeader from '../../components/ui/SectionCardHeader';
 import { ANIMAL_SPECIES, type AnimalType } from '../../constants/animalSpecies';
 import ArticleRichEditor from '../../components/admin/articleEditor/ArticleRichEditor';
+import RelatedArticlesPicker from '../../components/admin/articleEditor/RelatedArticlesPicker';
 import ArticleVersionsDrawer from '../../components/admin/ArticleVersionsDrawer';
 import ArticleValidationPanel from '../../components/admin/ArticleValidationPanel';
 import ArticleBody from '../../components/public/ArticleBody';
@@ -58,6 +60,7 @@ import {
   createAdminArticle,
   generateArticleAi,
   getAdminArticle,
+  getAdminStatus,
   getArticleAiLog,
   getArticleMetric,
   getArticleValidation,
@@ -66,6 +69,7 @@ import {
   uploadArticleImage,
 } from '../../services/adminApi';
 import { articleRefreshFlags } from '../../utils/articleRefreshFlags';
+import { slugifyHeading } from '../../utils/slugifyHeading';
 import { downscaleImage } from '../../utils/imageDownscale';
 import {
   ARTICLE_STATUS_TRANSITIONS,
@@ -116,6 +120,15 @@ const PUBLISH_CHECKLIST = [
   'Titulok, meta popis a úvod sú vyplnené.',
   'Odkazy a obrázky fungujú.',
 ];
+
+// Prechody, ktoré smie vykonať len admin (schválenie/publikovanie/archivácia).
+// Editor bez admin práv môže len poslať na schválenie alebo vrátiť do konceptu.
+const ADMIN_ONLY_STATUSES: ReadonlySet<ArticleStatus> = new Set([
+  'approved',
+  'scheduled',
+  'published',
+  'archived',
+]);
 
 // Doplnkový checklist keď bol použitý AI obsah (audit/kontrola pred publikovaním).
 const AI_REVIEW_CHECKLIST = [
@@ -189,13 +202,22 @@ export default function AdminArticleEditPage() {
   const [aiBusy, setAiBusy] = useState<ArticleAiType | null>(null);
   const [aiLog, setAiLog] = useState<AiGenerationLog[]>([]);
   const [aiNote, setAiNote] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Posledný uložený/načítaný stav (JSON) — autosave beží len pri reálnej zmene.
   const savedSnapshotRef = useRef<string>('');
+  // Používateľ ručne upravil slug → prestaneme ho auto-generovať z titulku.
+  const slugTouchedRef = useRef<boolean>(!isNew);
 
   // Lišta editora sa portáluje do tejto sticky hlavičky, aby bola vždy viditeľná
   // počas editácie tela (spoľahlivejšie než position: sticky vo vnorenom Card).
   const [toolbarSlot, setToolbarSlot] = useState<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    getAdminStatus()
+      .then(setIsAdmin)
+      .catch(() => setIsAdmin(false));
+  }, []);
 
   useEffect(() => {
     if (isNew) return;
@@ -565,7 +587,15 @@ export default function AdminArticleEditPage() {
                   id="field-title"
                   label="Titulok (H1)"
                   value={form.title}
-                  onChange={(e) => set('title', e.target.value)}
+                  onChange={(e) => {
+                    const title = e.target.value;
+                    setForm((f) => ({
+                      ...f,
+                      title,
+                      // Auto-slug z titulku, kým ho admin ručne neupravil (len nový článok).
+                      ...(isNew && !slugTouchedRef.current ? { slug: slugifyHeading(title) } : {}),
+                    }));
+                  }}
                   fullWidth
                   size="small"
                 />
@@ -573,11 +603,14 @@ export default function AdminArticleEditPage() {
                   id="field-slug"
                   label="Slug (URL)"
                   value={form.slug}
-                  onChange={(e) => set('slug', e.target.value)}
+                  onChange={(e) => {
+                    slugTouchedRef.current = true;
+                    set('slug', e.target.value);
+                  }}
                   disabled={!isNew}
                   helperText={
                     isNew
-                      ? 'Malé písmená, číslice a pomlčky. Po vytvorení sa nemení.'
+                      ? 'Automaticky z titulku; môžeš prepísať. Po vytvorení sa nemení.'
                       : 'Slug sa po vytvorení nemení.'
                   }
                   fullWidth
@@ -740,21 +773,16 @@ export default function AdminArticleEditPage() {
                     sx={{ width: theme.spacing(14) }}
                   />
                 </Stack>
-                <TextField
-                  label="Súvisiace články (slugy oddelené čiarkou)"
-                  value={(form.relatedSlugs ?? []).join(', ')}
-                  onChange={(e) =>
-                    set(
-                      'relatedSlugs',
-                      e.target.value
-                        .split(',')
-                        .map((s) => s.trim())
-                        .filter((s) => s.length > 0)
-                    )
-                  }
-                  fullWidth
-                  size="small"
-                />
+                <Box>
+                  <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                    Súvisiace články
+                  </Typography>
+                  <RelatedArticlesPicker
+                    value={form.relatedSlugs ?? []}
+                    onChange={(slugs) => set('relatedSlugs', slugs)}
+                    currentSlug={isNew ? undefined : form.slug}
+                  />
+                </Box>
               </Stack>
             </CardContent>
           </Card>
@@ -798,25 +826,36 @@ export default function AdminArticleEditPage() {
                     Po uložení sa článok vytvorí ako koncept a sprístupnia sa redakčné akcie.
                   </Typography>
                 ) : (
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
-                    {allowedTransitions.map((target) => (
-                      <Button
-                        key={target}
-                        size="small"
-                        variant="outlined"
-                        disabled={saving}
-                        color={
-                          target === 'published'
-                            ? 'success'
-                            : target === 'archived'
-                              ? 'inherit'
-                              : 'primary'
-                        }
-                        onClick={() => handleTransition(target)}
-                      >
-                        {transitionActionLabel(form.status, target)}
-                      </Button>
-                    ))}
+                  <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                    {allowedTransitions.map((target) => {
+                      const adminOnly = ADMIN_ONLY_STATUSES.has(target);
+                      const blocked = adminOnly && !isAdmin;
+                      const button = (
+                        <Button
+                          key={target}
+                          size="small"
+                          variant="outlined"
+                          disabled={saving || blocked}
+                          color={
+                            target === 'published'
+                              ? 'success'
+                              : target === 'archived'
+                                ? 'inherit'
+                                : 'primary'
+                          }
+                          onClick={() => handleTransition(target)}
+                        >
+                          {transitionActionLabel(form.status, target)}
+                        </Button>
+                      );
+                      return blocked ? (
+                        <Tooltip key={target} title="Túto akciu môže vykonať len administrátor.">
+                          <span>{button}</span>
+                        </Tooltip>
+                      ) : (
+                        button
+                      );
+                    })}
                   </Stack>
                 )}
 

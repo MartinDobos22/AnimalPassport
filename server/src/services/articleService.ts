@@ -321,8 +321,10 @@ function toRow(input: unknown): ContentRow {
             typeof s === 'string' && (ANIMAL_SPECIES as readonly string[]).includes(s)
         )
       : [],
-    title: reqStr(a.title, 'title'),
-    description: reqStr(a.description, 'description'),
+    // Titulok a popis nie sú povinné pri ukladaní konceptu — povinné sú až pred
+    // publikovaním (viď articleValidation.ts). Umožňuje uložiť rozpracovaný článok.
+    title: asString(a.title),
+    description: asString(a.description),
     // Perex = prvý odsek tela; samostatný `intro` je voliteľný (legacy obsah).
     intro: asString(a.intro),
     sections: validateSections(a.sections),

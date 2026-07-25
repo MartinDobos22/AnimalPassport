@@ -39,6 +39,7 @@ import {
   DragIndicator as DragIcon,
   AddPhotoAlternateOutlined as ImageIcon,
   CollectionsOutlined as GalleryIcon,
+  MenuBookOutlined as ArticleLinkIcon,
 } from '@mui/icons-material';
 import {
   useEditor,
@@ -57,6 +58,7 @@ import Image from '@tiptap/extension-image';
 import { CalloutNode } from './CalloutNode';
 import { GalleryNode } from './GalleryNode';
 import ImageNodeView from './ImageNodeView';
+import ArticlePickerDialog from './ArticlePickerDialog';
 import { sectionsToTiptap, tiptapToSections } from './articleTiptapBridge';
 import { uploadArticleImage } from '../../../services/adminApi';
 import type { ArticleSection } from '../../../content/poradna/types';
@@ -208,10 +210,17 @@ interface ToolbarProps {
 
 interface MainToolbarProps extends ToolbarProps {
   onImageRequest: () => void;
+  onArticleLinkRequest: () => void;
   inHeader: boolean;
 }
 
-function Toolbar({ editor, onLinkRequest, onImageRequest, inHeader }: MainToolbarProps) {
+function Toolbar({
+  editor,
+  onLinkRequest,
+  onImageRequest,
+  onArticleLinkRequest,
+  inHeader,
+}: MainToolbarProps) {
   const state = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -406,6 +415,11 @@ function Toolbar({ editor, onLinkRequest, onImageRequest, inHeader }: MainToolba
           <GalleryIcon fontSize="small" />
         </ToolButton>
       </Tooltip>
+      <Tooltip title="Vložiť odkaz na článok">
+        <ToolButton value="articleLink" size="small" onClick={onArticleLinkRequest}>
+          <ArticleLinkIcon fontSize="small" />
+        </ToolButton>
+      </Tooltip>
     </Stack>
   );
 }
@@ -497,6 +511,7 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [articlePickerOpen, setArticlePickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const initialContent = useMemo(() => sectionsToTiptap(value), []);
@@ -574,11 +589,24 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
     }
   };
 
+  const insertArticleLink = (article: { slug: string; title: string }) => {
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: 'text',
+        text: article.title,
+        marks: [{ type: 'link', attrs: { href: `/poradna/${article.slug}` } }],
+      })
+      .run();
+  };
+
   const toolbar = (
     <Toolbar
       editor={editor}
       onLinkRequest={openLinkDialog}
       onImageRequest={() => fileInputRef.current?.click()}
+      onArticleLinkRequest={() => setArticlePickerOpen(true)}
       inHeader={Boolean(toolbarContainer)}
     />
   );
@@ -646,6 +674,13 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ArticlePickerDialog
+        open={articlePickerOpen}
+        onClose={() => setArticlePickerOpen(false)}
+        onSelect={insertArticleLink}
+        title="Vložiť odkaz na článok"
+      />
     </Box>
   );
 }
