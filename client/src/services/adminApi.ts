@@ -8,6 +8,7 @@ import type {
   ArticleVersion,
   ArticleVersionMeta,
 } from '../content/poradna/types';
+import type { MediaImage } from '../types/media';
 import { getAuthHeader, handleUnauthorized } from './authToken';
 import { logger } from '../utils/logger';
 
@@ -77,11 +78,39 @@ export async function deleteAdminArticle(slug: string): Promise<void> {
 export async function uploadArticleImage(payload: {
   mimeType: string;
   base64Data: string;
-}): Promise<{ url: string; objectPath: string }> {
-  return request<{ url: string; objectPath: string }>('/articles/upload-image', {
-    method: 'POST',
-    body: JSON.stringify(payload),
+  alt?: string;
+  caption?: string;
+  author?: string;
+  width?: number;
+  height?: number;
+}): Promise<{ url: string; objectPath: string; media: MediaImage }> {
+  return request<{ url: string; objectPath: string; media: MediaImage }>(
+    '/articles/upload-image',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
+export async function listMedia(): Promise<MediaImage[]> {
+  const data = await request<{ media: MediaImage[] }>('/media');
+  return data.media;
+}
+
+export async function updateMedia(
+  id: string,
+  patch: { alt?: string; caption?: string; author?: string }
+): Promise<MediaImage> {
+  const data = await request<{ media: MediaImage }>(`/media/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
   });
+  return data.media;
+}
+
+export async function deleteMedia(id: string): Promise<void> {
+  await request<void>(`/media/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 export async function publishArticles(): Promise<void> {

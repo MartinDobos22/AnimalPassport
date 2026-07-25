@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { getSupabase } from '../config/supabase';
 import { httpError } from '../utils/httpError';
+import { recordMediaImage, type MediaImage } from './mediaImageService';
 
 // Upload titulného obrázka článku do verejného bucketu `article-images`.
 // Vzor: petPhotoService.ts. Upload len server-side (service_role).
@@ -26,10 +27,18 @@ function decodeBase64(base64Data: unknown): Buffer {
   return buffer;
 }
 
-export async function uploadArticleImage(input: {
-  mimeType?: unknown;
-  base64Data?: unknown;
-}): Promise<{ url: string; objectPath: string }> {
+export async function uploadArticleImage(
+  input: {
+    mimeType?: unknown;
+    base64Data?: unknown;
+    alt?: unknown;
+    caption?: unknown;
+    author?: unknown;
+    width?: unknown;
+    height?: unknown;
+  },
+  createdBy?: string | null
+): Promise<{ url: string; objectPath: string; media: MediaImage }> {
   const mimeType = typeof input.mimeType === 'string' ? input.mimeType : '';
   const ext = EXT_BY_MIME[mimeType];
   if (!ext) throw httpError(400, 'Nepodporovaný formát obrázka.', 'INVALID_IMAGE');
@@ -43,5 +52,20 @@ export async function uploadArticleImage(input: {
   if (error) throw error;
 
   const { data } = getSupabase().storage.from(BUCKET).getPublicUrl(objectPath);
-  return { url: data.publicUrl, objectPath };
+  const url = data.publicUrl;
+
+  const media = await recordMediaImage({
+    objectPath,
+    url,
+    mime: mimeType,
+    sizeBytes: buffer.length,
+    alt: input.alt,
+    caption: input.caption,
+    author: input.author,
+    width: input.width,
+    height: input.height,
+    createdBy: createdBy ?? null,
+  });
+
+  return { url, objectPath, media };
 }

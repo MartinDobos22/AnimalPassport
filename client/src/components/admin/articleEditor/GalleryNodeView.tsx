@@ -1,46 +1,12 @@
-import { useRef, useState } from 'react';
-import {
-  Box,
-  Button,
-  IconButton,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-  useTheme,
-} from '@mui/material';
-import {
-  AddPhotoAlternateOutlined as AddIcon,
-  Close as CloseIcon,
-  DeleteOutline as DeleteIcon,
-} from '@mui/icons-material';
+import { Box, IconButton, Stack, TextField, Tooltip, Typography, useTheme } from '@mui/material';
+import { Close as CloseIcon, DeleteOutline as DeleteIcon } from '@mui/icons-material';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
-import { uploadArticleImage } from '../../../services/adminApi';
+import ImagePickerButton from './ImagePickerButton';
 import type { GalleryImage } from './GalleryNode';
 
 export default function GalleryNodeView({ node, updateAttributes, deleteNode }: NodeViewProps) {
   const theme = useTheme();
   const images = (node.attrs.images as GalleryImage[]) ?? [];
-  const [uploading, setUploading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const addImage = async (file: File) => {
-    setUploading(true);
-    try {
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-      });
-      const { url } = await uploadArticleImage({ mimeType: file.type, base64Data });
-      updateAttributes({ images: [...images, { src: url }] });
-    } catch {
-      /* admin uvidí, že sa obrázok nepridal */
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const removeImage = (index: number) =>
     updateAttributes({ images: images.filter((_, i) => i !== index) });
@@ -72,14 +38,14 @@ export default function GalleryNodeView({ node, updateAttributes, deleteNode }: 
             Galéria ({images.length})
           </Typography>
           <Stack direction="row" spacing={0.5} alignItems="center">
-            <Button
-              size="small"
-              startIcon={<AddIcon fontSize="small" />}
-              onClick={() => inputRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? 'Nahrávam…' : 'Pridať obrázok'}
-            </Button>
+            <ImagePickerButton
+              label="Pridať obrázok"
+              onPicked={(media) =>
+                updateAttributes({
+                  images: [...images, { src: media.url, ...(media.alt ? { alt: media.alt } : {}) }],
+                })
+              }
+            />
             <Tooltip title="Zmazať galériu">
               <IconButton size="small" aria-label="Zmazať galériu" onClick={deleteNode}>
                 <DeleteIcon fontSize="small" />
@@ -143,18 +109,6 @@ export default function GalleryNodeView({ node, updateAttributes, deleteNode }: 
             ))}
           </Box>
         )}
-
-        <input
-          ref={inputRef}
-          type="file"
-          hidden
-          accept="image/jpeg,image/png,image/webp"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void addImage(f);
-            e.target.value = '';
-          }}
-        />
       </Box>
     </NodeViewWrapper>
   );

@@ -35,7 +35,6 @@ import {
   HistoryOutlined as HistoryIcon,
   OpenInNew as OpenInNewIcon,
   Save as SaveIcon,
-  UploadFile as UploadIcon,
   InfoOutlined as InfoIcon,
   Flag as FlagIcon,
   BarChart as BarChartIcon,
@@ -50,6 +49,7 @@ import SectionCardHeader from '../../components/ui/SectionCardHeader';
 import { ANIMAL_SPECIES, type AnimalType } from '../../constants/animalSpecies';
 import ArticleRichEditor from '../../components/admin/articleEditor/ArticleRichEditor';
 import RelatedArticlesPicker from '../../components/admin/articleEditor/RelatedArticlesPicker';
+import ImagePickerButton from '../../components/admin/articleEditor/ImagePickerButton';
 import ArticleVersionsDrawer from '../../components/admin/ArticleVersionsDrawer';
 import ArticleValidationPanel from '../../components/admin/ArticleValidationPanel';
 import ArticleBody from '../../components/public/ArticleBody';
@@ -66,11 +66,9 @@ import {
   getArticleValidation,
   listArticleVersions,
   updateAdminArticle,
-  uploadArticleImage,
 } from '../../services/adminApi';
 import { articleRefreshFlags } from '../../utils/articleRefreshFlags';
 import { slugifyHeading } from '../../utils/slugifyHeading';
-import { downscaleImage } from '../../utils/imageDownscale';
 import {
   ARTICLE_STATUS_TRANSITIONS,
   STATUS_COLORS,
@@ -187,7 +185,6 @@ export default function AdminArticleEditPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState(0);
-  const [uploading, setUploading] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [checklistOpen, setChecklistOpen] = useState(false);
@@ -288,25 +285,6 @@ export default function AdminArticleEditPage() {
         el.focus();
       }
     }, 100);
-  };
-
-  const handleCoverUpload = async (file: File) => {
-    setError(null);
-    setUploading(true);
-    try {
-      const { dataUrl, mimeType } = await downscaleImage(file, {
-        maxWidth: 1200,
-        mimeType: 'image/jpeg',
-        quality: 0.85,
-      });
-      const base64Data = dataUrl.split(',')[1] ?? '';
-      const { url } = await uploadArticleImage({ mimeType, base64Data });
-      set('coverImage', url);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setUploading(false);
-    }
   };
 
   const cleanedPayload = (): AdminArticle => ({
@@ -740,26 +718,23 @@ export default function AdminArticleEditPage() {
                       fullWidth
                       helperText={'Popisok pod obrázkom, napr. „Zdroj: Unsplash". Nepovinné.'}
                     />
-                    <Button
-                      component="label"
-                      variant="outlined"
-                      size="small"
-                      startIcon={<UploadIcon />}
-                      disabled={uploading}
-                      sx={{ alignSelf: 'flex-start' }}
-                    >
-                      {uploading ? 'Nahrávam…' : 'Nahrať obrázok'}
-                      <input
-                        type="file"
-                        hidden
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) void handleCoverUpload(file);
-                          e.target.value = '';
-                        }}
+                    <Box sx={{ alignSelf: 'flex-start' }}>
+                      <ImagePickerButton
+                        label="Vybrať / nahrať titulnú fotku"
+                        onPicked={(media) =>
+                          setForm((f) => ({
+                            ...f,
+                            coverImage: media.url,
+                            coverAlt: f.coverAlt?.trim() ? f.coverAlt : (media.alt ?? ''),
+                            coverCredit: f.coverCredit?.trim()
+                              ? f.coverCredit
+                              : media.author
+                                ? `Zdroj: ${media.author}`
+                                : (f.coverCredit ?? ''),
+                          }))
+                        }
                       />
-                    </Button>
+                    </Box>
                     {form.coverImage && (
                       <Box
                         component="img"

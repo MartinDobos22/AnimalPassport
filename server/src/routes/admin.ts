@@ -15,6 +15,7 @@ import { getArticleMetric, getArticleMetrics } from '../services/articleAnalytic
 import { listAiGenerations } from '../services/articleAiService';
 import type { ArticleStatus } from '../types/article';
 import { uploadArticleImage } from '../services/articleImageService';
+import { deleteMediaImage, listMediaImages, updateMediaImage } from '../services/mediaImageService';
 import {
   isPublishConfigured,
   requestNetlifyRedeploy,
@@ -100,7 +101,7 @@ articles.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
 articles.post('/upload-image', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    res.json(await uploadArticleImage(req.body));
+    res.json(await uploadArticleImage(req.body, req.user?.email ?? null));
   } catch (err) {
     next(err);
   }
@@ -265,5 +266,37 @@ articles.delete('/:slug', async (req: Request, res: Response, next: NextFunction
 });
 
 router.use('/articles', requireAdmin, articles);
+
+// Media knižnica — zoznam/úprava/mazanie nahratých obrázkov (upload beží cez
+// /articles/upload-image). Gated cez requireAdmin rovnako ako články.
+const media = Router();
+
+media.get('/', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json({ media: await listMediaImages() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+media.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const updated = await updateMediaImage(String(req.params.id), req.body ?? {});
+    res.json({ media: updated });
+  } catch (err) {
+    next(err);
+  }
+});
+
+media.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await deleteMediaImage(String(req.params.id));
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.use('/media', requireAdmin, media);
 
 export default router;

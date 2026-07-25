@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type MouseEvent } from 'react';
+import { useMemo, useState, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Box,
@@ -61,9 +61,10 @@ import { GalleryNode } from './GalleryNode';
 import { EmbedNode } from './EmbedNode';
 import ImageNodeView from './ImageNodeView';
 import ArticlePickerDialog from './ArticlePickerDialog';
+import MediaLibraryDialog from './MediaLibraryDialog';
 import { sectionsToTiptap, tiptapToSections } from './articleTiptapBridge';
-import { uploadArticleImage } from '../../../services/adminApi';
 import type { ArticleSection } from '../../../content/poradna/types';
+import type { MediaImage } from '../../../types/media';
 
 interface Props {
   value: ArticleSection[];
@@ -521,9 +522,8 @@ function BubbleToolbar({ editor, onLinkRequest }: ToolbarProps) {
 export default function ArticleRichEditor({ value, onChange, toolbarContainer }: Props) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
-  const [uploading, setUploading] = useState(false);
   const [articlePickerOpen, setArticlePickerOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
   const initialContent = useMemo(() => sectionsToTiptap(value), []);
 
@@ -584,22 +584,19 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
     setLinkOpen(false);
   };
 
-  const handleImageFile = async (file: File) => {
-    setUploading(true);
-    try {
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-      });
-      const { url } = await uploadArticleImage({ mimeType: file.type, base64Data });
-      editor.chain().focus().setImage({ src: url }).run();
-    } catch {
-      /* admin uvidí, že sa obrázok nevložil */
-    } finally {
-      setUploading(false);
-    }
+  const insertMediaImage = (media: MediaImage) => {
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: 'image',
+        attrs: {
+          src: media.url,
+          alt: media.alt ?? null,
+          caption: media.caption ?? null,
+        },
+      })
+      .run();
   };
 
   const insertArticleLink = (article: { slug: string; title: string }) => {
@@ -618,7 +615,7 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
     <Toolbar
       editor={editor}
       onLinkRequest={openLinkDialog}
-      onImageRequest={() => fileInputRef.current?.click()}
+      onImageRequest={() => setMediaPickerOpen(true)}
       onArticleLinkRequest={() => setArticlePickerOpen(true)}
       inHeader={Boolean(toolbarContainer)}
     />
@@ -626,17 +623,6 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
 
   return (
     <Box>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        hidden
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) void handleImageFile(f);
-          e.target.value = '';
-        }}
-      />
       {toolbarContainer && createPortal(toolbar, toolbarContainer)}
       <EditorShell>
         {!toolbarContainer && toolbar}
@@ -660,7 +646,7 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
       </EditorShell>
       <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
         Píš priamo do textu. Označ slovo a použi lištu na tučné/odkaz. „H2" začína novú sekciu,
-        „Box" premení odsek na zvýraznený box.{uploading ? ' · Nahrávam obrázok…' : ''}
+        „Box" premení odsek na zvýraznený box.
       </Typography>
 
       <Dialog open={linkOpen} onClose={() => setLinkOpen(false)} fullWidth maxWidth="sm">
@@ -693,6 +679,12 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
         onClose={() => setArticlePickerOpen(false)}
         onSelect={insertArticleLink}
         title="Vložiť odkaz na článok"
+      />
+
+      <MediaLibraryDialog
+        open={mediaPickerOpen}
+        onClose={() => setMediaPickerOpen(false)}
+        onSelect={insertMediaImage}
       />
     </Box>
   );
