@@ -8,6 +8,8 @@ export type CalloutVariant = 'tip' | 'warning' | 'info';
 
 export type TextAlign = 'left' | 'center' | 'right';
 
+export type EmbedProvider = 'facebook' | 'youtube' | 'instagram';
+
 export type Block =
   | { type: 'paragraph'; text: string; align?: TextAlign }
   | { type: 'bullets'; ordered?: boolean; items: string[] }
@@ -15,8 +17,9 @@ export type Block =
   | { type: 'quote'; text: string }
   | { type: 'divider' }
   | { type: 'callout'; variant: CalloutVariant; title?: string; text: string }
-  | { type: 'image'; src: string; alt?: string; width?: number }
-  | { type: 'gallery'; images: { src: string; alt?: string }[] };
+  | { type: 'image'; src: string; alt?: string; width?: number; caption?: string }
+  | { type: 'gallery'; images: { src: string; alt?: string }[] }
+  | { type: 'embed'; provider: EmbedProvider; url: string; caption?: string };
 
 export interface ArticleSection {
   heading: string;
@@ -36,11 +39,15 @@ export interface Article {
   title: string;
   /** Meta description + perex v zozname. */
   description: string;
+  /** Krátky pútací text na kartu v zozname (fallback na description). */
+  teaser?: string;
   /** Úvodný odsek pod H1. */
   intro: string;
   sections: ArticleSection[];
   faqs?: FaqItem[];
   relatedSlugs?: string[];
+  /** Hashtagy / kľúčové slová pre SEO a filtrovanie. */
+  tags?: string[];
   /** ISO dátum poslednej aktualizácie (pre Article schema). */
   updated: string;
   /** URL titulného obrázka (zatiaľ Unsplash placeholder, neskôr vlastné). */

@@ -43,7 +43,7 @@ export default function ArticleCard({ article }: Props) {
             {article.title}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: theme.spacing(2), flex: 1 }}>
-            {article.description}
+            {article.teaser?.trim() || article.description}
           </Typography>
           <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary">
             <ScheduleIcon sx={{ fontSize: theme.typography.body2.fontSize }} />

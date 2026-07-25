@@ -658,13 +658,44 @@ export default function AdminArticleEditPage() {
                 <TextField
                   id="field-description"
                   label="Popis do zoznamu / SEO"
-                  helperText="Text na kartách v zozname a meta popis (SEO)."
+                  helperText="Meta popis (SEO). Povinný až pred publikovaním."
                   value={form.description}
                   onChange={(e) => set('description', e.target.value)}
                   multiline
                   minRows={2}
                   fullWidth
                   size="small"
+                />
+                <TextField
+                  id="field-teaser"
+                  label="Pútač (text na karte v zozname)"
+                  helperText="Krátky pútací text na karte článku. Ak prázdny, použije sa popis."
+                  value={form.teaser ?? ''}
+                  onChange={(e) => set('teaser', e.target.value)}
+                  multiline
+                  minRows={2}
+                  fullWidth
+                  size="small"
+                />
+                <Autocomplete
+                  multiple
+                  freeSolo
+                  size="small"
+                  options={[] as string[]}
+                  value={form.tags ?? []}
+                  onChange={(_e, value) =>
+                    set(
+                      'tags',
+                      value.map((v) => v.trim().replace(/^#/, '')).filter((v) => v.length > 0)
+                    )
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Hashtagy (SEO)"
+                      helperText="Kľúčové slová pre Google. Napíš slovo a stlač Enter."
+                    />
+                  )}
                 />
                 <TextField
                   id="field-intro"

@@ -40,6 +40,7 @@ import {
   AddPhotoAlternateOutlined as ImageIcon,
   CollectionsOutlined as GalleryIcon,
   MenuBookOutlined as ArticleLinkIcon,
+  OndemandVideoOutlined as EmbedIcon,
 } from '@mui/icons-material';
 import {
   useEditor,
@@ -57,6 +58,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
 import { CalloutNode } from './CalloutNode';
 import { GalleryNode } from './GalleryNode';
+import { EmbedNode } from './EmbedNode';
 import ImageNodeView from './ImageNodeView';
 import ArticlePickerDialog from './ArticlePickerDialog';
 import { sectionsToTiptap, tiptapToSections } from './articleTiptapBridge';
@@ -91,12 +93,12 @@ const EditorShell = styled(Box)(({ theme }) => ({
     outline: 'none',
   },
   '& .ProseMirror h2': {
-    ...theme.typography.h5,
+    ...theme.typography.h4,
     marginTop: theme.spacing(3),
     marginBottom: theme.spacing(1.5),
   },
   '& .ProseMirror h3': {
-    ...theme.typography.h6,
+    ...theme.typography.h5,
     marginTop: theme.spacing(2.5),
     marginBottom: theme.spacing(1),
   },
@@ -420,6 +422,15 @@ function Toolbar({
           <ArticleLinkIcon fontSize="small" />
         </ToolButton>
       </Tooltip>
+      <Tooltip title="Vložiť embed (Facebook, YouTube, Instagram)">
+        <ToolButton
+          value="embed"
+          size="small"
+          onClick={() => editor.chain().focus().setEmbed().run()}
+        >
+          <EmbedIcon fontSize="small" />
+        </ToolButton>
+      </Tooltip>
     </Stack>
   );
 }
@@ -538,6 +549,7 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
           return {
             ...this.parent?.(),
             width: { default: null },
+            caption: { default: null },
           };
         },
         addNodeView() {
@@ -546,6 +558,7 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
       }).configure({ inline: false }),
       CalloutNode,
       GalleryNode,
+      EmbedNode,
     ],
     content: initialContent,
     onUpdate: ({ editor: e }) => {
