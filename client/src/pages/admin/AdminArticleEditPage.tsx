@@ -24,6 +24,7 @@ import {
   Tab,
   Tabs,
   TextField,
+  Tooltip,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -34,7 +35,6 @@ import {
   HistoryOutlined as HistoryIcon,
   OpenInNew as OpenInNewIcon,
   Save as SaveIcon,
-  UploadFile as UploadIcon,
   InfoOutlined as InfoIcon,
   Flag as FlagIcon,
   BarChart as BarChartIcon,
@@ -43,11 +43,14 @@ import {
   Article as ArticleIcon,
   QuestionAnswer as QuestionAnswerIcon,
   Link as LinkIcon,
+  PhotoLibrary as PhotoIcon,
 } from '@mui/icons-material';
 import PageContainer from '../../components/ui/PageContainer';
 import SectionCardHeader from '../../components/ui/SectionCardHeader';
 import { ANIMAL_SPECIES, type AnimalType } from '../../constants/animalSpecies';
 import ArticleRichEditor from '../../components/admin/articleEditor/ArticleRichEditor';
+import RelatedArticlesPicker from '../../components/admin/articleEditor/RelatedArticlesPicker';
+import ImagePickerButton from '../../components/admin/articleEditor/ImagePickerButton';
 import ArticleVersionsDrawer from '../../components/admin/ArticleVersionsDrawer';
 import ArticleValidationPanel from '../../components/admin/ArticleValidationPanel';
 import ArticleBody from '../../components/public/ArticleBody';
@@ -58,15 +61,15 @@ import {
   createAdminArticle,
   generateArticleAi,
   getAdminArticle,
+  getAdminStatus,
   getArticleAiLog,
   getArticleMetric,
   getArticleValidation,
   listArticleVersions,
   updateAdminArticle,
-  uploadArticleImage,
 } from '../../services/adminApi';
 import { articleRefreshFlags } from '../../utils/articleRefreshFlags';
-import { downscaleImage } from '../../utils/imageDownscale';
+import { slugifyHeading } from '../../utils/slugifyHeading';
 import {
   ARTICLE_STATUS_TRANSITIONS,
   STATUS_COLORS,
@@ -116,6 +119,15 @@ const PUBLISH_CHECKLIST = [
   'Titulok, meta popis a úvod sú vyplnené.',
   'Odkazy a obrázky fungujú.',
 ];
+
+// Prechody, ktoré smie vykonať len admin (schválenie/publikovanie/archivácia).
+// Editor bez admin práv môže len poslať na schválenie alebo vrátiť do konceptu.
+const ADMIN_ONLY_STATUSES: ReadonlySet<ArticleStatus> = new Set([
+  'approved',
+  'scheduled',
+  'published',
+  'archived',
+]);
 
 // Doplnkový checklist keď bol použitý AI obsah (audit/kontrola pred publikovaním).
 const AI_REVIEW_CHECKLIST = [
@@ -174,7 +186,6 @@ export default function AdminArticleEditPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState(0);
-  const [uploading, setUploading] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [checklistOpen, setChecklistOpen] = useState(false);
@@ -189,13 +200,22 @@ export default function AdminArticleEditPage() {
   const [aiBusy, setAiBusy] = useState<ArticleAiType | null>(null);
   const [aiLog, setAiLog] = useState<AiGenerationLog[]>([]);
   const [aiNote, setAiNote] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Posledný uložený/načítaný stav (JSON) — autosave beží len pri reálnej zmene.
   const savedSnapshotRef = useRef<string>('');
+  // Používateľ ručne upravil slug → prestaneme ho auto-generovať z titulku.
+  const slugTouchedRef = useRef<boolean>(!isNew);
 
   // Lišta editora sa portáluje do tejto sticky hlavičky, aby bola vždy viditeľná
   // počas editácie tela (spoľahlivejšie než position: sticky vo vnorenom Card).
   const [toolbarSlot, setToolbarSlot] = useState<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    getAdminStatus()
+      .then(setIsAdmin)
+      .catch(() => setIsAdmin(false));
+  }, []);
 
   useEffect(() => {
     if (isNew) return;
@@ -266,25 +286,6 @@ export default function AdminArticleEditPage() {
         el.focus();
       }
     }, 100);
-  };
-
-  const handleCoverUpload = async (file: File) => {
-    setError(null);
-    setUploading(true);
-    try {
-      const { dataUrl, mimeType } = await downscaleImage(file, {
-        maxWidth: 1200,
-        mimeType: 'image/jpeg',
-        quality: 0.85,
-      });
-      const base64Data = dataUrl.split(',')[1] ?? '';
-      const { url } = await uploadArticleImage({ mimeType, base64Data });
-      set('coverImage', url);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setUploading(false);
-    }
   };
 
   const cleanedPayload = (): AdminArticle => ({
@@ -371,6 +372,11 @@ export default function AdminArticleEditPage() {
   // Akcia podľa cieľového stavu: publish cez checklist, schedule cez dialóg.
   const handleTransition = (target: ArticleStatus) => {
     if (target === 'published') {
+      // Admin publikuje priamo — bez schvaľovacieho checklistu.
+      if (isAdmin) {
+        void runStatus('published');
+        return;
+      }
       const list =
         aiLog.length > 0 ? [...PUBLISH_CHECKLIST, ...AI_REVIEW_CHECKLIST] : PUBLISH_CHECKLIST;
       setChecklistChecked(list.map(() => false));
@@ -552,664 +558,739 @@ export default function AdminArticleEditPage() {
       )}
 
       {tab === 0 && (
-        <Stack spacing={theme.spacing(2)}>
-          <Card sx={{ borderRadius: 2 }}>
-            <CardContent>
-              <SectionCardHeader
-                icon={<InfoIcon />}
-                accent={theme.palette.primary.main}
-                title="Základné údaje"
-              />
-              <Stack spacing={theme.spacing(2)}>
-                <TextField
-                  id="field-title"
-                  label="Titulok (H1)"
-                  value={form.title}
-                  onChange={(e) => set('title', e.target.value)}
-                  fullWidth
-                  size="small"
+        <Box
+          sx={{
+            display: 'grid',
+            gap: theme.spacing(2),
+            gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(280px, 340px)' },
+            alignItems: 'start',
+          }}
+        >
+          <Stack spacing={theme.spacing(2)} sx={{ minWidth: 0 }}>
+            <Card sx={{ borderRadius: 2 }}>
+              <CardContent>
+                <SectionCardHeader
+                  icon={<InfoIcon />}
+                  accent={theme.palette.primary.main}
+                  title="Základné údaje"
                 />
-                <TextField
-                  id="field-slug"
-                  label="Slug (URL)"
-                  value={form.slug}
-                  onChange={(e) => set('slug', e.target.value)}
-                  disabled={!isNew}
-                  helperText={
-                    isNew
-                      ? 'Malé písmená, číslice a pomlčky. Po vytvorení sa nemení.'
-                      : 'Slug sa po vytvorení nemení.'
-                  }
-                  fullWidth
-                  size="small"
-                />
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={theme.spacing(2)}>
+                <Stack spacing={theme.spacing(2)}>
                   <TextField
-                    select
-                    label="Kategória"
-                    value={form.category}
-                    onChange={(e) => set('category', e.target.value as AdminArticle['category'])}
-                    size="small"
+                    id="field-title"
+                    label="Titulok (H1)"
+                    value={form.title}
+                    onChange={(e) => {
+                      const title = e.target.value;
+                      setForm((f) => ({
+                        ...f,
+                        title,
+                        // Auto-slug z titulku, kým ho admin ručne neupravil (len nový článok).
+                        ...(isNew && !slugTouchedRef.current
+                          ? { slug: slugifyHeading(title) }
+                          : {}),
+                      }));
+                    }}
                     fullWidth
-                  >
-                    <MenuItem value="krmivo">Krmivo a výživa</MenuItem>
-                    <MenuItem value="zdravie">Zdravie a prevencia</MenuItem>
-                  </TextField>
+                    size="small"
+                  />
                   <TextField
-                    select
-                    label="CTA cieľ"
-                    value={form.ctaIntent}
-                    onChange={(e) => set('ctaIntent', e.target.value as AdminArticle['ctaIntent'])}
-                    size="small"
+                    id="field-slug"
+                    label="Slug (URL)"
+                    value={form.slug}
+                    onChange={(e) => {
+                      slugTouchedRef.current = true;
+                      set('slug', e.target.value);
+                    }}
+                    disabled={!isNew}
+                    helperText={
+                      isNew
+                        ? 'Automaticky z titulku; môžeš prepísať. Po vytvorení sa nemení.'
+                        : 'Slug sa po vytvorení nemení.'
+                    }
                     fullWidth
-                  >
-                    <MenuItem value="food">Analýza krmiva</MenuItem>
-                    <MenuItem value="passport">Zdravotný pas</MenuItem>
-                  </TextField>
-                </Stack>
-                <Autocomplete
-                  multiple
-                  size="small"
-                  options={ANIMAL_SPECIES as readonly AnimalType[]}
-                  value={(form.species ?? []) as AnimalType[]}
-                  onChange={(_e, value) => set('species', value)}
-                  getOptionLabel={(opt) => speciesLabel(opt)}
-                  renderInput={(params) => (
+                    size="small"
+                  />
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={theme.spacing(2)}>
                     <TextField
-                      {...params}
-                      label="Druh zvieraťa (filter)"
-                      helperText="Pre koho je článok určený. Prázdne = bez viazania na druh."
-                    />
-                  )}
-                />
-                <TextField
-                  id="field-description"
-                  label="Popis do zoznamu / SEO"
-                  helperText="Text na kartách v zozname a meta popis (SEO)."
-                  value={form.description}
-                  onChange={(e) => set('description', e.target.value)}
-                  multiline
-                  minRows={2}
-                  fullWidth
-                  size="small"
-                />
-                <TextField
-                  id="field-intro"
-                  label="Perex (úvodný odsek)"
-                  helperText="Výrazný úvodný odsek pod nadpisom článku."
-                  value={form.intro ?? ''}
-                  onChange={(e) => set('intro', e.target.value)}
-                  multiline
-                  minRows={2}
-                  fullWidth
-                  size="small"
-                />
-                <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
-                  spacing={theme.spacing(2)}
-                  alignItems="flex-start"
-                >
-                  <Stack spacing={1} sx={{ flexGrow: 1, width: '100%' }}>
-                    <TextField
-                      id="field-coverImage"
-                      label="URL titulného obrázka"
-                      value={form.coverImage ?? ''}
-                      onChange={(e) => set('coverImage', e.target.value)}
+                      select
+                      label="Kategória"
+                      value={form.category}
+                      onChange={(e) => set('category', e.target.value as AdminArticle['category'])}
                       size="small"
                       fullWidth
-                    />
-                    <TextField
-                      id="field-coverAlt"
-                      label="Alt text titulného obrázka"
-                      value={form.coverAlt ?? ''}
-                      onChange={(e) => set('coverAlt', e.target.value)}
-                      size="small"
-                      fullWidth
-                      helperText="Popis obrázka pre prístupnosť a zdieľanie (og:image:alt)."
-                    />
-                    <TextField
-                      id="field-coverCredit"
-                      label="Zdroj titulného obrázka"
-                      value={form.coverCredit ?? ''}
-                      onChange={(e) => set('coverCredit', e.target.value)}
-                      size="small"
-                      fullWidth
-                      helperText={'Popisok pod obrázkom, napr. „Zdroj: Unsplash". Nepovinné.'}
-                    />
-                    <Button
-                      component="label"
-                      variant="outlined"
-                      size="small"
-                      startIcon={<UploadIcon />}
-                      disabled={uploading}
-                      sx={{ alignSelf: 'flex-start' }}
                     >
-                      {uploading ? 'Nahrávam…' : 'Nahrať obrázok'}
-                      <input
-                        type="file"
-                        hidden
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) void handleCoverUpload(file);
-                          e.target.value = '';
-                        }}
-                      />
-                    </Button>
-                    {form.coverImage && (
-                      <Box
-                        component="img"
-                        src={form.coverImage}
-                        alt=""
-                        sx={{
-                          width: '100%',
-                          maxWidth: theme.spacing(40),
-                          borderRadius: theme.shape.borderRadius,
-                          objectFit: 'cover',
-                        }}
+                      <MenuItem value="krmivo">Krmivo a výživa</MenuItem>
+                      <MenuItem value="zdravie">Zdravie a prevencia</MenuItem>
+                    </TextField>
+                    <TextField
+                      select
+                      label="CTA cieľ"
+                      value={form.ctaIntent}
+                      onChange={(e) =>
+                        set('ctaIntent', e.target.value as AdminArticle['ctaIntent'])
+                      }
+                      size="small"
+                      fullWidth
+                    >
+                      <MenuItem value="food">Analýza krmiva</MenuItem>
+                      <MenuItem value="passport">Zdravotný pas</MenuItem>
+                    </TextField>
+                  </Stack>
+                  <Autocomplete
+                    multiple
+                    size="small"
+                    options={ANIMAL_SPECIES as readonly AnimalType[]}
+                    value={(form.species ?? []) as AnimalType[]}
+                    onChange={(_e, value) => set('species', value)}
+                    getOptionLabel={(opt) => speciesLabel(opt)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Druh zvieraťa (filter)"
+                        helperText="Pre koho je článok určený. Prázdne = bez viazania na druh."
                       />
                     )}
+                  />
+                  <TextField
+                    id="field-description"
+                    label="Popis do zoznamu / SEO"
+                    helperText="Meta popis (SEO). Povinný až pred publikovaním."
+                    value={form.description}
+                    onChange={(e) => set('description', e.target.value)}
+                    multiline
+                    minRows={2}
+                    fullWidth
+                    size="small"
+                  />
+                  <TextField
+                    id="field-teaser"
+                    label="Pútač (text na karte v zozname)"
+                    helperText="Krátky pútací text na karte článku. Ak prázdny, použije sa popis."
+                    value={form.teaser ?? ''}
+                    onChange={(e) => set('teaser', e.target.value)}
+                    multiline
+                    minRows={2}
+                    fullWidth
+                    size="small"
+                  />
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    size="small"
+                    options={[] as string[]}
+                    value={form.tags ?? []}
+                    onChange={(_e, value) =>
+                      set(
+                        'tags',
+                        value.map((v) => v.trim().replace(/^#/, '')).filter((v) => v.length > 0)
+                      )
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Hashtagy (SEO)"
+                        helperText="Kľúčové slová pre Google. Napíš slovo a stlač Enter."
+                      />
+                    )}
+                  />
+                  <TextField
+                    id="field-intro"
+                    label="Perex (úvodný odsek)"
+                    helperText="Výrazný úvodný odsek pod nadpisom článku."
+                    value={form.intro ?? ''}
+                    onChange={(e) => set('intro', e.target.value)}
+                    multiline
+                    minRows={2}
+                    fullWidth
+                    size="small"
+                  />
+                  <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={theme.spacing(2)}
+                    alignItems="center"
+                  >
+                    <TextField
+                      label="Dátum aktualizácie"
+                      type="date"
+                      value={form.updated}
+                      onChange={(e) => set('updated', e.target.value)}
+                      size="small"
+                      InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                      label="Poradie"
+                      type="number"
+                      value={form.position}
+                      onChange={(e) => set('position', Number(e.target.value))}
+                      size="small"
+                      sx={{ width: theme.spacing(14) }}
+                    />
+                  </Stack>
+                  <Box>
+                    <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                      Súvisiace články
+                    </Typography>
+                    <RelatedArticlesPicker
+                      value={form.relatedSlugs ?? []}
+                      onChange={(slugs) => set('relatedSlugs', slugs)}
+                      currentSlug={isNew ? undefined : form.slug}
+                    />
+                  </Box>
+                </Stack>
+              </CardContent>
+            </Card>
+
+            <Card sx={{ borderRadius: 2 }}>
+              <CardContent>
+                <SectionCardHeader
+                  icon={<FlagIcon />}
+                  accent={theme.palette.secondary.main}
+                  title="Redakčný stav"
+                />
+                <Stack spacing={theme.spacing(2)}>
+                  <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center">
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                      <Typography variant="body2" color="text.secondary">
+                        Status:
+                      </Typography>
+                      <Chip
+                        label={STATUS_LABELS[form.status]}
+                        color={STATUS_COLORS[form.status]}
+                        size="small"
+                      />
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary">
+                      Posledná zmena: {form.updated}
+                    </Typography>
+                    {latestVersion != null && (
+                      <Typography variant="body2" color="text.secondary">
+                        Verzia: v{latestVersion}
+                      </Typography>
+                    )}
+                    {form.scheduledFor && form.status === 'scheduled' && (
+                      <Typography variant="body2" color="text.secondary">
+                        Naplánované na {new Date(form.scheduledFor).toLocaleString('sk-SK')}
+                      </Typography>
+                    )}
+                  </Stack>
+
+                  {isNew ? (
+                    <Typography variant="caption" color="text.secondary">
+                      Po uložení sa článok vytvorí ako koncept a sprístupnia sa redakčné akcie.
+                    </Typography>
+                  ) : (
+                    <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                      {allowedTransitions.map((target) => {
+                        const adminOnly = ADMIN_ONLY_STATUSES.has(target);
+                        const blocked = adminOnly && !isAdmin;
+                        const button = (
+                          <Button
+                            key={target}
+                            size="small"
+                            variant="outlined"
+                            disabled={saving || blocked}
+                            color={
+                              target === 'published'
+                                ? 'success'
+                                : target === 'archived'
+                                  ? 'inherit'
+                                  : 'primary'
+                            }
+                            onClick={() => handleTransition(target)}
+                          >
+                            {transitionActionLabel(form.status, target)}
+                          </Button>
+                        );
+                        return blocked ? (
+                          <Tooltip key={target} title="Túto akciu môže vykonať len administrátor.">
+                            <span>{button}</span>
+                          </Tooltip>
+                        ) : (
+                          button
+                        );
+                      })}
+                      {isAdmin &&
+                        form.status !== 'published' &&
+                        !allowedTransitions.includes('published') && (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="success"
+                            disabled={saving}
+                            onClick={() => handleTransition('published')}
+                          >
+                            Publikovať hneď
+                          </Button>
+                        )}
+                    </Stack>
+                  )}
+
+                  <TextField
+                    label="Priradené (e-mail editora)"
+                    value={form.assignedTo ?? ''}
+                    onChange={(e) => set('assignedTo', e.target.value)}
+                    size="small"
+                    fullWidth
+                  />
+                  <TextField
+                    label="Interné poznámky (nezobrazujú sa verejne)"
+                    value={form.internalNotes ?? ''}
+                    onChange={(e) => set('internalNotes', e.target.value)}
+                    multiline
+                    minRows={2}
+                    fullWidth
+                    size="small"
+                  />
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {!isNew && (
+              <Card sx={{ borderRadius: 2 }}>
+                <CardContent>
+                  <SectionCardHeader
+                    icon={<BarChartIcon />}
+                    accent={theme.palette.info.main}
+                    title="Výkon článku (30 dní)"
+                  />
+                  <Stack direction="row" spacing={3} flexWrap="wrap" sx={{ mb: theme.spacing(1) }}>
+                    <Typography variant="body2">
+                      <strong>Zobrazenia:</strong> {metric?.views ?? 0}
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>CTA kliky:</strong> {metric?.ctaClicks ?? 0}
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>CTR:</strong> {((metric?.ctr ?? 0) * 100).toFixed(1)} %
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Scroll 90 %:</strong>{' '}
+                      {metric && metric.views > 0
+                        ? `${((metric.scroll90 / metric.views) * 100).toFixed(0)} %`
+                        : '—'}
+                    </Typography>
+                  </Stack>
+                  {articleRefreshFlags(form, metric).map((flag) => (
+                    <Alert key={flag.key} severity="warning" sx={{ mt: 1 }}>
+                      {flag.message}
+                    </Alert>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            <Card sx={{ borderRadius: 2 }}>
+              <CardContent>
+                <SectionCardHeader
+                  icon={<VerifiedUserIcon />}
+                  accent={theme.palette.success.main}
+                  title="Odborná kontrola"
+                />
+                {form.category === 'zdravie' && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', mb: 1 }}
+                  >
+                    Zdravotný článok: pred publikovaním je povinný disclaimer, dátum poslednej
+                    kontroly a úroveň rizika. Pri vysokom riziku aj medicínska kontrola a
+                    fact-check.
+                  </Typography>
+                )}
+                <Stack spacing={theme.spacing(2)}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={theme.spacing(2)}>
+                    <TextField
+                      id="field-riskLevel"
+                      select
+                      label="Úroveň rizika"
+                      value={form.riskLevel ?? ''}
+                      onChange={(e) =>
+                        set('riskLevel', (e.target.value || undefined) as AdminArticle['riskLevel'])
+                      }
+                      size="small"
+                      fullWidth
+                    >
+                      <MenuItem value="">— nezvolené —</MenuItem>
+                      <MenuItem value="low">Nízke (všeobecná starostlivosť)</MenuItem>
+                      <MenuItem value="medium">Stredné (výživa, alergie, trávenie)</MenuItem>
+                      <MenuItem value="high">Vysoké (choroby, lieky, urgentné stavy)</MenuItem>
+                    </TextField>
+                    <TextField
+                      id="field-lastContentReviewAt"
+                      label="Dátum poslednej kontroly"
+                      type="date"
+                      value={(form.lastContentReviewAt ?? '').slice(0, 10)}
+                      onChange={(e) => set('lastContentReviewAt', e.target.value)}
+                      size="small"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                      label="Ďalšia kontrola"
+                      type="date"
+                      value={(form.nextReviewDueAt ?? '').slice(0, 10)}
+                      onChange={(e) => set('nextReviewDueAt', e.target.value)}
+                      size="small"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Stack>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={theme.spacing(2)}>
+                    <TextField
+                      label="Kontroloval(a)"
+                      value={form.reviewedBy ?? ''}
+                      onChange={(e) => set('reviewedBy', e.target.value)}
+                      size="small"
+                      fullWidth
+                    />
+                    <TextField
+                      label="Titul / rola kontrolóra"
+                      value={form.reviewerTitle ?? ''}
+                      onChange={(e) => set('reviewerTitle', e.target.value)}
+                      size="small"
+                      fullWidth
+                    />
+                    <TextField
+                      label="Dátum kontroly"
+                      type="date"
+                      value={(form.reviewedAt ?? '').slice(0, 10)}
+                      onChange={(e) => set('reviewedAt', e.target.value)}
+                      size="small"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Stack>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={theme.spacing(2)}>
+                    <TextField
+                      id="field-factCheckedBy"
+                      label="Fact-check (kto)"
+                      value={form.factCheckedBy ?? ''}
+                      onChange={(e) => set('factCheckedBy', e.target.value)}
+                      size="small"
+                      fullWidth
+                    />
+                    <TextField
+                      label="Fact-check (dátum)"
+                      type="date"
+                      value={(form.factCheckedAt ?? '').slice(0, 10)}
+                      onChange={(e) => set('factCheckedAt', e.target.value)}
+                      size="small"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Stack>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={theme.spacing(2)}>
+                    <TextField
+                      id="field-medicalReviewedBy"
+                      label="Medicínska kontrola (kto)"
+                      value={form.medicalReviewedBy ?? ''}
+                      onChange={(e) => set('medicalReviewedBy', e.target.value)}
+                      size="small"
+                      fullWidth
+                    />
+                    <TextField
+                      label="Medicínska kontrola (dátum)"
+                      type="date"
+                      value={(form.medicalReviewedAt ?? '').slice(0, 10)}
+                      onChange={(e) => set('medicalReviewedAt', e.target.value)}
+                      size="small"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
                   </Stack>
                   <TextField
-                    label="Autor"
+                    id="field-disclaimer"
+                    label="Disclaimer (ak prázdne, použije sa globálny)"
+                    value={form.disclaimer ?? ''}
+                    onChange={(e) => set('disclaimer', e.target.value)}
+                    multiline
+                    minRows={2}
+                    fullWidth
+                    size="small"
+                  />
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {!isNew && (
+              <Card sx={{ borderRadius: 2 }}>
+                <CardContent>
+                  <SectionCardHeader
+                    icon={<AutoAwesomeIcon />}
+                    accent={theme.palette.diet.main}
+                    title="AI asistent"
+                  />
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', mb: 1 }}
+                  >
+                    AI len navrhuje — výstup vždy skontroluj a uprav. Každé volanie sa loguje (audit
+                    + náklady) a pred publikovaním si vyžiada AI kontrolu.
+                  </Typography>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {(
+                      [
+                        ['meta_description', 'Meta popis'],
+                        ['summary', 'Úvod'],
+                        ['rewrite', 'Vylepšiť úvod'],
+                        ['faq', 'Navrhnúť FAQ'],
+                        ['outline', 'Osnova sekcií'],
+                        ['source_check', 'Skontrolovať zdroje'],
+                      ] as [ArticleAiType, string][]
+                    ).map(([type, label]) => (
+                      <Button
+                        key={type}
+                        size="small"
+                        variant="outlined"
+                        disabled={aiBusy !== null}
+                        onClick={() => void runAi(type)}
+                      >
+                        {aiBusy === type ? 'Generujem…' : label}
+                      </Button>
+                    ))}
+                  </Stack>
+                  {aiLog.length > 0 && (
+                    <Box sx={{ mt: theme.spacing(2) }}>
+                      <Typography variant="caption" color="text.secondary">
+                        AI log ({aiLog.length}) — posledné:
+                      </Typography>
+                      <Stack sx={{ mt: 0.5 }}>
+                        {aiLog.slice(0, 5).map((g) => (
+                          <Typography key={g.id} variant="caption" color="text.secondary">
+                            {new Date(g.createdAt).toLocaleString('sk-SK')} · {g.type} · {g.model} ·{' '}
+                            {g.inputTokens ?? '?'}+{g.outputTokens ?? '?'} tok ·{' '}
+                            {g.estimatedCost != null ? `$${g.estimatedCost.toFixed(4)}` : '—'}
+                          </Typography>
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            <Card sx={{ borderRadius: 2 }}>
+              <CardContent>
+                <SectionCardHeader
+                  icon={<ArticleIcon />}
+                  accent={theme.palette.primary.main}
+                  title="Obsah článku"
+                />
+                <ArticleRichEditor
+                  value={form.sections}
+                  onChange={(sections) => set('sections', sections)}
+                  toolbarContainer={toolbarSlot}
+                />
+              </CardContent>
+            </Card>
+
+            <Card sx={{ borderRadius: 2 }}>
+              <CardContent>
+                <SectionCardHeader
+                  icon={<QuestionAnswerIcon />}
+                  accent={theme.palette.info.main}
+                  title="Často kladené otázky (FAQ)"
+                />
+                <Stack spacing={theme.spacing(1.5)}>
+                  {faqs.map((f, i) => (
+                    <Stack key={i} direction="row" spacing={1} alignItems="flex-start">
+                      <Stack spacing={1} sx={{ flexGrow: 1 }}>
+                        <TextField
+                          label={`Otázka #${i + 1}`}
+                          value={f.q}
+                          onChange={(e) =>
+                            set(
+                              'faqs',
+                              faqs.map((x, j) => (j === i ? { ...x, q: e.target.value } : x))
+                            )
+                          }
+                          size="small"
+                          fullWidth
+                        />
+                        <TextField
+                          label="Odpoveď"
+                          value={f.a}
+                          onChange={(e) =>
+                            set(
+                              'faqs',
+                              faqs.map((x, j) => (j === i ? { ...x, a: e.target.value } : x))
+                            )
+                          }
+                          multiline
+                          minRows={2}
+                          size="small"
+                          fullWidth
+                        />
+                      </Stack>
+                      <IconButton
+                        color="error"
+                        onClick={() =>
+                          set(
+                            'faqs',
+                            faqs.filter((_, j) => j !== i)
+                          )
+                        }
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Stack>
+                  ))}
+                  <Button
+                    startIcon={<AddIcon />}
+                    onClick={() => set('faqs', [...faqs, { q: '', a: '' }])}
+                    sx={{ alignSelf: 'flex-start' }}
+                  >
+                    Pridať otázku
+                  </Button>
+                </Stack>
+              </CardContent>
+            </Card>
+
+            <Card sx={{ borderRadius: 2 }}>
+              <CardContent>
+                <SectionCardHeader
+                  icon={<LinkIcon />}
+                  accent={theme.palette.secondary.main}
+                  title="Zdroje"
+                />
+                <Stack spacing={theme.spacing(1.5)}>
+                  {sources.map((s, i) => (
+                    <Stack key={i} direction="row" spacing={1} alignItems="center">
+                      <TextField
+                        label="Názov"
+                        value={s.label}
+                        onChange={(e) =>
+                          set(
+                            'sources',
+                            sources.map((x, j) => (j === i ? { ...x, label: e.target.value } : x))
+                          )
+                        }
+                        size="small"
+                        sx={{ flexGrow: 1 }}
+                      />
+                      <TextField
+                        label="URL"
+                        value={s.url}
+                        onChange={(e) =>
+                          set(
+                            'sources',
+                            sources.map((x, j) => (j === i ? { ...x, url: e.target.value } : x))
+                          )
+                        }
+                        size="small"
+                        sx={{ flexGrow: 1 }}
+                      />
+                      <IconButton
+                        color="error"
+                        onClick={() =>
+                          set(
+                            'sources',
+                            sources.filter((_, j) => j !== i)
+                          )
+                        }
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Stack>
+                  ))}
+                  <Button
+                    startIcon={<AddIcon />}
+                    onClick={() => set('sources', [...sources, { label: '', url: '' }])}
+                    sx={{ alignSelf: 'flex-start' }}
+                  >
+                    Pridať zdroj
+                  </Button>
+                </Stack>
+              </CardContent>
+            </Card>
+
+            <Divider />
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={saveContent}
+              disabled={saving}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              {saving ? 'Ukladám…' : 'Uložiť článok'}
+            </Button>
+          </Stack>
+
+          <Stack spacing={theme.spacing(2)} sx={{ minWidth: 0 }}>
+            <Card sx={{ borderRadius: 2 }}>
+              <CardContent>
+                <SectionCardHeader
+                  icon={<PhotoIcon />}
+                  accent={theme.palette.diet.main}
+                  title="Fotky / Médiá"
+                />
+                <Stack spacing={theme.spacing(1.5)}>
+                  <ImagePickerButton
+                    label="Vybrať / nahrať titulnú fotku"
+                    onPicked={(media) =>
+                      setForm((f) => ({
+                        ...f,
+                        coverImage: media.url,
+                        coverAlt: f.coverAlt?.trim() ? f.coverAlt : (media.alt ?? ''),
+                        coverCredit: f.coverCredit?.trim()
+                          ? f.coverCredit
+                          : media.author
+                            ? `Zdroj: ${media.author}`
+                            : (f.coverCredit ?? ''),
+                      }))
+                    }
+                  />
+                  {form.coverImage && (
+                    <Box
+                      component="img"
+                      src={form.coverImage}
+                      alt=""
+                      sx={{
+                        width: '100%',
+                        borderRadius: theme.shape.borderRadius,
+                        objectFit: 'cover',
+                      }}
+                    />
+                  )}
+                  <TextField
+                    id="field-coverImage"
+                    label="URL titulného obrázka"
+                    value={form.coverImage ?? ''}
+                    onChange={(e) => set('coverImage', e.target.value)}
+                    size="small"
+                    fullWidth
+                  />
+                  <TextField
+                    id="field-coverAlt"
+                    label="Alt text titulného obrázka"
+                    value={form.coverAlt ?? ''}
+                    onChange={(e) => set('coverAlt', e.target.value)}
+                    size="small"
+                    fullWidth
+                    helperText="Popis obrázka pre prístupnosť a zdieľanie (og:image:alt)."
+                  />
+                  <TextField
+                    id="field-coverCredit"
+                    label="Zdroj / popisok titulného obrázka"
+                    value={form.coverCredit ?? ''}
+                    onChange={(e) => set('coverCredit', e.target.value)}
+                    size="small"
+                    fullWidth
+                    helperText={'Popisok pod obrázkom, napr. „Zdroj: Unsplash". Nepovinné.'}
+                  />
+                  <TextField
+                    label="Autor článku"
                     value={form.author ?? ''}
                     onChange={(e) => set('author', e.target.value)}
                     size="small"
                     fullWidth
                   />
                 </Stack>
-                <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
-                  spacing={theme.spacing(2)}
-                  alignItems="center"
-                >
-                  <TextField
-                    label="Dátum aktualizácie"
-                    type="date"
-                    value={form.updated}
-                    onChange={(e) => set('updated', e.target.value)}
-                    size="small"
-                    InputLabelProps={{ shrink: true }}
-                  />
-                  <TextField
-                    label="Poradie"
-                    type="number"
-                    value={form.position}
-                    onChange={(e) => set('position', Number(e.target.value))}
-                    size="small"
-                    sx={{ width: theme.spacing(14) }}
-                  />
-                </Stack>
-                <TextField
-                  label="Súvisiace články (slugy oddelené čiarkou)"
-                  value={(form.relatedSlugs ?? []).join(', ')}
-                  onChange={(e) =>
-                    set(
-                      'relatedSlugs',
-                      e.target.value
-                        .split(',')
-                        .map((s) => s.trim())
-                        .filter((s) => s.length > 0)
-                    )
-                  }
-                  fullWidth
-                  size="small"
-                />
-              </Stack>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ borderRadius: 2 }}>
-            <CardContent>
-              <SectionCardHeader
-                icon={<FlagIcon />}
-                accent={theme.palette.secondary.main}
-                title="Redakčný stav"
-              />
-              <Stack spacing={theme.spacing(2)}>
-                <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center">
-                  <Stack direction="row" spacing={0.5} alignItems="center">
-                    <Typography variant="body2" color="text.secondary">
-                      Status:
-                    </Typography>
-                    <Chip
-                      label={STATUS_LABELS[form.status]}
-                      color={STATUS_COLORS[form.status]}
-                      size="small"
-                    />
-                  </Stack>
-                  <Typography variant="body2" color="text.secondary">
-                    Posledná zmena: {form.updated}
-                  </Typography>
-                  {latestVersion != null && (
-                    <Typography variant="body2" color="text.secondary">
-                      Verzia: v{latestVersion}
-                    </Typography>
-                  )}
-                  {form.scheduledFor && form.status === 'scheduled' && (
-                    <Typography variant="body2" color="text.secondary">
-                      Naplánované na {new Date(form.scheduledFor).toLocaleString('sk-SK')}
-                    </Typography>
-                  )}
-                </Stack>
-
-                {isNew ? (
-                  <Typography variant="caption" color="text.secondary">
-                    Po uložení sa článok vytvorí ako koncept a sprístupnia sa redakčné akcie.
-                  </Typography>
-                ) : (
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
-                    {allowedTransitions.map((target) => (
-                      <Button
-                        key={target}
-                        size="small"
-                        variant="outlined"
-                        disabled={saving}
-                        color={
-                          target === 'published'
-                            ? 'success'
-                            : target === 'archived'
-                              ? 'inherit'
-                              : 'primary'
-                        }
-                        onClick={() => handleTransition(target)}
-                      >
-                        {transitionActionLabel(form.status, target)}
-                      </Button>
-                    ))}
-                  </Stack>
-                )}
-
-                <TextField
-                  label="Priradené (e-mail editora)"
-                  value={form.assignedTo ?? ''}
-                  onChange={(e) => set('assignedTo', e.target.value)}
-                  size="small"
-                  fullWidth
-                />
-                <TextField
-                  label="Interné poznámky (nezobrazujú sa verejne)"
-                  value={form.internalNotes ?? ''}
-                  onChange={(e) => set('internalNotes', e.target.value)}
-                  multiline
-                  minRows={2}
-                  fullWidth
-                  size="small"
-                />
-              </Stack>
-            </CardContent>
-          </Card>
-
-          {!isNew && (
-            <Card sx={{ borderRadius: 2 }}>
-              <CardContent>
-                <SectionCardHeader
-                  icon={<BarChartIcon />}
-                  accent={theme.palette.info.main}
-                  title="Výkon článku (30 dní)"
-                />
-                <Stack direction="row" spacing={3} flexWrap="wrap" sx={{ mb: theme.spacing(1) }}>
-                  <Typography variant="body2">
-                    <strong>Zobrazenia:</strong> {metric?.views ?? 0}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>CTA kliky:</strong> {metric?.ctaClicks ?? 0}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>CTR:</strong> {((metric?.ctr ?? 0) * 100).toFixed(1)} %
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Scroll 90 %:</strong>{' '}
-                    {metric && metric.views > 0
-                      ? `${((metric.scroll90 / metric.views) * 100).toFixed(0)} %`
-                      : '—'}
-                  </Typography>
-                </Stack>
-                {articleRefreshFlags(form, metric).map((flag) => (
-                  <Alert key={flag.key} severity="warning" sx={{ mt: 1 }}>
-                    {flag.message}
-                  </Alert>
-                ))}
               </CardContent>
             </Card>
-          )}
-
-          <Card sx={{ borderRadius: 2 }}>
-            <CardContent>
-              <SectionCardHeader
-                icon={<VerifiedUserIcon />}
-                accent={theme.palette.success.main}
-                title="Odborná kontrola"
-              />
-              {form.category === 'zdravie' && (
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ display: 'block', mb: 1 }}
-                >
-                  Zdravotný článok: pred publikovaním je povinný disclaimer, dátum poslednej
-                  kontroly a úroveň rizika. Pri vysokom riziku aj medicínska kontrola a fact-check.
-                </Typography>
-              )}
-              <Stack spacing={theme.spacing(2)}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={theme.spacing(2)}>
-                  <TextField
-                    id="field-riskLevel"
-                    select
-                    label="Úroveň rizika"
-                    value={form.riskLevel ?? ''}
-                    onChange={(e) =>
-                      set('riskLevel', (e.target.value || undefined) as AdminArticle['riskLevel'])
-                    }
-                    size="small"
-                    fullWidth
-                  >
-                    <MenuItem value="">— nezvolené —</MenuItem>
-                    <MenuItem value="low">Nízke (všeobecná starostlivosť)</MenuItem>
-                    <MenuItem value="medium">Stredné (výživa, alergie, trávenie)</MenuItem>
-                    <MenuItem value="high">Vysoké (choroby, lieky, urgentné stavy)</MenuItem>
-                  </TextField>
-                  <TextField
-                    id="field-lastContentReviewAt"
-                    label="Dátum poslednej kontroly"
-                    type="date"
-                    value={(form.lastContentReviewAt ?? '').slice(0, 10)}
-                    onChange={(e) => set('lastContentReviewAt', e.target.value)}
-                    size="small"
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
-                  <TextField
-                    label="Ďalšia kontrola"
-                    type="date"
-                    value={(form.nextReviewDueAt ?? '').slice(0, 10)}
-                    onChange={(e) => set('nextReviewDueAt', e.target.value)}
-                    size="small"
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Stack>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={theme.spacing(2)}>
-                  <TextField
-                    label="Kontroloval(a)"
-                    value={form.reviewedBy ?? ''}
-                    onChange={(e) => set('reviewedBy', e.target.value)}
-                    size="small"
-                    fullWidth
-                  />
-                  <TextField
-                    label="Titul / rola kontrolóra"
-                    value={form.reviewerTitle ?? ''}
-                    onChange={(e) => set('reviewerTitle', e.target.value)}
-                    size="small"
-                    fullWidth
-                  />
-                  <TextField
-                    label="Dátum kontroly"
-                    type="date"
-                    value={(form.reviewedAt ?? '').slice(0, 10)}
-                    onChange={(e) => set('reviewedAt', e.target.value)}
-                    size="small"
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Stack>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={theme.spacing(2)}>
-                  <TextField
-                    id="field-factCheckedBy"
-                    label="Fact-check (kto)"
-                    value={form.factCheckedBy ?? ''}
-                    onChange={(e) => set('factCheckedBy', e.target.value)}
-                    size="small"
-                    fullWidth
-                  />
-                  <TextField
-                    label="Fact-check (dátum)"
-                    type="date"
-                    value={(form.factCheckedAt ?? '').slice(0, 10)}
-                    onChange={(e) => set('factCheckedAt', e.target.value)}
-                    size="small"
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Stack>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={theme.spacing(2)}>
-                  <TextField
-                    id="field-medicalReviewedBy"
-                    label="Medicínska kontrola (kto)"
-                    value={form.medicalReviewedBy ?? ''}
-                    onChange={(e) => set('medicalReviewedBy', e.target.value)}
-                    size="small"
-                    fullWidth
-                  />
-                  <TextField
-                    label="Medicínska kontrola (dátum)"
-                    type="date"
-                    value={(form.medicalReviewedAt ?? '').slice(0, 10)}
-                    onChange={(e) => set('medicalReviewedAt', e.target.value)}
-                    size="small"
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Stack>
-                <TextField
-                  id="field-disclaimer"
-                  label="Disclaimer (ak prázdne, použije sa globálny)"
-                  value={form.disclaimer ?? ''}
-                  onChange={(e) => set('disclaimer', e.target.value)}
-                  multiline
-                  minRows={2}
-                  fullWidth
-                  size="small"
-                />
-              </Stack>
-            </CardContent>
-          </Card>
-
-          {!isNew && (
-            <Card sx={{ borderRadius: 2 }}>
-              <CardContent>
-                <SectionCardHeader
-                  icon={<AutoAwesomeIcon />}
-                  accent={theme.palette.diet.main}
-                  title="AI asistent"
-                />
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ display: 'block', mb: 1 }}
-                >
-                  AI len navrhuje — výstup vždy skontroluj a uprav. Každé volanie sa loguje (audit +
-                  náklady) a pred publikovaním si vyžiada AI kontrolu.
-                </Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {(
-                    [
-                      ['meta_description', 'Meta popis'],
-                      ['summary', 'Úvod'],
-                      ['rewrite', 'Vylepšiť úvod'],
-                      ['faq', 'Navrhnúť FAQ'],
-                      ['outline', 'Osnova sekcií'],
-                      ['source_check', 'Skontrolovať zdroje'],
-                    ] as [ArticleAiType, string][]
-                  ).map(([type, label]) => (
-                    <Button
-                      key={type}
-                      size="small"
-                      variant="outlined"
-                      disabled={aiBusy !== null}
-                      onClick={() => void runAi(type)}
-                    >
-                      {aiBusy === type ? 'Generujem…' : label}
-                    </Button>
-                  ))}
-                </Stack>
-                {aiLog.length > 0 && (
-                  <Box sx={{ mt: theme.spacing(2) }}>
-                    <Typography variant="caption" color="text.secondary">
-                      AI log ({aiLog.length}) — posledné:
-                    </Typography>
-                    <Stack sx={{ mt: 0.5 }}>
-                      {aiLog.slice(0, 5).map((g) => (
-                        <Typography key={g.id} variant="caption" color="text.secondary">
-                          {new Date(g.createdAt).toLocaleString('sk-SK')} · {g.type} · {g.model} ·{' '}
-                          {g.inputTokens ?? '?'}+{g.outputTokens ?? '?'} tok ·{' '}
-                          {g.estimatedCost != null ? `$${g.estimatedCost.toFixed(4)}` : '—'}
-                        </Typography>
-                      ))}
-                    </Stack>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          <Card sx={{ borderRadius: 2 }}>
-            <CardContent>
-              <SectionCardHeader
-                icon={<ArticleIcon />}
-                accent={theme.palette.primary.main}
-                title="Obsah článku"
-              />
-              <ArticleRichEditor
-                value={form.sections}
-                onChange={(sections) => set('sections', sections)}
-                toolbarContainer={toolbarSlot}
-              />
-            </CardContent>
-          </Card>
-
-          <Card sx={{ borderRadius: 2 }}>
-            <CardContent>
-              <SectionCardHeader
-                icon={<QuestionAnswerIcon />}
-                accent={theme.palette.info.main}
-                title="Často kladené otázky (FAQ)"
-              />
-              <Stack spacing={theme.spacing(1.5)}>
-                {faqs.map((f, i) => (
-                  <Stack key={i} direction="row" spacing={1} alignItems="flex-start">
-                    <Stack spacing={1} sx={{ flexGrow: 1 }}>
-                      <TextField
-                        label={`Otázka #${i + 1}`}
-                        value={f.q}
-                        onChange={(e) =>
-                          set(
-                            'faqs',
-                            faqs.map((x, j) => (j === i ? { ...x, q: e.target.value } : x))
-                          )
-                        }
-                        size="small"
-                        fullWidth
-                      />
-                      <TextField
-                        label="Odpoveď"
-                        value={f.a}
-                        onChange={(e) =>
-                          set(
-                            'faqs',
-                            faqs.map((x, j) => (j === i ? { ...x, a: e.target.value } : x))
-                          )
-                        }
-                        multiline
-                        minRows={2}
-                        size="small"
-                        fullWidth
-                      />
-                    </Stack>
-                    <IconButton
-                      color="error"
-                      onClick={() =>
-                        set(
-                          'faqs',
-                          faqs.filter((_, j) => j !== i)
-                        )
-                      }
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Stack>
-                ))}
-                <Button
-                  startIcon={<AddIcon />}
-                  onClick={() => set('faqs', [...faqs, { q: '', a: '' }])}
-                  sx={{ alignSelf: 'flex-start' }}
-                >
-                  Pridať otázku
-                </Button>
-              </Stack>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ borderRadius: 2 }}>
-            <CardContent>
-              <SectionCardHeader
-                icon={<LinkIcon />}
-                accent={theme.palette.secondary.main}
-                title="Zdroje"
-              />
-              <Stack spacing={theme.spacing(1.5)}>
-                {sources.map((s, i) => (
-                  <Stack key={i} direction="row" spacing={1} alignItems="center">
-                    <TextField
-                      label="Názov"
-                      value={s.label}
-                      onChange={(e) =>
-                        set(
-                          'sources',
-                          sources.map((x, j) => (j === i ? { ...x, label: e.target.value } : x))
-                        )
-                      }
-                      size="small"
-                      sx={{ flexGrow: 1 }}
-                    />
-                    <TextField
-                      label="URL"
-                      value={s.url}
-                      onChange={(e) =>
-                        set(
-                          'sources',
-                          sources.map((x, j) => (j === i ? { ...x, url: e.target.value } : x))
-                        )
-                      }
-                      size="small"
-                      sx={{ flexGrow: 1 }}
-                    />
-                    <IconButton
-                      color="error"
-                      onClick={() =>
-                        set(
-                          'sources',
-                          sources.filter((_, j) => j !== i)
-                        )
-                      }
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Stack>
-                ))}
-                <Button
-                  startIcon={<AddIcon />}
-                  onClick={() => set('sources', [...sources, { label: '', url: '' }])}
-                  sx={{ alignSelf: 'flex-start' }}
-                >
-                  Pridať zdroj
-                </Button>
-              </Stack>
-            </CardContent>
-          </Card>
-
-          <Divider />
-          <Button
-            variant="contained"
-            startIcon={<SaveIcon />}
-            onClick={saveContent}
-            disabled={saving}
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            {saving ? 'Ukladám…' : 'Uložiť článok'}
-          </Button>
-        </Stack>
+          </Stack>
+        </Box>
       )}
 
       {!isNew && (

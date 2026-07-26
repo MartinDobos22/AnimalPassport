@@ -21,6 +21,7 @@ export default function ImageNodeView({ node, updateAttributes, deleteNode }: No
   const theme = useTheme();
   const src = (node.attrs.src as string) ?? '';
   const alt = (node.attrs.alt as string) ?? '';
+  const caption = (node.attrs.caption as string) ?? '';
   const width = typeof node.attrs.width === 'number' ? (node.attrs.width as number) : null;
   // 100 % = plná šírka → ukladáme ako null (default), aby web nebol viazaný na hodnotu.
   const setWidth = (value: number | null) =>
@@ -77,6 +78,15 @@ export default function ImageNodeView({ node, updateAttributes, deleteNode }: No
           value={alt}
           onChange={(e) => updateAttributes({ alt: e.target.value })}
           placeholder="Alt text (popis obrázka pre prístupnosť a SEO)"
+          size="small"
+          variant="standard"
+          fullWidth
+          sx={{ mt: theme.spacing(0.5) }}
+        />
+        <TextField
+          value={caption}
+          onChange={(e) => updateAttributes({ caption: e.target.value })}
+          placeholder="Popisok pod obrázkom (zobrazí sa čitateľom)"
           size="small"
           variant="standard"
           fullWidth

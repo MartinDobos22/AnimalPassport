@@ -20,6 +20,7 @@ interface Props {
   ogImage?: string;
   ogImageAlt?: string;
   ogType?: string;
+  keywords?: string[];
   jsonLd?: object;
 }
 
@@ -64,6 +65,7 @@ export default function Seo({
   ogImage,
   ogImageAlt,
   ogType,
+  keywords,
   jsonLd,
 }: Props) {
   useEffect(() => {
@@ -93,12 +95,16 @@ export default function Seo({
 
     upsertMeta('name', 'robots', noindex ? 'noindex,nofollow' : 'index,follow');
 
+    if (keywords && keywords.length > 0) {
+      upsertMeta('name', 'keywords', keywords.join(', '));
+    }
+
     upsertJsonLd(jsonLd);
     return () => {
       // JSON-LD je per-stránka — odstráň pri odchode, aby sa nezdedil na app routy
       if (jsonLd) upsertJsonLd(undefined);
     };
-  }, [title, description, path, noindex, ogImage, ogImageAlt, ogType, jsonLd]);
+  }, [title, description, path, noindex, ogImage, ogImageAlt, ogType, keywords, jsonLd]);
 
   return null;
 }

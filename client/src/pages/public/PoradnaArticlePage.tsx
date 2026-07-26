@@ -22,6 +22,7 @@ export function articleSeo(article: Article) {
     path,
     ogImage: article.coverImage,
     ogImageAlt: article.coverAlt,
+    keywords: article.tags,
     jsonLd: articleJsonLd({
       title: article.title,
       description: article.description,

@@ -1,5 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
-import { isAdminEmail, requireAdmin } from '../middleware/requireAdmin';
+import { requireAdmin, resolveIsAdmin } from '../middleware/requireAdmin';
+import { listUsers, setUserAdmin } from '../services/adminUsersService';
 import { httpError } from '../utils/httpError';
 import {
   changeArticleStatus,
@@ -15,6 +16,7 @@ import { getArticleMetric, getArticleMetrics } from '../services/articleAnalytic
 import { listAiGenerations } from '../services/articleAiService';
 import type { ArticleStatus } from '../types/article';
 import { uploadArticleImage } from '../services/articleImageService';
+import { deleteMediaImage, listMediaImages, updateMediaImage } from '../services/mediaImageService';
 import {
   isPublishConfigured,
   requestNetlifyRedeploy,
@@ -34,8 +36,12 @@ import {
 // `articles/*` je gated cez requireAdmin (env allowlist ADMIN_EMAILS).
 const router = Router();
 
-router.get('/status', (req: Request, res: Response) => {
-  res.json({ isAdmin: isAdminEmail(req.user?.email) });
+router.get('/status', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json({ isAdmin: await resolveIsAdmin(req) });
+  } catch (err) {
+    next(err);
+  }
 });
 
 const articles = Router();
@@ -100,7 +106,7 @@ articles.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
 articles.post('/upload-image', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    res.json(await uploadArticleImage(req.body));
+    res.json(await uploadArticleImage(req.body, req.user?.email ?? null));
   } catch (err) {
     next(err);
   }
@@ -158,8 +164,10 @@ articles.post('/:slug/status', async (req: Request, res: Response, next: NextFun
     const body = (req.body ?? {}) as { status?: unknown; note?: unknown; scheduledFor?: unknown };
     const target = body.status as ArticleStatus;
     const by = req.user?.email ?? null;
+    const admin = await resolveIsAdmin(req);
 
-    // Tvrdý blok: publikovať sa nedá, ak validácia nájde errory.
+    // Tvrdý blok: publikovať sa nedá, ak validácia nájde errory (aj pre admina —
+    // chráni verejnú stránku pred nekompletným obsahom).
     if (target === 'published') {
       const candidate = await getArticleBySlugAdmin(slug);
       if (!candidate) throw httpError(404, 'Článok sa nenašiel.', 'NOT_FOUND');
@@ -174,9 +182,12 @@ articles.post('/:slug/status', async (req: Request, res: Response, next: NextFun
       }
     }
 
+    // Admin smie publikovať priamo z ktoréhokoľvek stavu (bez schvaľovacieho
+    // kroku); editor je viazaný na štandardný workflow prechodov.
     const article = await changeArticleStatus(slug, target, {
       by,
       scheduledFor: body.scheduledFor,
+      bypassTransition: admin,
     });
 
     const note =
@@ -265,5 +276,64 @@ articles.delete('/:slug', async (req: Request, res: Response, next: NextFunction
 });
 
 router.use('/articles', requireAdmin, articles);
+
+// Media knižnica — zoznam/úprava/mazanie nahratých obrázkov (upload beží cez
+// /articles/upload-image). Gated cez requireAdmin rovnako ako články.
+const media = Router();
+
+media.get('/', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json({ media: await listMediaImages() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+media.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const updated = await updateMediaImage(String(req.params.id), req.body ?? {});
+    res.json({ media: updated });
+  } catch (err) {
+    next(err);
+  }
+});
+
+media.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await deleteMediaImage(String(req.params.id));
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.use('/media', requireAdmin, media);
+
+// Správa používateľov — zoznam účtov + prepínanie admin práv.
+const users = Router();
+
+users.get('/', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json({ users: await listUsers() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+users.post('/:id/admin', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = String(req.params.id);
+    const isAdmin = (req.body as { isAdmin?: unknown })?.isAdmin === true;
+    // Zabráni odobratiu vlastných admin práv (last-admin lockout).
+    if (!isAdmin && id === req.appUserId) {
+      throw httpError(400, 'Nemôžeš odobrať admin práva sám sebe.', 'CANNOT_DEMOTE_SELF');
+    }
+    res.json({ user: await setUserAdmin(id, isAdmin) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.use('/users', requireAdmin, users);
 
 export default router;

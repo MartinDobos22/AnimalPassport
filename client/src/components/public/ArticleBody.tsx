@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 import Callout from './Callout';
 import RichText from './RichText';
+import Lightbox, { type LightboxImage } from './Lightbox';
 import { slugifyHeading } from '../../utils/slugifyHeading';
+import { toEmbedSrc } from '../../utils/embedUrl';
 import type { ArticleSection } from '../../content/poradna/types';
 
 interface Props {
@@ -12,6 +15,7 @@ interface Props {
 // (PoradnaArticlePage) aj admin náhľadom, aby sa vzhľad nerozišiel.
 export default function ArticleBody({ sections }: Props) {
   const theme = useTheme();
+  const [lightbox, setLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
 
   return (
     <>
@@ -23,7 +27,7 @@ export default function ArticleBody({ sections }: Props) {
         >
           {section.heading.trim() && (
             <Typography
-              variant="h5"
+              variant="h4"
               component="h2"
               id={slugifyHeading(section.heading)}
               sx={{ mb: theme.spacing(2), scrollMarginTop: theme.spacing(10) }}
@@ -95,7 +99,7 @@ export default function ArticleBody({ sections }: Props) {
                 return (
                   <Typography
                     key={j}
-                    variant="h6"
+                    variant="h5"
                     component="h3"
                     id={slugifyHeading(block.text)}
                     sx={{
@@ -114,23 +118,36 @@ export default function ArticleBody({ sections }: Props) {
               case 'image':
                 if (!block.src?.trim()) return null;
                 return (
-                  <Box
-                    key={j}
-                    component="img"
-                    src={block.src}
-                    alt={block.alt ?? ''}
-                    loading="lazy"
-                    sx={{
-                      display: 'block',
-                      width: block.width ? `${block.width}%` : '100%',
-                      maxWidth: '100%',
-                      height: 'auto',
-                      borderRadius: (t) => `${t.shape.borderRadius}px`,
-                      my: 3,
-                    }}
-                  />
+                  <Box key={j} component="figure" sx={{ m: 0, my: 3 }}>
+                    <Box
+                      component="img"
+                      src={block.src}
+                      alt={block.alt ?? ''}
+                      loading="lazy"
+                      sx={{
+                        display: 'block',
+                        width: block.width ? `${block.width}%` : '100%',
+                        maxWidth: '100%',
+                        height: 'auto',
+                        borderRadius: (t) => `${t.shape.borderRadius}px`,
+                      }}
+                    />
+                    {block.caption?.trim() && (
+                      <Typography
+                        component="figcaption"
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 1, width: '100%', textAlign: 'left' }}
+                      >
+                        {block.caption}
+                      </Typography>
+                    )}
+                  </Box>
                 );
-              case 'gallery':
+              case 'gallery': {
+                const galleryImages: LightboxImage[] = block.images.filter((img) =>
+                  img.src?.trim()
+                );
                 return (
                   <Box
                     key={j}
@@ -144,35 +161,75 @@ export default function ArticleBody({ sections }: Props) {
                       my: 3,
                     }}
                   >
-                    {block.images
-                      .filter((img) => img.src?.trim())
-                      .map((img, k) => (
-                        <Box
-                          key={k}
-                          component="img"
-                          src={img.src}
-                          alt={img.alt ?? ''}
-                          loading="lazy"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                          sx={{
-                            width: '100%',
-                            aspectRatio: '1 / 1',
-                            objectFit: 'cover',
-                            borderRadius: (t) => `${t.shape.borderRadius}px`,
-                            display: 'block',
-                          }}
-                        />
-                      ))}
+                    {galleryImages.map((img, k) => (
+                      <Box
+                        key={k}
+                        component="img"
+                        src={img.src}
+                        alt={img.alt ?? ''}
+                        loading="lazy"
+                        onClick={() => setLightbox({ images: galleryImages, index: k })}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                        sx={{
+                          width: '100%',
+                          aspectRatio: '1 / 1',
+                          objectFit: 'cover',
+                          borderRadius: (t) => `${t.shape.borderRadius}px`,
+                          display: 'block',
+                          cursor: 'pointer',
+                          transition: 'opacity 0.15s',
+                          '&:hover': { opacity: 0.85 },
+                        }}
+                      />
+                    ))}
                   </Box>
                 );
+              }
+              case 'embed': {
+                const embedSrc = toEmbedSrc(block.provider, block.url);
+                if (!embedSrc) return null;
+                return (
+                  <Box key={j} component="figure" sx={{ m: 0, my: 3 }}>
+                    <Box
+                      component="iframe"
+                      src={embedSrc}
+                      title={`Embed ${block.provider}`}
+                      loading="lazy"
+                      allowFullScreen
+                      sx={{
+                        width: '100%',
+                        minHeight: theme.spacing(50),
+                        border: 0,
+                        borderRadius: (t) => `${t.shape.borderRadius}px`,
+                      }}
+                    />
+                    {block.caption?.trim() && (
+                      <Typography
+                        component="figcaption"
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 1, textAlign: 'left' }}
+                      >
+                        {block.caption}
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              }
               default:
                 return null;
             }
           })}
         </Box>
       ))}
+      <Lightbox
+        images={lightbox?.images ?? []}
+        index={lightbox?.index ?? null}
+        onClose={() => setLightbox(null)}
+        onIndexChange={(index) => setLightbox((lb) => (lb ? { ...lb, index } : lb))}
+      />
     </>
   );
 }

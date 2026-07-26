@@ -9,6 +9,7 @@ import type {
   ArticleStatus,
   Block,
   CalloutVariant,
+  EmbedProvider,
   FaqItem,
   RiskLevel,
   TextAlign,
@@ -41,12 +42,13 @@ export function isTransitionAllowed(from: ArticleStatus, to: ArticleStatus): boo
 }
 
 const SELECT_COLUMNS =
-  'slug, category, species, title, description, intro, sections, faqs, related_slugs, cover_image, cover_alt, cover_credit, cta_intent, author, sources, updated, position, reviewed_by, reviewed_at, reviewer_title, medical_reviewed_at, disclaimer';
+  'slug, category, species, title, description, teaser, tags, intro, sections, faqs, related_slugs, cover_image, cover_alt, cover_credit, cta_intent, author, sources, updated, position, reviewed_by, reviewed_at, reviewer_title, medical_reviewed_at, disclaimer';
 
 const SELECT_COLUMNS_ADMIN = `${SELECT_COLUMNS}, published, status, assigned_editor, editorial_notes, publish_at, unpublish_at, submitted_for_review_at, submitted_for_review_by, approved_at, approved_by, published_at, published_by, archived_at, archived_by, risk_level, fact_checked_by, fact_checked_at, medical_reviewed_by, last_content_review_at, next_review_due_at`;
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const CALLOUT_VARIANTS: CalloutVariant[] = ['tip', 'warning', 'info'];
+const EMBED_PROVIDERS: EmbedProvider[] = ['facebook', 'youtube', 'instagram'];
 
 function asString(value: unknown): string {
   return typeof value === 'string' ? value : '';
@@ -67,10 +69,12 @@ function rowToArticle(row: Row): Article {
     species: asStringArray(row.species),
     title: asString(row.title),
     description: asString(row.description),
+    teaser: asOptionalString(row.teaser),
     intro: asString(row.intro),
     sections: (Array.isArray(row.sections) ? row.sections : []) as ArticleSection[],
     faqs: (Array.isArray(row.faqs) ? row.faqs : []) as FaqItem[],
     relatedSlugs: asStringArray(row.related_slugs),
+    tags: asStringArray(row.tags),
     updated: asString(row.updated),
     coverImage: asOptionalString(row.cover_image),
     coverAlt: asOptionalString(row.cover_alt),
@@ -200,6 +204,9 @@ function validateBlocks(value: unknown): Block[] {
         if (typeof b.width === 'number' && b.width >= 10 && b.width <= 100) {
           out.width = Math.round(b.width);
         }
+        if (typeof b.caption === 'string' && b.caption.trim().length > 0) {
+          out.caption = b.caption.trim();
+        }
         return out;
       }
       case 'gallery': {
@@ -214,6 +221,19 @@ function validateBlocks(value: unknown): Block[] {
           return out;
         });
         return { type: 'gallery', images };
+      }
+      case 'embed': {
+        const provider = b.provider as EmbedProvider;
+        if (!EMBED_PROVIDERS.includes(provider)) bad(`Blok #${i + 1}: neplatný typ embedu.`);
+        const out: Block = {
+          type: 'embed',
+          provider,
+          url: reqStr(b.url, `blok #${i + 1} URL`),
+        };
+        if (typeof b.caption === 'string' && b.caption.trim().length > 0) {
+          out.caption = b.caption.trim();
+        }
+        return out;
       }
       default:
         return bad(`Blok #${i + 1}: neznámy typ.`);
@@ -262,10 +282,12 @@ interface ContentRow {
   species: string[];
   title: string;
   description: string;
+  teaser: string | null;
   intro: string;
   sections: ArticleSection[];
   faqs: FaqItem[];
   related_slugs: string[];
+  tags: string[];
   cover_image: string | null;
   cta_intent: string;
   author: string | null;
@@ -321,14 +343,23 @@ function toRow(input: unknown): ContentRow {
             typeof s === 'string' && (ANIMAL_SPECIES as readonly string[]).includes(s)
         )
       : [],
-    title: reqStr(a.title, 'title'),
-    description: reqStr(a.description, 'description'),
+    // Titulok a popis nie sú povinné pri ukladaní konceptu — povinné sú až pred
+    // publikovaním (viď articleValidation.ts). Umožňuje uložiť rozpracovaný článok.
+    title: asString(a.title),
+    description: asString(a.description),
+    teaser: optionalStr(a.teaser),
     // Perex = prvý odsek tela; samostatný `intro` je voliteľný (legacy obsah).
     intro: asString(a.intro),
     sections: validateSections(a.sections),
     faqs: validateFaqs(a.faqs),
     related_slugs: Array.isArray(a.relatedSlugs)
       ? (a.relatedSlugs as unknown[]).filter((s): s is string => typeof s === 'string')
+      : [],
+    tags: Array.isArray(a.tags)
+      ? (a.tags as unknown[])
+          .filter((s): s is string => typeof s === 'string')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
       : [],
     cover_image:
       typeof a.coverImage === 'string' && a.coverImage.trim().length > 0
@@ -441,7 +472,7 @@ export async function getExistingSlugs(): Promise<Set<string>> {
 export async function changeArticleStatus(
   slug: string,
   target: ArticleStatus,
-  opts: { by?: string | null; scheduledFor?: unknown } = {}
+  opts: { by?: string | null; scheduledFor?: unknown; bypassTransition?: boolean } = {}
 ): Promise<AdminArticle> {
   if (!ARTICLE_STATUSES.includes(target)) bad('Neplatný cieľový stav.');
 
@@ -449,7 +480,7 @@ export async function changeArticleStatus(
   if (!current) throw httpError(404, 'Článok sa nenašiel.', 'NOT_FOUND');
   if (current.status === target) return current;
 
-  if (!isTransitionAllowed(current.status, target)) {
+  if (!opts.bypassTransition && !isTransitionAllowed(current.status, target)) {
     throw httpError(
       400,
       `Prechod „${current.status}" → „${target}" nie je povolený.`,

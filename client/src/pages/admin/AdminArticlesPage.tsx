@@ -18,6 +18,7 @@ import {
   Add as AddIcon,
   CloudUpload as PublishIcon,
   Article as ArticleIcon,
+  People as PeopleIcon,
 } from '@mui/icons-material';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import PageContainer from '../../components/ui/PageContainer';
@@ -140,6 +141,13 @@ export default function AdminArticlesPage() {
         title="Správa článkov"
         action={
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <Button
+              variant="outlined"
+              startIcon={<PeopleIcon />}
+              onClick={() => navigate('/admin/pouzivatelia')}
+            >
+              Používatelia
+            </Button>
             <Button
               variant="outlined"
               startIcon={<PublishIcon />}

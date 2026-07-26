@@ -261,6 +261,14 @@ export default function ArticleView({ article, preview = false }: Props) {
           </Box>
         </Box>
 
+        {article.tags && article.tags.length > 0 && (
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: theme.spacing(3) }}>
+            {article.tags.map((tag) => (
+              <Chip key={tag} label={`#${tag}`} size="small" variant="outlined" />
+            ))}
+          </Stack>
+        )}
+
         {!preview && <AdUnit />}
 
         <Box onClick={() => track('cta_click', { ctaIntent: article.ctaIntent })}>

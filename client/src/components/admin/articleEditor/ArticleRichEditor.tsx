@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type MouseEvent } from 'react';
+import { useMemo, useState, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Box,
@@ -39,6 +39,8 @@ import {
   DragIndicator as DragIcon,
   AddPhotoAlternateOutlined as ImageIcon,
   CollectionsOutlined as GalleryIcon,
+  MenuBookOutlined as ArticleLinkIcon,
+  OndemandVideoOutlined as EmbedIcon,
 } from '@mui/icons-material';
 import {
   useEditor,
@@ -56,10 +58,13 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
 import { CalloutNode } from './CalloutNode';
 import { GalleryNode } from './GalleryNode';
+import { EmbedNode } from './EmbedNode';
 import ImageNodeView from './ImageNodeView';
+import ArticlePickerDialog from './ArticlePickerDialog';
+import MediaLibraryDialog from './MediaLibraryDialog';
 import { sectionsToTiptap, tiptapToSections } from './articleTiptapBridge';
-import { uploadArticleImage } from '../../../services/adminApi';
 import type { ArticleSection } from '../../../content/poradna/types';
+import type { MediaImage } from '../../../types/media';
 
 interface Props {
   value: ArticleSection[];
@@ -89,12 +94,12 @@ const EditorShell = styled(Box)(({ theme }) => ({
     outline: 'none',
   },
   '& .ProseMirror h2': {
-    ...theme.typography.h5,
+    ...theme.typography.h4,
     marginTop: theme.spacing(3),
     marginBottom: theme.spacing(1.5),
   },
   '& .ProseMirror h3': {
-    ...theme.typography.h6,
+    ...theme.typography.h5,
     marginTop: theme.spacing(2.5),
     marginBottom: theme.spacing(1),
   },
@@ -208,10 +213,17 @@ interface ToolbarProps {
 
 interface MainToolbarProps extends ToolbarProps {
   onImageRequest: () => void;
+  onArticleLinkRequest: () => void;
   inHeader: boolean;
 }
 
-function Toolbar({ editor, onLinkRequest, onImageRequest, inHeader }: MainToolbarProps) {
+function Toolbar({
+  editor,
+  onLinkRequest,
+  onImageRequest,
+  onArticleLinkRequest,
+  inHeader,
+}: MainToolbarProps) {
   const state = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -406,6 +418,20 @@ function Toolbar({ editor, onLinkRequest, onImageRequest, inHeader }: MainToolba
           <GalleryIcon fontSize="small" />
         </ToolButton>
       </Tooltip>
+      <Tooltip title="Vložiť odkaz na článok">
+        <ToolButton value="articleLink" size="small" onClick={onArticleLinkRequest}>
+          <ArticleLinkIcon fontSize="small" />
+        </ToolButton>
+      </Tooltip>
+      <Tooltip title="Vložiť embed (Facebook, YouTube, Instagram)">
+        <ToolButton
+          value="embed"
+          size="small"
+          onClick={() => editor.chain().focus().setEmbed().run()}
+        >
+          <EmbedIcon fontSize="small" />
+        </ToolButton>
+      </Tooltip>
     </Stack>
   );
 }
@@ -496,8 +522,8 @@ function BubbleToolbar({ editor, onLinkRequest }: ToolbarProps) {
 export default function ArticleRichEditor({ value, onChange, toolbarContainer }: Props) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [articlePickerOpen, setArticlePickerOpen] = useState(false);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
   const initialContent = useMemo(() => sectionsToTiptap(value), []);
 
@@ -523,6 +549,7 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
           return {
             ...this.parent?.(),
             width: { default: null },
+            caption: { default: null },
           };
         },
         addNodeView() {
@@ -531,6 +558,7 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
       }).configure({ inline: false }),
       CalloutNode,
       GalleryNode,
+      EmbedNode,
     ],
     content: initialContent,
     onUpdate: ({ editor: e }) => {
@@ -556,46 +584,45 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
     setLinkOpen(false);
   };
 
-  const handleImageFile = async (file: File) => {
-    setUploading(true);
-    try {
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-      });
-      const { url } = await uploadArticleImage({ mimeType: file.type, base64Data });
-      editor.chain().focus().setImage({ src: url }).run();
-    } catch {
-      /* admin uvidí, že sa obrázok nevložil */
-    } finally {
-      setUploading(false);
-    }
+  const insertMediaImage = (media: MediaImage) => {
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: 'image',
+        attrs: {
+          src: media.url,
+          alt: media.alt ?? null,
+          caption: media.caption ?? null,
+        },
+      })
+      .run();
+  };
+
+  const insertArticleLink = (article: { slug: string; title: string }) => {
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: 'text',
+        text: article.title,
+        marks: [{ type: 'link', attrs: { href: `/poradna/${article.slug}` } }],
+      })
+      .run();
   };
 
   const toolbar = (
     <Toolbar
       editor={editor}
       onLinkRequest={openLinkDialog}
-      onImageRequest={() => fileInputRef.current?.click()}
+      onImageRequest={() => setMediaPickerOpen(true)}
+      onArticleLinkRequest={() => setArticlePickerOpen(true)}
       inHeader={Boolean(toolbarContainer)}
     />
   );
 
   return (
     <Box>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        hidden
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) void handleImageFile(f);
-          e.target.value = '';
-        }}
-      />
       {toolbarContainer && createPortal(toolbar, toolbarContainer)}
       <EditorShell>
         {!toolbarContainer && toolbar}
@@ -619,7 +646,7 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
       </EditorShell>
       <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
         Píš priamo do textu. Označ slovo a použi lištu na tučné/odkaz. „H2" začína novú sekciu,
-        „Box" premení odsek na zvýraznený box.{uploading ? ' · Nahrávam obrázok…' : ''}
+        „Box" premení odsek na zvýraznený box.
       </Typography>
 
       <Dialog open={linkOpen} onClose={() => setLinkOpen(false)} fullWidth maxWidth="sm">
@@ -646,6 +673,19 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ArticlePickerDialog
+        open={articlePickerOpen}
+        onClose={() => setArticlePickerOpen(false)}
+        onSelect={insertArticleLink}
+        title="Vložiť odkaz na článok"
+      />
+
+      <MediaLibraryDialog
+        open={mediaPickerOpen}
+        onClose={() => setMediaPickerOpen(false)}
+        onSelect={insertMediaImage}
+      />
     </Box>
   );
 }
