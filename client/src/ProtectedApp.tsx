@@ -14,6 +14,7 @@ import AdminGuard from './components/admin/AdminGuard';
 const OverviewPage = lazy(() => import('./pages/OverviewPage'));
 const AdminArticlesPage = lazy(() => import('./pages/admin/AdminArticlesPage'));
 const AdminArticleEditPage = lazy(() => import('./pages/admin/AdminArticleEditPage'));
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
 const CheckInPage = lazy(() => import('./pages/CheckInPage'));
 const FoodPage = lazy(() => import('./pages/FoodPage'));
 const AnalyzePage = lazy(() => import('./pages/AnalyzePage'));
@@ -95,6 +96,14 @@ export default function ProtectedApp({ darkMode, onToggleTheme, language }: Prop
                     element={
                       <AdminGuard>
                         <AdminArticleEditPage />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path="/admin/pouzivatelia"
+                    element={
+                      <AdminGuard>
+                        <AdminUsersPage />
                       </AdminGuard>
                     }
                   />

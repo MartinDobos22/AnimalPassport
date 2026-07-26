@@ -372,6 +372,11 @@ export default function AdminArticleEditPage() {
   // Akcia podľa cieľového stavu: publish cez checklist, schedule cez dialóg.
   const handleTransition = (target: ArticleStatus) => {
     if (target === 'published') {
+      // Admin publikuje priamo — bez schvaľovacieho checklistu.
+      if (isAdmin) {
+        void runStatus('published');
+        return;
+      }
       const list =
         aiLog.length > 0 ? [...PUBLISH_CHECKLIST, ...AI_REVIEW_CHECKLIST] : PUBLISH_CHECKLIST;
       setChecklistChecked(list.map(() => false));
@@ -804,6 +809,19 @@ export default function AdminArticleEditPage() {
                           button
                         );
                       })}
+                      {isAdmin &&
+                        form.status !== 'published' &&
+                        !allowedTransitions.includes('published') && (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="success"
+                            disabled={saving}
+                            onClick={() => handleTransition('published')}
+                          >
+                            Publikovať hneď
+                          </Button>
+                        )}
                     </Stack>
                   )}
 

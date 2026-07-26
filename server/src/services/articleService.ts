@@ -472,7 +472,7 @@ export async function getExistingSlugs(): Promise<Set<string>> {
 export async function changeArticleStatus(
   slug: string,
   target: ArticleStatus,
-  opts: { by?: string | null; scheduledFor?: unknown } = {}
+  opts: { by?: string | null; scheduledFor?: unknown; bypassTransition?: boolean } = {}
 ): Promise<AdminArticle> {
   if (!ARTICLE_STATUSES.includes(target)) bad('Neplatný cieľový stav.');
 
@@ -480,7 +480,7 @@ export async function changeArticleStatus(
   if (!current) throw httpError(404, 'Článok sa nenašiel.', 'NOT_FOUND');
   if (current.status === target) return current;
 
-  if (!isTransitionAllowed(current.status, target)) {
+  if (!opts.bypassTransition && !isTransitionAllowed(current.status, target)) {
     throw httpError(
       400,
       `Prechod „${current.status}" → „${target}" nie je povolený.`,

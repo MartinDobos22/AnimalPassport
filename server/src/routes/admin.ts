@@ -1,5 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
-import { isAdminEmail, requireAdmin } from '../middleware/requireAdmin';
+import { requireAdmin, resolveIsAdmin } from '../middleware/requireAdmin';
+import { listUsers, setUserAdmin } from '../services/adminUsersService';
 import { httpError } from '../utils/httpError';
 import {
   changeArticleStatus,
@@ -35,8 +36,12 @@ import {
 // `articles/*` je gated cez requireAdmin (env allowlist ADMIN_EMAILS).
 const router = Router();
 
-router.get('/status', (req: Request, res: Response) => {
-  res.json({ isAdmin: isAdminEmail(req.user?.email) });
+router.get('/status', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json({ isAdmin: await resolveIsAdmin(req) });
+  } catch (err) {
+    next(err);
+  }
 });
 
 const articles = Router();
@@ -159,8 +164,10 @@ articles.post('/:slug/status', async (req: Request, res: Response, next: NextFun
     const body = (req.body ?? {}) as { status?: unknown; note?: unknown; scheduledFor?: unknown };
     const target = body.status as ArticleStatus;
     const by = req.user?.email ?? null;
+    const admin = await resolveIsAdmin(req);
 
-    // Tvrdý blok: publikovať sa nedá, ak validácia nájde errory.
+    // Tvrdý blok: publikovať sa nedá, ak validácia nájde errory (aj pre admina —
+    // chráni verejnú stránku pred nekompletným obsahom).
     if (target === 'published') {
       const candidate = await getArticleBySlugAdmin(slug);
       if (!candidate) throw httpError(404, 'Článok sa nenašiel.', 'NOT_FOUND');
@@ -175,9 +182,12 @@ articles.post('/:slug/status', async (req: Request, res: Response, next: NextFun
       }
     }
 
+    // Admin smie publikovať priamo z ktoréhokoľvek stavu (bez schvaľovacieho
+    // kroku); editor je viazaný na štandardný workflow prechodov.
     const article = await changeArticleStatus(slug, target, {
       by,
       scheduledFor: body.scheduledFor,
+      bypassTransition: admin,
     });
 
     const note =
@@ -298,5 +308,32 @@ media.delete('/:id', async (req: Request, res: Response, next: NextFunction) => 
 });
 
 router.use('/media', requireAdmin, media);
+
+// Správa používateľov — zoznam účtov + prepínanie admin práv.
+const users = Router();
+
+users.get('/', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    res.json({ users: await listUsers() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+users.post('/:id/admin', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = String(req.params.id);
+    const isAdmin = (req.body as { isAdmin?: unknown })?.isAdmin === true;
+    // Zabráni odobratiu vlastných admin práv (last-admin lockout).
+    if (!isAdmin && id === req.appUserId) {
+      throw httpError(400, 'Nemôžeš odobrať admin práva sám sebe.', 'CANNOT_DEMOTE_SELF');
+    }
+    res.json({ user: await setUserAdmin(id, isAdmin) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.use('/users', requireAdmin, users);
 
 export default router;

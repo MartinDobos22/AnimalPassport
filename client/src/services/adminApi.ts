@@ -113,6 +113,26 @@ export async function deleteMedia(id: string): Promise<void> {
   await request<void>(`/media/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
+export interface AdminUser {
+  id: string;
+  email: string | null;
+  isAdmin: boolean;
+  createdAt: string | null;
+}
+
+export async function listUsers(): Promise<AdminUser[]> {
+  const data = await request<{ users: AdminUser[] }>('/users');
+  return data.users;
+}
+
+export async function setUserAdmin(id: string, isAdmin: boolean): Promise<AdminUser> {
+  const data = await request<{ user: AdminUser }>(`/users/${encodeURIComponent(id)}/admin`, {
+    method: 'POST',
+    body: JSON.stringify({ isAdmin }),
+  });
+  return data.user;
+}
+
 export async function publishArticles(): Promise<void> {
   await request<{ triggered: boolean }>('/articles/publish', { method: 'POST' });
 }
