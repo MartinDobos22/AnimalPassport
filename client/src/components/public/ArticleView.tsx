@@ -200,7 +200,7 @@ export default function ArticleView({ article, preview = false }: Props) {
 
         <Divider sx={{ mb: theme.spacing(4) }} />
 
-        <Box component="article" sx={{ maxWidth: 720, mx: 'auto' }}>
+        <Box component="article">
           <ArticleBody sections={article.sections} />
 
           <Callout
@@ -262,7 +262,13 @@ export default function ArticleView({ article, preview = false }: Props) {
         </Box>
 
         {article.tags && article.tags.length > 0 && (
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: theme.spacing(3) }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            flexWrap="wrap"
+            useFlexGap
+            sx={{ mt: theme.spacing(3) }}
+          >
             {article.tags.map((tag) => (
               <Chip key={tag} label={`#${tag}`} size="small" variant="outlined" />
             ))}
