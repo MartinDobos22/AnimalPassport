@@ -2,6 +2,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Card, CardActionArea, Chip, Stack, Typography, useTheme } from '@mui/material';
 import { Schedule as ScheduleIcon } from '@mui/icons-material';
 import { articleReadingMinutes } from '../../utils/readingTime';
+import { articleHref } from '../../utils/articleHref';
 import { CATEGORY_COLORS, CATEGORY_LABELS } from '../../content/poradna/articles';
 import type { Article } from '../../content/poradna/types';
 
@@ -18,7 +19,7 @@ export default function ArticleCard({ article }: Props) {
     <Card sx={{ height: '100%' }}>
       <CardActionArea
         component={RouterLink}
-        to={`/poradna/${article.slug}`}
+        to={articleHref(article.slug)}
         sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
       >
         <Box

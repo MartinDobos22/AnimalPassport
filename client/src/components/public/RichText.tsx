@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { Link } from '@mui/material';
+import { withPoradnaTrailingSlash } from '../../utils/articleHref';
 
 interface Props {
   text: string;
@@ -29,7 +30,7 @@ function renderToken(token: string, key: number): ReactNode {
     const [, label, url] = linkMatch;
     if (url.startsWith('/')) {
       return (
-        <Link key={key} component={RouterLink} to={url} underline="hover">
+        <Link key={key} component={RouterLink} to={withPoradnaTrailingSlash(url)} underline="hover">
           {label}
         </Link>
       );
