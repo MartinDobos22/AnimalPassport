@@ -61,10 +61,9 @@ import { GalleryNode } from './GalleryNode';
 import { EmbedNode } from './EmbedNode';
 import ImageNodeView from './ImageNodeView';
 import ArticlePickerDialog from './ArticlePickerDialog';
-import MediaLibraryDialog from './MediaLibraryDialog';
+import ImagePickerButton, { type PickedImage } from './ImagePickerButton';
 import { sectionsToTiptap, tiptapToSections } from './articleTiptapBridge';
 import type { ArticleSection } from '../../../content/poradna/types';
-import type { MediaImage } from '../../../types/media';
 
 interface Props {
   value: ArticleSection[];
@@ -212,7 +211,7 @@ interface ToolbarProps {
 }
 
 interface MainToolbarProps extends ToolbarProps {
-  onImageRequest: () => void;
+  onInsertImage: (image: PickedImage) => void;
   onArticleLinkRequest: () => void;
   inHeader: boolean;
 }
@@ -220,7 +219,7 @@ interface MainToolbarProps extends ToolbarProps {
 function Toolbar({
   editor,
   onLinkRequest,
-  onImageRequest,
+  onInsertImage,
   onArticleLinkRequest,
   inHeader,
 }: MainToolbarProps) {
@@ -404,11 +403,16 @@ function Toolbar({
           <CalloutIcon fontSize="small" />
         </ToolButton>
       </Tooltip>
-      <Tooltip title="Vložiť obrázok">
-        <ToolButton value="image" size="small" onClick={onImageRequest}>
-          <ImageIcon fontSize="small" />
-        </ToolButton>
-      </Tooltip>
+      <ImagePickerButton
+        onPicked={onInsertImage}
+        renderTrigger={(onClick) => (
+          <Tooltip title="Vložiť obrázok (knižnica / nahrať / URL)">
+            <ToolButton value="image" size="small" onClick={onClick}>
+              <ImageIcon fontSize="small" />
+            </ToolButton>
+          </Tooltip>
+        )}
+      />
       <Tooltip title="Galéria obrázkov">
         <ToolButton
           value="gallery"
@@ -523,7 +527,6 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [articlePickerOpen, setArticlePickerOpen] = useState(false);
-  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
   const initialContent = useMemo(() => sectionsToTiptap(value), []);
 
@@ -584,16 +587,16 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
     setLinkOpen(false);
   };
 
-  const insertMediaImage = (media: MediaImage) => {
+  const insertImage = (image: PickedImage) => {
     editor
       .chain()
       .focus()
       .insertContent({
         type: 'image',
         attrs: {
-          src: media.url,
-          alt: media.alt ?? null,
-          caption: media.caption ?? null,
+          src: image.url,
+          alt: image.alt ?? null,
+          caption: image.caption ?? null,
         },
       })
       .run();
@@ -615,7 +618,7 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
     <Toolbar
       editor={editor}
       onLinkRequest={openLinkDialog}
-      onImageRequest={() => setMediaPickerOpen(true)}
+      onInsertImage={insertImage}
       onArticleLinkRequest={() => setArticlePickerOpen(true)}
       inHeader={Boolean(toolbarContainer)}
     />
@@ -679,12 +682,6 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
         onClose={() => setArticlePickerOpen(false)}
         onSelect={insertArticleLink}
         title="Vložiť odkaz na článok"
-      />
-
-      <MediaLibraryDialog
-        open={mediaPickerOpen}
-        onClose={() => setMediaPickerOpen(false)}
-        onSelect={insertMediaImage}
       />
     </Box>
   );
