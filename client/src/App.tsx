@@ -69,21 +69,21 @@ function AppRoutes({ darkMode, onToggleTheme, language }: ThemeProps) {
       />
       <Route
         path="/analyza-krmiva-pre-psa"
-        element={<Navigate to="/poradna/analyza-krmiva-pre-psa" replace />}
+        element={<Navigate to="/poradna/analyza-krmiva-pre-psa/" replace />}
       />
       <Route
         path="/digitalny-zdravotny-pas-pre-psa"
-        element={<Navigate to="/poradna/digitalny-zdravotny-pas-pre-psa" replace />}
+        element={<Navigate to="/poradna/digitalny-zdravotny-pas-pre-psa/" replace />}
       />
-      <Route path="/ockovanie-psa" element={<Navigate to="/poradna/ockovanie-psa" replace />} />
-      <Route path="/odcervenie-psa" element={<Navigate to="/poradna/odcervenie-psa" replace />} />
+      <Route path="/ockovanie-psa" element={<Navigate to="/poradna/ockovanie-psa/" replace />} />
+      <Route path="/odcervenie-psa" element={<Navigate to="/poradna/odcervenie-psa/" replace />} />
       <Route
         path="/alergia-na-krmivo-u-psa"
-        element={<Navigate to="/poradna/alergia-na-krmivo-u-psa" replace />}
+        element={<Navigate to="/poradna/alergia-na-krmivo-u-psa/" replace />}
       />
       <Route
         path="/co-nesmie-pes-jest"
-        element={<Navigate to="/poradna/co-nesmie-pes-jest" replace />}
+        element={<Navigate to="/poradna/co-nesmie-pes-jest/" replace />}
       />
       {!user && (
         <Route

@@ -20,6 +20,7 @@ import BlogLayout from '../../components/public/BlogLayout';
 import ArticleCard from '../../components/public/ArticleCard';
 import ArticleFilterBar from '../../components/public/ArticleFilterBar';
 import { collectionJsonLd } from '../../utils/seoSchema';
+import { articleHref, PORADNA_PATH } from '../../utils/articleHref';
 import { articleReadingMinutes } from '../../utils/readingTime';
 import { CATEGORY_COLORS, CATEGORY_LABELS, articles } from '../../content/poradna/articles';
 import type { Article, ArticleCategory } from '../../content/poradna/types';
@@ -37,10 +38,10 @@ export const seo = {
     'Praktické články o starostlivosti o psa, mačku aj ďalšie zvieratá: krmivo, očkovanie, odčervenie, prvá pomoc a prevencia. Poradňa Pawly.',
   path: '/poradna',
   jsonLd: collectionJsonLd({
-    items: articles.map((a) => ({ name: a.title, path: `/poradna/${a.slug}` })),
+    items: articles.map((a) => ({ name: a.title, path: articleHref(a.slug) })),
     breadcrumbs: [
       { name: 'Pawly', path: '/' },
-      { name: 'Poradňa', path: '/poradna' },
+      { name: 'Poradňa', path: PORADNA_PATH },
     ],
   }),
 };
@@ -56,7 +57,7 @@ function FeaturedCard({ article }: { article: Article }) {
     <Card sx={{ mb: theme.spacing(5) }}>
       <CardActionArea
         component={RouterLink}
-        to={`/poradna/${article.slug}`}
+        to={articleHref(article.slug)}
         sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'stretch' }}
       >
         <Box

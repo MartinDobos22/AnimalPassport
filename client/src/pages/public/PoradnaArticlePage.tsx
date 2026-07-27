@@ -3,6 +3,7 @@ import Seo from '../../components/Seo';
 import BlogLayout from '../../components/public/BlogLayout';
 import ArticleView from '../../components/public/ArticleView';
 import { articleJsonLd } from '../../utils/seoSchema';
+import { articleHref, PORADNA_PATH } from '../../utils/articleHref';
 import { useArticleTracking } from '../../hooks/useArticleTracking';
 import { getArticle } from '../../content/poradna/articles';
 import type { Article } from '../../content/poradna/types';
@@ -15,7 +16,11 @@ interface Props {
 }
 
 export function articleSeo(article: Article) {
+  // seo.path ostáva bez lomky — prerender/canonical ju doplní (withTrailingSlash).
+  // JSON-LD ale musí niesť rovno 200-URL s lomkou, aby štruktúrované dáta sedeli
+  // s canonicalom a Google neobjavil bez-lomkovú (redirectujúcu) verziu.
   const path = `/poradna/${article.slug}`;
+  const canonicalPath = articleHref(article.slug);
   return {
     title: `${article.title} | Pawly`,
     description: article.description,
@@ -26,14 +31,14 @@ export function articleSeo(article: Article) {
     jsonLd: articleJsonLd({
       title: article.title,
       description: article.description,
-      path,
+      path: canonicalPath,
       updated: article.updated,
       image: article.coverImage,
       faqs: article.faqs,
       breadcrumbs: [
         { name: 'Pawly', path: '/' },
-        { name: 'Poradňa', path: '/poradna' },
-        { name: article.title, path },
+        { name: 'Poradňa', path: PORADNA_PATH },
+        { name: article.title, path: canonicalPath },
       ],
     }),
   };

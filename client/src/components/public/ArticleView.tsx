@@ -73,7 +73,7 @@ export default function ArticleView({ article, preview = false }: Props) {
             </Link>
             <Link
               component={RouterLink}
-              to="/poradna"
+              to="/poradna/"
               underline="hover"
               color="inherit"
               variant="body2"
@@ -88,7 +88,7 @@ export default function ArticleView({ article, preview = false }: Props) {
           <Box sx={{ mb: theme.spacing(3) }}>
             <Link
               component={RouterLink}
-              to="/poradna"
+              to="/poradna/"
               underline="hover"
               variant="body2"
               sx={{ display: 'inline-flex', alignItems: 'center', gap: theme.spacing(0.5) }}
@@ -308,7 +308,7 @@ export default function ArticleView({ article, preview = false }: Props) {
         <Box sx={{ mt: theme.spacing(5) }}>
           <Link
             component={RouterLink}
-            to="/poradna"
+            to="/poradna/"
             underline="hover"
             variant="body2"
             sx={{ display: 'inline-flex', alignItems: 'center', gap: theme.spacing(0.5) }}

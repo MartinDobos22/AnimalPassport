@@ -606,7 +606,7 @@ export default function ArticleRichEditor({ value, onChange, toolbarContainer }:
       .insertContent({
         type: 'text',
         text: article.title,
-        marks: [{ type: 'link', attrs: { href: `/poradna/${article.slug}` } }],
+        marks: [{ type: 'link', attrs: { href: `/poradna/${article.slug}/` } }],
       })
       .run();
   };
