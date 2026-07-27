@@ -131,8 +131,8 @@ export function validateArticleForPublish(
   if (isHealth && sources.length === 0) {
     out.push({
       key: 'health_no_sources',
-      severity: 'error',
-      message: 'Zdravotný článok musí mať aspoň jeden zdroj.',
+      severity: 'warning',
+      message: 'Zdravotný článok nemá žiadny zdroj (odporúčané, ale nie povinné).',
     });
   }
   if (isHealth) {
