@@ -166,9 +166,9 @@ articles.post('/:slug/status', async (req: Request, res: Response, next: NextFun
     const by = req.user?.email ?? null;
     const admin = await resolveIsAdmin(req);
 
-    // Tvrdý blok: publikovať sa nedá, ak validácia nájde errory (aj pre admina —
-    // chráni verejnú stránku pred nekompletným obsahom).
-    if (target === 'published') {
+    // Publikačná validácia platí len pre ne-adminov (editorov). Admin publikuje
+    // úplne bez validácie a schvaľovania — na vlastnú zodpovednosť.
+    if (target === 'published' && !admin) {
       const candidate = await getArticleBySlugAdmin(slug);
       if (!candidate) throw httpError(404, 'Článok sa nenašiel.', 'NOT_FOUND');
       const existingSlugs = await getExistingSlugs();

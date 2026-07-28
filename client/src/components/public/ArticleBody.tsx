@@ -3,6 +3,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 import Callout from './Callout';
 import RichText from './RichText';
 import Lightbox, { type LightboxImage } from './Lightbox';
+import GalleryCarousel from './GalleryCarousel';
 import { slugifyHeading } from '../../utils/slugifyHeading';
 import { toEmbedSrc } from '../../utils/embedUrl';
 import type { ArticleSection } from '../../content/poradna/types';
@@ -148,43 +149,13 @@ export default function ArticleBody({ sections }: Props) {
                 const galleryImages: LightboxImage[] = block.images.filter((img) =>
                   img.src?.trim()
                 );
+                if (galleryImages.length === 0) return null;
                 return (
-                  <Box
+                  <GalleryCarousel
                     key={j}
-                    sx={{
-                      display: 'grid',
-                      gap: 1.5,
-                      gridTemplateColumns: {
-                        xs: 'repeat(2, 1fr)',
-                        sm: 'repeat(3, 1fr)',
-                      },
-                      my: 3,
-                    }}
-                  >
-                    {galleryImages.map((img, k) => (
-                      <Box
-                        key={k}
-                        component="img"
-                        src={img.src}
-                        alt={img.alt ?? ''}
-                        loading="lazy"
-                        onClick={() => setLightbox({ images: galleryImages, index: k })}
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                        sx={{
-                          width: '100%',
-                          aspectRatio: '1 / 1',
-                          objectFit: 'cover',
-                          borderRadius: (t) => `${t.shape.borderRadius}px`,
-                          display: 'block',
-                          cursor: 'pointer',
-                          transition: 'opacity 0.15s',
-                          '&:hover': { opacity: 0.85 },
-                        }}
-                      />
-                    ))}
-                  </Box>
+                    images={galleryImages}
+                    onOpen={(index) => setLightbox({ images: galleryImages, index })}
+                  />
                 );
               }
               case 'embed': {
