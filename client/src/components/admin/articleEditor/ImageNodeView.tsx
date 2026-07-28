@@ -1,6 +1,7 @@
 import {
   Box,
   IconButton,
+  Stack,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -9,6 +10,7 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
+import ImageCropButton from './ImageCropButton';
 
 const WIDTH_PRESETS: { label: string; value: number }[] = [
   { label: 'S', value: 25 },
@@ -61,19 +63,34 @@ export default function ImageNodeView({ node, updateAttributes, deleteNode }: No
             </IconButton>
           </Tooltip>
         </Box>
-        <ToggleButtonGroup
-          size="small"
-          exclusive
-          value={width ?? 100}
-          onChange={(_, val) => setWidth(val)}
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          flexWrap="wrap"
+          useFlexGap
           sx={{ mt: theme.spacing(0.75) }}
         >
-          {WIDTH_PRESETS.map((preset) => (
-            <ToggleButton key={preset.label} value={preset.value}>
-              {preset.label}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={width ?? 100}
+            onChange={(_, val) => setWidth(val)}
+          >
+            {WIDTH_PRESETS.map((preset) => (
+              <ToggleButton key={preset.label} value={preset.value}>
+                {preset.label}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+          {src && (
+            <ImageCropButton
+              imageUrl={src}
+              initialMeta={{ alt, caption }}
+              onCropped={(image) => updateAttributes({ src: image.url })}
+            />
+          )}
+        </Stack>
         <TextField
           value={alt}
           onChange={(e) => updateAttributes({ alt: e.target.value })}

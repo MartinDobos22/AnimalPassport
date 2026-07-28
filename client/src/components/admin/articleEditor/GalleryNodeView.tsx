@@ -1,7 +1,12 @@
 import { Box, IconButton, Stack, TextField, Tooltip, Typography, useTheme } from '@mui/material';
-import { Close as CloseIcon, DeleteOutline as DeleteIcon } from '@mui/icons-material';
+import {
+  Close as CloseIcon,
+  DeleteOutline as DeleteIcon,
+  CropOutlined as CropIcon,
+} from '@mui/icons-material';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import ImagePickerButton from './ImagePickerButton';
+import ImageCropButton from './ImageCropButton';
 import type { GalleryImage } from './GalleryNode';
 
 export default function GalleryNodeView({ node, updateAttributes, deleteNode }: NodeViewProps) {
@@ -14,6 +19,11 @@ export default function GalleryNodeView({ node, updateAttributes, deleteNode }: 
   const setAlt = (index: number, alt: string) =>
     updateAttributes({
       images: images.map((img, i) => (i === index ? { ...img, alt } : img)),
+    });
+
+  const setSrc = (index: number, src: string) =>
+    updateAttributes({
+      images: images.map((img, i) => (i === index ? { ...img, src } : img)),
     });
 
   return (
@@ -95,6 +105,29 @@ export default function GalleryNodeView({ node, updateAttributes, deleteNode }: 
                   >
                     <CloseIcon fontSize="small" />
                   </IconButton>
+                  <ImageCropButton
+                    imageUrl={img.src}
+                    initialMeta={{ alt: img.alt }}
+                    onCropped={(image) => setSrc(i, image.url)}
+                    renderTrigger={(onClick) => (
+                      <Tooltip title="Orezať obrázok">
+                        <IconButton
+                          size="small"
+                          aria-label="Orezať obrázok"
+                          onClick={onClick}
+                          sx={{
+                            position: 'absolute',
+                            top: 4,
+                            left: 4,
+                            bgcolor: 'background.paper',
+                            '&:hover': { bgcolor: 'background.paper' },
+                          }}
+                        >
+                          <CropIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  />
                 </Box>
                 <TextField
                   value={img.alt ?? ''}
