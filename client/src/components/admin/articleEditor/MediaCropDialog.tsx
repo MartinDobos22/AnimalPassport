@@ -19,10 +19,13 @@ import { uploadArticleImage } from '../../../services/adminApi';
 import type { MediaImage } from '../../../types/media';
 
 interface Props {
-  file: File | null;
+  /** Zdroj: buď nový súbor (upload), alebo URL existujúceho obrázka (re-crop). */
+  file?: File | null;
+  imageUrl?: string | null;
   open: boolean;
   onClose: () => void;
   onUploaded: (media: MediaImage) => void;
+  initialMeta?: { alt?: string | null; caption?: string | null; author?: string | null };
 }
 
 const ASPECTS: { label: string; value: number | undefined }[] = [
@@ -32,9 +35,17 @@ const ASPECTS: { label: string; value: number | undefined }[] = [
   { label: '1:1', value: 1 },
 ];
 
-export default function MediaCropDialog({ file, open, onClose, onUploaded }: Props) {
+export default function MediaCropDialog({
+  file,
+  imageUrl,
+  open,
+  onClose,
+  onUploaded,
+  initialMeta,
+}: Props) {
   const theme = useTheme();
   const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const isUrlSource = !file && Boolean(imageUrl);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [aspect, setAspect] = useState<number | undefined>(16 / 9);
@@ -46,21 +57,25 @@ export default function MediaCropDialog({ file, open, onClose, onUploaded }: Pro
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!file) {
+    if (!file && !imageUrl) {
       setImageSrc(null);
       return;
     }
-    const url = URL.createObjectURL(file);
-    setImageSrc(url);
+    const objectUrl = file ? URL.createObjectURL(file) : null;
+    setImageSrc(objectUrl ?? imageUrl ?? null);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setAreaPixels(null);
-    setAlt('');
-    setCaption('');
-    setAuthor('');
+    setAlt(initialMeta?.alt ?? '');
+    setCaption(initialMeta?.caption ?? '');
+    setAuthor(initialMeta?.author ?? '');
     setError(null);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+    // initialMeta je stabilné per otvorenie; nezaraďujeme do deps zámerne.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file, imageUrl]);
 
   const onCropComplete = useCallback((_area: Area, areaPx: Area) => {
     setAreaPixels(areaPx);
@@ -71,7 +86,7 @@ export default function MediaCropDialog({ file, open, onClose, onUploaded }: Pro
     setUploading(true);
     setError(null);
     try {
-      const cropped = await cropImage(imageSrc, areaPixels);
+      const cropped = await cropImage(imageSrc, areaPixels, { crossOrigin: isUrlSource });
       const base64Data = cropped.dataUrl.split(',')[1] ?? '';
       const { media } = await uploadArticleImage({
         mimeType: cropped.mimeType,
@@ -85,7 +100,13 @@ export default function MediaCropDialog({ file, open, onClose, onUploaded }: Pro
       onUploaded(media);
       onClose();
     } catch (e) {
-      setError((e as Error).message);
+      const msg = (e as Error).message ?? '';
+      // Tainted canvas = obrázok z cudzej domény bez CORS hlavičiek.
+      setError(
+        /taint|security|cross-origin/i.test(msg)
+          ? 'Tento obrázok z internetu sa nedá orezať (zdroj nepovoľuje úpravu). Najprv ho nahraj do knižnice.'
+          : msg
+      );
     } finally {
       setUploading(false);
     }
@@ -185,11 +206,7 @@ export default function MediaCropDialog({ file, open, onClose, onUploaded }: Pro
         <Button onClick={onClose} disabled={uploading}>
           Zrušiť
         </Button>
-        <Button
-          variant="contained"
-          onClick={handleUpload}
-          disabled={uploading || !areaPixels}
-        >
+        <Button variant="contained" onClick={handleUpload} disabled={uploading || !areaPixels}>
           {uploading ? 'Nahrávam…' : 'Nahrať'}
         </Button>
       </DialogActions>

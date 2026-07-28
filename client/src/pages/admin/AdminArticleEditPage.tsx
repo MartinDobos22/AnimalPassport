@@ -51,6 +51,7 @@ import { ANIMAL_SPECIES, type AnimalType } from '../../constants/animalSpecies';
 import ArticleRichEditor from '../../components/admin/articleEditor/ArticleRichEditor';
 import RelatedArticlesPicker from '../../components/admin/articleEditor/RelatedArticlesPicker';
 import ImagePickerButton from '../../components/admin/articleEditor/ImagePickerButton';
+import ImageCropButton from '../../components/admin/articleEditor/ImageCropButton';
 import ArticleVersionsDrawer from '../../components/admin/ArticleVersionsDrawer';
 import ArticleValidationPanel from '../../components/admin/ArticleValidationPanel';
 import ArticleBody from '../../components/public/ArticleBody';
@@ -1242,16 +1243,24 @@ export default function AdminArticleEditPage() {
                     }
                   />
                   {form.coverImage && (
-                    <Box
-                      component="img"
-                      src={form.coverImage}
-                      alt=""
-                      sx={{
-                        width: '100%',
-                        borderRadius: theme.shape.borderRadius,
-                        objectFit: 'cover',
-                      }}
-                    />
+                    <>
+                      <Box
+                        component="img"
+                        src={form.coverImage}
+                        alt=""
+                        sx={{
+                          width: '100%',
+                          borderRadius: theme.shape.borderRadius,
+                          objectFit: 'cover',
+                        }}
+                      />
+                      <ImageCropButton
+                        imageUrl={form.coverImage}
+                        initialMeta={{ alt: form.coverAlt, caption: form.coverCredit }}
+                        label="Orezať titulnú fotku"
+                        onCropped={(image) => set('coverImage', image.url)}
+                      />
+                    </>
                   )}
                   <TextField
                     id="field-coverImage"
