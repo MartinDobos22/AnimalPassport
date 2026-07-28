@@ -19,8 +19,10 @@ import {
   EditOutlined as EditIcon,
   DeleteOutline as DeleteIcon,
   Close as CloseIcon,
+  CropOutlined as CropIcon,
 } from '@mui/icons-material';
 import MediaCropDialog from './MediaCropDialog';
+import ImageCropButton from './ImageCropButton';
 import { deleteMedia, listMedia, updateMedia } from '../../../services/adminApi';
 import type { MediaImage } from '../../../types/media';
 
@@ -129,11 +131,33 @@ export default function MediaLibraryDialog({ open, onClose, onSelect }: Props) {
                   spacing={0.5}
                   sx={{ position: 'absolute', top: 2, right: 2 }}
                 >
+                  <ImageCropButton
+                    imageUrl={m.url}
+                    initialMeta={{ alt: m.alt, caption: m.caption, author: m.author }}
+                    onCropped={() => load()}
+                    renderTrigger={(onClick) => (
+                      <Tooltip title="Orezať (vytvorí kópiu)">
+                        <IconButton
+                          size="small"
+                          onClick={onClick}
+                          sx={{
+                            bgcolor: 'background.paper',
+                            '&:hover': { bgcolor: 'background.paper' },
+                          }}
+                        >
+                          <CropIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  />
                   <Tooltip title="Upraviť popis">
                     <IconButton
                       size="small"
                       onClick={() => setEditing(m)}
-                      sx={{ bgcolor: 'background.paper', '&:hover': { bgcolor: 'background.paper' } }}
+                      sx={{
+                        bgcolor: 'background.paper',
+                        '&:hover': { bgcolor: 'background.paper' },
+                      }}
                     >
                       <EditIcon fontSize="small" />
                     </IconButton>
@@ -142,14 +166,22 @@ export default function MediaLibraryDialog({ open, onClose, onSelect }: Props) {
                     <IconButton
                       size="small"
                       onClick={() => void handleDelete(m.id)}
-                      sx={{ bgcolor: 'background.paper', '&:hover': { bgcolor: 'background.paper' } }}
+                      sx={{
+                        bgcolor: 'background.paper',
+                        '&:hover': { bgcolor: 'background.paper' },
+                      }}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
                 </Stack>
                 {m.caption && (
-                  <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', px: 0.5, py: 0.25 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    noWrap
+                    sx={{ display: 'block', px: 0.5, py: 0.25 }}
+                  >
                     {m.caption}
                   </Typography>
                 )}
@@ -232,9 +264,27 @@ function MediaMetaDialog({
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          <TextField label="Alt text" value={alt} onChange={(e) => setAlt(e.target.value)} size="small" fullWidth />
-          <TextField label="Popisok" value={caption} onChange={(e) => setCaption(e.target.value)} size="small" fullWidth />
-          <TextField label="Autor / zdroj" value={author} onChange={(e) => setAuthor(e.target.value)} size="small" fullWidth />
+          <TextField
+            label="Alt text"
+            value={alt}
+            onChange={(e) => setAlt(e.target.value)}
+            size="small"
+            fullWidth
+          />
+          <TextField
+            label="Popisok"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            size="small"
+            fullWidth
+          />
+          <TextField
+            label="Autor / zdroj"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            size="small"
+            fullWidth
+          />
         </Stack>
       </DialogContent>
       <DialogActions>
