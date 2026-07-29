@@ -1,6 +1,6 @@
 // Pawly Service Worker
 // Verzia cache – zmeňte pri každom deployi aby sa cache invalidoval
-const CACHE_VERSION = 'pawly-v34';
+const CACHE_VERSION = 'pawly-v35';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 

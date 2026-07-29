@@ -1,4 +1,9 @@
 {
+  "testimonials": {
+    "title": "What owners say",
+    "subtitle": "Real reviews from people who care for their pets with Pawly.",
+    "anonymous": "Pawly user"
+  },
   "about": {
     "title": "About",
     "subtitle": "A small helper for the big love you have for your pet.",

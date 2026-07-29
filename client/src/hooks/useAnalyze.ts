@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { analyzeAttachment, analyzeComposition, extractTextFromImage } from '../services/api';
 import { AnalysisRequest, AnalysisResult, FileExtractionResult, PetProfile } from '../types';
 import { logger } from '../utils/logger';
+import { recordReviewSignal } from '../utils/reviewPrompt';
 import i18n from '../i18n';
 
 const SLOW_WARNING_MS = 10_000;
@@ -74,6 +75,7 @@ export function useAnalyze() {
       try {
         const data = await analyzeComposition(composition, petProfile, controller.signal);
         setResult(data);
+        recordReviewSignal();
         logger.info('Hook useAnalyze prijal výsledok textovej analýzy', { score: data.score });
       } catch (err) {
         if (isAbortError(err)) {
@@ -115,6 +117,7 @@ export function useAnalyze() {
       try {
         const data = await analyzeAttachment(attachment, examAlias, controller.signal);
         setFileResult(data);
+        recordReviewSignal();
         logger.info('Hook useAnalyze prijal výsledok súborovej analýzy z backendu', {
           source: data.source,
           contextDocumentType: data.contextAnalysis?.documentType ?? null,

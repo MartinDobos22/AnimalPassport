@@ -15,6 +15,8 @@ import notificationsRouter from './routes/notifications';
 import cronRouter from './routes/cron';
 import authEmailsRouter from './routes/authEmails';
 import articlesRouter from './routes/articles';
+import reviewsRouter from './routes/reviews';
+import myReviewRouter from './routes/myReview';
 import analyticsRouter from './routes/analytics';
 import adminRouter from './routes/admin';
 import adminAiRouter from './routes/adminAi';
@@ -217,6 +219,10 @@ app.use('/api/auth', authEmailsRouter);
 // PRED firebaseAuth). Pokrytý globalLimiterom.
 app.use('/api/articles', articlesRouter);
 
+// /api/reviews — verejné schválené recenzie pre landing page (bez tokenu, PRED
+// firebaseAuth). Zápis vlastnej recenzie ide cez /api/my-review (authed nižšie).
+app.use('/api/reviews', reviewsRouter);
+
 // /api/analytics — verejný tracking eventov z poradne (bez tokenu, PRED
 // firebaseAuth). Vlastný rate limit proti spamu.
 app.use('/api/analytics', analyticsLimiter, analyticsRouter);
@@ -232,6 +238,7 @@ app.use('/api/pets', ensureUser, petsRouter);
 app.use('/api/health', ensureUser, healthRouter);
 app.use('/api/account', ensureUser, accountRouter);
 app.use('/api/notifications', ensureUser, notificationsRouter);
+app.use('/api/my-review', ensureUser, myReviewRouter);
 app.use('/api/analyze', aiHeavyLimiter, ensureUser, requireAiQuota(), analyzeRouter);
 app.use('/api/episodes', aiHeavyLimiter, ensureUser, episodesRouter);
 app.use('/api/extract-text', aiHeavyLimiter, ensureUser, requireAiQuota(), extractTextRouter);

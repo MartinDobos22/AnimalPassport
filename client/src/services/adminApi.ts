@@ -9,6 +9,7 @@ import type {
   ArticleVersionMeta,
 } from '../content/poradna/types';
 import type { MediaImage } from '../types/media';
+import type { AdminReview, ReviewStatus } from '../types/review';
 import { getAuthHeader, handleUnauthorized } from './authToken';
 import { logger } from '../utils/logger';
 
@@ -131,6 +132,24 @@ export async function setUserAdmin(id: string, isAdmin: boolean): Promise<AdminU
     body: JSON.stringify({ isAdmin }),
   });
   return data.user;
+}
+
+export async function listAdminReviews(status?: ReviewStatus): Promise<AdminReview[]> {
+  const query = status ? `?status=${encodeURIComponent(status)}` : '';
+  const data = await request<{ reviews: AdminReview[] }>(`/reviews${query}`);
+  return data.reviews;
+}
+
+export async function setReviewStatus(id: string, status: ReviewStatus): Promise<AdminReview> {
+  const data = await request<{ review: AdminReview }>(
+    `/reviews/${encodeURIComponent(id)}/status`,
+    { method: 'POST', body: JSON.stringify({ status }) }
+  );
+  return data.review;
+}
+
+export async function deleteAdminReview(id: string): Promise<void> {
+  await request<void>(`/reviews/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 export async function publishArticles(): Promise<void> {

@@ -1,21 +1,23 @@
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Box, Tab, Tabs } from '@mui/material';
+import { Box, Card, CardContent, Tab, Tabs } from '@mui/material';
 import {
   HelpOutline as HelpOutlineIcon,
   Info as InfoIcon,
   InstallMobile as InstallMobileIcon,
   Lock as LockIcon,
+  RateReview as RateReviewIcon,
 } from '@mui/icons-material';
 import FaqContent from '../components/FaqContent';
 import AboutContent from '../components/AboutContent';
 import InstallGuideContent from '../components/InstallGuideContent';
 import PrivacyPolicyContent from '../components/PrivacyPolicyContent';
+import ReviewForm from '../components/reviews/ReviewForm';
 
-type TabKey = 'faq' | 'install' | 'about' | 'privacy';
+type TabKey = 'faq' | 'install' | 'about' | 'privacy' | 'review';
 
-const TAB_KEYS: TabKey[] = ['faq', 'install', 'about', 'privacy'];
+const TAB_KEYS: TabKey[] = ['faq', 'install', 'about', 'privacy', 'review'];
 
 const isTabKey = (value: string | null): value is TabKey =>
   value !== null && (TAB_KEYS as string[]).includes(value);
@@ -72,12 +74,26 @@ export default function InfoPage() {
           label={t('nav.privacy')}
           sx={{ minHeight: 56, fontWeight: 600 }}
         />
+        <Tab
+          value="review"
+          icon={<RateReviewIcon />}
+          iconPosition="start"
+          label={t('review.tabLabel')}
+          sx={{ minHeight: 56, fontWeight: 600 }}
+        />
       </Tabs>
 
       {activeTab === 'faq' && <FaqContent />}
       {activeTab === 'install' && <InstallGuideContent />}
       {activeTab === 'about' && <AboutContent />}
       {activeTab === 'privacy' && <PrivacyPolicyContent />}
+      {activeTab === 'review' && (
+        <Card>
+          <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+            <ReviewForm />
+          </CardContent>
+        </Card>
+      )}
     </Box>
   );
 }
