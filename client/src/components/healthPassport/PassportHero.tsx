@@ -5,6 +5,9 @@ import {
   CircularProgress,
   FormControl,
   IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
   MenuItem,
   Select,
   Stack,
@@ -14,9 +17,11 @@ import {
 } from '@mui/material';
 import {
   ChevronRight as ChevronIcon,
+  Delete as DeleteIcon,
   Edit as EditIcon,
   Favorite as FavoriteIcon,
   PhotoCamera as PhotoCameraIcon,
+  PhotoLibrary as PhotoLibraryIcon,
 } from '@mui/icons-material';
 import type { PetProfile } from '../../types';
 import { petPhotoStock, petPhotoSvg } from '../../utils/petPhotoDefaults';
@@ -41,6 +46,7 @@ interface Props {
   infoCards: HeroInfoCard[];
   onEditProfile: () => void;
   onPhotoSelected?: (file: File) => void;
+  onPhotoRemove?: () => void;
   photoUploading?: boolean;
 }
 
@@ -58,11 +64,14 @@ export default function PassportHero({
   infoCards,
   onEditProfile,
   onPhotoSelected,
+  onPhotoRemove,
   photoUploading = false,
 }: Props) {
   const { t } = useTranslation('healthPassport');
   const theme = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoMenuAnchor, setPhotoMenuAnchor] = useState<HTMLElement | null>(null);
+  const hasCustomPhoto = Boolean(dog.photoUrl);
 
   // Photo source: user's own photo → species stock photo → local SVG (offline fallback).
   const fallbackSvg = petPhotoSvg(dog.animalType);
@@ -73,6 +82,9 @@ export default function PassportHero({
   const handleImgError = () => {
     if (imgSrc !== fallbackSvg) setImgSrc(fallbackSvg);
   };
+  // A user photo is already framed in the crop editor, so center it. Stock photos
+  // are generic and read better shifted toward the subject (upper-right).
+  const photoObjectPosition = imgSrc === dog.photoUrl ? 'center' : '60% 35%';
 
   const computeAgeLabel = (p: PetProfile): string | null => {
     if (p.dateOfBirth) {
@@ -129,7 +141,7 @@ export default function PassportHero({
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          objectPosition: '60% 35%',
+          objectPosition: photoObjectPosition,
         }}
       />
 
@@ -199,9 +211,9 @@ export default function PassportHero({
                 {onPhotoSelected && (
                   <>
                     <IconButton
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={(e) => setPhotoMenuAnchor(e.currentTarget)}
                       disabled={photoUploading}
-                      aria-label={t('hero.changePhoto')}
+                      aria-label={t('hero.photoMenuAria')}
                       sx={{
                         color: alpha(theme.palette.common.white, 0.85),
                         '&:hover': { color: 'common.white' },
@@ -213,6 +225,36 @@ export default function PassportHero({
                         <PhotoCameraIcon />
                       )}
                     </IconButton>
+                    <Menu
+                      anchorEl={photoMenuAnchor}
+                      open={Boolean(photoMenuAnchor)}
+                      onClose={() => setPhotoMenuAnchor(null)}
+                    >
+                      <MenuItem
+                        onClick={() => {
+                          setPhotoMenuAnchor(null);
+                          fileInputRef.current?.click();
+                        }}
+                      >
+                        <ListItemIcon>
+                          <PhotoLibraryIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>{t('hero.photoMenuUpload')}</ListItemText>
+                      </MenuItem>
+                      {hasCustomPhoto && onPhotoRemove && (
+                        <MenuItem
+                          onClick={() => {
+                            setPhotoMenuAnchor(null);
+                            onPhotoRemove();
+                          }}
+                        >
+                          <ListItemIcon>
+                            <DeleteIcon fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText>{t('hero.photoMenuRemove')}</ListItemText>
+                        </MenuItem>
+                      )}
+                    </Menu>
                     <Box
                       component="input"
                       ref={fileInputRef}

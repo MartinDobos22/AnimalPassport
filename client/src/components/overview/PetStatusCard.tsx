@@ -77,7 +77,10 @@ export default function PetStatusCard({
       }}
     >
       <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Avatar src={pet.photoUrl} sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>
+        <Avatar
+          src={pet.photoUrl ?? undefined}
+          sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}
+        >
           {pet.photoUrl ? null : <PetsIcon />}
         </Avatar>
         <Box sx={{ flex: 1, minWidth: 0 }}>
