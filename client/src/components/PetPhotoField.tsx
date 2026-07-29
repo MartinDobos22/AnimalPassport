@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
@@ -16,7 +16,8 @@ import {
   Delete as DeleteIcon,
   Pets as PetsIcon,
 } from '@mui/icons-material';
-import { usePetPhotoUpload } from '../hooks/usePetPhotoUpload';
+import { usePetPhotoUpload, validatePetPhotoFile } from '../hooks/usePetPhotoUpload';
+import PetPhotoCropDialog from './PetPhotoCropDialog';
 
 interface Props {
   value?: string;
@@ -27,11 +28,25 @@ export default function PetPhotoField({ value, onChange }: Props) {
   const { t } = useTranslation('healthPassport');
   const theme = useTheme();
   const inputRef = useRef<HTMLInputElement>(null);
-  const { upload, uploading, error } = usePetPhotoUpload();
+  const { uploadCropped, uploading, error, setError } = usePetPhotoUpload();
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
-  const handleFile = async (file: File) => {
-    const url = await upload(file);
-    if (url) onChange(url);
+  const handleFileSelected = (file: File) => {
+    const validationError = validatePetPhotoFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setError(null);
+    setPendingFile(file);
+  };
+
+  const handleCropConfirm = async (dataUrl: string, mimeType: string) => {
+    const url = await uploadCropped(dataUrl, mimeType);
+    if (url) {
+      onChange(url);
+      setPendingFile(null);
+    }
   };
 
   const errorMsg =
@@ -128,7 +143,7 @@ export default function PetPhotoField({ value, onChange }: Props) {
           sx={{ display: 'none' }}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             const file = e.target.files?.[0];
-            if (file) void handleFile(file);
+            if (file) handleFileSelected(file);
             e.target.value = '';
           }}
         />
@@ -138,6 +153,13 @@ export default function PetPhotoField({ value, onChange }: Props) {
           {errorMsg}
         </FormHelperText>
       )}
+      <PetPhotoCropDialog
+        file={pendingFile}
+        open={pendingFile !== null}
+        uploading={uploading}
+        onCancel={() => setPendingFile(null)}
+        onConfirm={handleCropConfirm}
+      />
     </Box>
   );
 }

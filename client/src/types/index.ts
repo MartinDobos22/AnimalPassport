@@ -18,7 +18,7 @@ export interface PetProfile {
   ageYears?: number;
   ageMonths?: number;
   weightKg?: number;
-  photoUrl?: string;
+  photoUrl?: string | null;
   microchipNumber?: string;
   passportNumber?: string;
   size?: AnimalSize;
