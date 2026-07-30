@@ -82,9 +82,7 @@ export default function PassportHero({
   const handleImgError = () => {
     if (imgSrc !== fallbackSvg) setImgSrc(fallbackSvg);
   };
-  // A user photo is already framed in the crop editor, so center it. Stock photos
-  // are generic and read better shifted toward the subject (upper-right).
-  const photoObjectPosition = imgSrc === dog.photoUrl ? 'center' : '60% 35%';
+  const isUserPhoto = imgSrc === dog.photoUrl;
 
   const computeAgeLabel = (p: PetProfile): string | null => {
     if (p.dateOfBirth) {
@@ -130,20 +128,59 @@ export default function PassportHero({
         bgcolor: HERO_SCRIM,
       }}
     >
-      <Box
-        component="img"
-        src={imgSrc}
-        onError={handleImgError}
-        alt={dog.name}
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          objectPosition: photoObjectPosition,
-        }}
-      />
+      {isUserPhoto ? (
+        // A user photo can be any orientation, and the hero shape swings from tall
+        // (mobile) to wide (desktop). Showing it with object-fit: cover would zoom
+        // in hard on the mismatched axis, so instead the whole photo is shown with
+        // object-fit: contain over a blurred, scaled copy that fills the frame.
+        <>
+          <Box
+            component="img"
+            src={imgSrc}
+            onError={handleImgError}
+            alt=""
+            aria-hidden
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transform: 'scale(1.2)',
+              filter: 'blur(28px)',
+            }}
+          />
+          <Box
+            component="img"
+            src={imgSrc}
+            onError={handleImgError}
+            alt={dog.name}
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              objectPosition: 'center',
+            }}
+          />
+        </>
+      ) : (
+        <Box
+          component="img"
+          src={imgSrc}
+          onError={handleImgError}
+          alt={dog.name}
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: '60% 35%',
+          }}
+        />
+      )}
 
       {/* Legibility scrims */}
       <Box
