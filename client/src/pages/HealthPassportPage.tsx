@@ -68,9 +68,11 @@ import {
   escapeHtml,
 } from '../components/healthPassport/utils';
 
-// The passport hero renders the pet photo as a wide banner, so its crop is
-// landscape (unlike the circular avatar used elsewhere).
-const HERO_PHOTO_ASPECT = 16 / 9;
+// The passport hero renders the pet photo as a full-bleed background. On mobile
+// (the primary form factor) that panel is portrait, so a wide crop would get
+// massively zoomed by object-fit: cover. A portrait crop keeps the framing the
+// user picked; on desktop object-fit: cover trims the top/bottom instead.
+const HERO_PHOTO_ASPECT = 3 / 4;
 
 export default function HealthPassportPage() {
   const { t, i18n } = useTranslation('healthPassport');
