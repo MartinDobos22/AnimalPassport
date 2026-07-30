@@ -82,9 +82,41 @@ export default function PassportHero({
   const handleImgError = () => {
     if (imgSrc !== fallbackSvg) setImgSrc(fallbackSvg);
   };
-  // A user photo is already framed in the crop editor, so center it. Stock photos
-  // are generic and read better shifted toward the subject (upper-right).
-  const photoObjectPosition = imgSrc === dog.photoUrl ? 'center' : '60% 35%';
+  const isUserPhoto = imgSrc === dog.photoUrl;
+
+  // Adapt the photo fit to both the device (the hero is tall on mobile, wide on
+  // desktop) and the photo's own orientation. When the two shapes are close,
+  // object-fit: cover fills the frame nicely; when they clash, cover would zoom
+  // in hard, so the whole photo is shown (contain) over a blurred fill instead.
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [heroAspect, setHeroAspect] = useState<number | null>(null);
+  const [photoAspect, setPhotoAspect] = useState<number | null>(null);
+
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const update = () => {
+      const { width, height } = el.getBoundingClientRect();
+      if (width > 0 && height > 0) setHeroAspect(width / height);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => setPhotoAspect(null), [imgSrc]);
+
+  const handlePhotoLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = event.currentTarget;
+    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+      setPhotoAspect(img.naturalWidth / img.naturalHeight);
+    }
+  };
+
+  const coverZoom =
+    heroAspect && photoAspect ? Math.max(heroAspect / photoAspect, photoAspect / heroAspect) : null;
+  const useCover = coverZoom !== null && coverZoom <= 1.7;
 
   const computeAgeLabel = (p: PetProfile): string | null => {
     if (p.dateOfBirth) {
@@ -117,6 +149,7 @@ export default function PassportHero({
 
   return (
     <Box
+      ref={heroRef}
       sx={{
         mb: 2.5,
         position: 'relative',
@@ -130,20 +163,59 @@ export default function PassportHero({
         bgcolor: HERO_SCRIM,
       }}
     >
-      <Box
-        component="img"
-        src={imgSrc}
-        onError={handleImgError}
-        alt={dog.name}
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          objectPosition: photoObjectPosition,
-        }}
-      />
+      {isUserPhoto && !useCover ? (
+        // Photo shape clashes with the current hero shape: show the whole photo
+        // (contain) over a blurred, scaled copy so nothing is zoomed or cut off.
+        <>
+          <Box
+            component="img"
+            src={imgSrc}
+            onError={handleImgError}
+            alt=""
+            aria-hidden
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transform: 'scale(1.2)',
+              filter: 'blur(28px)',
+            }}
+          />
+          <Box
+            component="img"
+            src={imgSrc}
+            onError={handleImgError}
+            onLoad={handlePhotoLoad}
+            alt={dog.name}
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              objectPosition: 'center',
+            }}
+          />
+        </>
+      ) : (
+        <Box
+          component="img"
+          src={imgSrc}
+          onError={handleImgError}
+          onLoad={handlePhotoLoad}
+          alt={dog.name}
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: isUserPhoto ? 'center' : '60% 35%',
+          }}
+        />
+      )}
 
       {/* Legibility scrims */}
       <Box
