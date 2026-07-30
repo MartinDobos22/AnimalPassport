@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Cropper, { type Area } from 'react-easy-crop';
+import 'react-easy-crop/react-easy-crop.css';
 import {
   Box,
   Button,
