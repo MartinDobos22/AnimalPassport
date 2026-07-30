@@ -15,10 +15,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import {
-  ZoomIn as ZoomInIcon,
-  ZoomOut as ZoomOutIcon,
-} from '@mui/icons-material';
+import { ZoomIn as ZoomInIcon, ZoomOut as ZoomOutIcon } from '@mui/icons-material';
 import { cropImage } from '../utils/cropImage';
 
 interface Props {
@@ -53,6 +50,10 @@ export default function PetPhotoCropDialog({
   const [zoom, setZoom] = useState(MIN_ZOOM);
   const [areaPixels, setAreaPixels] = useState<Area | null>(null);
   const [processing, setProcessing] = useState(false);
+  // react-easy-crop measures its container on mount; if it mounts while the
+  // dialog is still animating in, the container has zero size and the image
+  // renders black. Gate the cropper until the enter transition finishes.
+  const [entered, setEntered] = useState(false);
 
   useEffect(() => {
     if (!file) {
@@ -89,7 +90,16 @@ export default function PetPhotoCropDialog({
   };
 
   return (
-    <Dialog open={open} onClose={busy ? undefined : onCancel} fullWidth maxWidth="xs">
+    <Dialog
+      open={open}
+      onClose={busy ? undefined : onCancel}
+      fullWidth
+      maxWidth="xs"
+      TransitionProps={{
+        onEntered: () => setEntered(true),
+        onExited: () => setEntered(false),
+      }}
+    >
       <DialogTitle>{t('profiles.photoCropTitle')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -105,7 +115,7 @@ export default function PetPhotoCropDialog({
             overflow: 'hidden',
           }}
         >
-          {imageSrc && (
+          {imageSrc && entered && (
             <Cropper
               image={imageSrc}
               crop={crop}
