@@ -546,11 +546,11 @@
     "photoErrorUnsupported": "Nepodporovaný formát (JPG, PNG, WebP).",
     "photoErrorTooLarge": "Súbor je príliš veľký (max 5 MB).",
     "photoErrorFailed": "Nahrávanie zlyhalo. Skús to znova.",
-    "photoCropTitle": "Uprav fotku",
-    "photoCropHint": "Potiahni fotku a priblíž ju posúvačom, aby výrez sedel.",
-    "photoCropZoom": "Priblíženie",
-    "photoCropConfirm": "Použiť fotku",
-    "photoCropCancel": "Zrušiť",
+    "photoAdjustTitle": "Uprav fotku",
+    "photoAdjustHint": "Predvolene sa uloží celá fotka. Ak chceš, priblíž ju posúvačom a poposúvaj.",
+    "photoAdjustZoom": "Priblíženie",
+    "photoAdjustConfirm": "Použiť fotku",
+    "photoAdjustCancel": "Zrušiť",
     "microchip": "Číslo čipu",
     "passportNumber": "Číslo pasu",
     "size": "Veľkosť",
@@ -605,13 +605,7 @@
       "Kukurica",
       "Sója"
     ],
-    "intoleranceSuggestions": [
-      "Lepok",
-      "Laktóza",
-      "Kukurica",
-      "Sója",
-      "Obilniny"
-    ],
+    "intoleranceSuggestions": ["Lepok", "Laktóza", "Kukurica", "Sója", "Obilniny"],
     "healthSuggestions": [
       "Diabetes",
       "Problémy s obličkami",
