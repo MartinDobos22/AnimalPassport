@@ -84,6 +84,40 @@ export default function PassportHero({
   };
   const isUserPhoto = imgSrc === dog.photoUrl;
 
+  // Adapt the photo fit to both the device (the hero is tall on mobile, wide on
+  // desktop) and the photo's own orientation. When the two shapes are close,
+  // object-fit: cover fills the frame nicely; when they clash, cover would zoom
+  // in hard, so the whole photo is shown (contain) over a blurred fill instead.
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [heroAspect, setHeroAspect] = useState<number | null>(null);
+  const [photoAspect, setPhotoAspect] = useState<number | null>(null);
+
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const update = () => {
+      const { width, height } = el.getBoundingClientRect();
+      if (width > 0 && height > 0) setHeroAspect(width / height);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => setPhotoAspect(null), [imgSrc]);
+
+  const handlePhotoLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = event.currentTarget;
+    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+      setPhotoAspect(img.naturalWidth / img.naturalHeight);
+    }
+  };
+
+  const coverZoom =
+    heroAspect && photoAspect ? Math.max(heroAspect / photoAspect, photoAspect / heroAspect) : null;
+  const useCover = coverZoom !== null && coverZoom <= 1.7;
+
   const computeAgeLabel = (p: PetProfile): string | null => {
     if (p.dateOfBirth) {
       const dob = new Date(p.dateOfBirth);
@@ -115,6 +149,7 @@ export default function PassportHero({
 
   return (
     <Box
+      ref={heroRef}
       sx={{
         mb: 2.5,
         position: 'relative',
@@ -128,11 +163,9 @@ export default function PassportHero({
         bgcolor: HERO_SCRIM,
       }}
     >
-      {isUserPhoto ? (
-        // A user photo can be any orientation, and the hero shape swings from tall
-        // (mobile) to wide (desktop). Showing it with object-fit: cover would zoom
-        // in hard on the mismatched axis, so instead the whole photo is shown with
-        // object-fit: contain over a blurred, scaled copy that fills the frame.
+      {isUserPhoto && !useCover ? (
+        // Photo shape clashes with the current hero shape: show the whole photo
+        // (contain) over a blurred, scaled copy so nothing is zoomed or cut off.
         <>
           <Box
             component="img"
@@ -154,6 +187,7 @@ export default function PassportHero({
             component="img"
             src={imgSrc}
             onError={handleImgError}
+            onLoad={handlePhotoLoad}
             alt={dog.name}
             sx={{
               position: 'absolute',
@@ -170,6 +204,7 @@ export default function PassportHero({
           component="img"
           src={imgSrc}
           onError={handleImgError}
+          onLoad={handlePhotoLoad}
           alt={dog.name}
           sx={{
             position: 'absolute',
@@ -177,7 +212,7 @@ export default function PassportHero({
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            objectPosition: '60% 35%',
+            objectPosition: isUserPhoto ? 'center' : '60% 35%',
           }}
         />
       )}
