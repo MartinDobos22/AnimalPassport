@@ -68,6 +68,11 @@ import {
   escapeHtml,
 } from '../components/healthPassport/utils';
 
+// Koľko dní dopredu považujeme expiráciu vakcíny za blížiacu sa pripomienku.
+// Dosť času objednať sa na preočkovanie; expirácie ďalej v budúcnosti sú na
+// dlaždici Očkovanie a na timeline, nie medzi pripomienkami.
+const VACCINE_REMINDER_HORIZON_DAYS = 60;
+
 export default function HealthPassportPage() {
   const { t, i18n } = useTranslation('healthPassport');
   const { t: tCommon } = useTranslation('common');
@@ -170,16 +175,6 @@ export default function HealthPassportPage() {
     ? statusByDate(urgentVaccination.validUntil, 30)
     : 'UNKNOWN';
 
-  // Popis pomenuje konkrétnu vakcínu (chorobu) + koľko ďalších sledujeme,
-  // aby dlaždica nebola generické „Očkovanie".
-  const vaccinationDetail = urgentVaccination
-    ? latestVaccineByType.size > 1
-      ? t('overview.vaccinationOthers', {
-          type: t(`vaccineTypes.${urgentVaccination.type}`),
-          count: latestVaccineByType.size - 1,
-        })
-      : t(`vaccineTypes.${urgentVaccination.type}`)
-    : undefined;
   const dewormingStatus = latestDeworming
     ? statusByDate(latestDeworming.nextDueDate, 7)
     : 'UNKNOWN';
@@ -902,18 +897,47 @@ export default function HealthPassportPage() {
   const insightFooter = insightPositive ? t('insight.footer') : t('insight.footerAttention');
 
   // ── Najbližšie termíny a kontroly (vrátane vyšetrení z „Ďalšia kontrola") ────
-  const upcomingReminders: UpcomingReminderItem[] = [
-    urgentVaccination?.validUntil
-      ? {
-          key: 'vaccination',
+  // Každá vakcína (posledná per choroba) sa pripomína samostatne, aby skoršia
+  // expirácia neprekryla druhú. Ďaleké expirácie sú na dlaždici + timeline, nie tu.
+  const vaccineReminders: UpcomingReminderItem[] = [...latestVaccineByType.values()].flatMap(
+    (v) => {
+      if (!v.validUntil) return [];
+      const rel = relativeDate(v.validUntil);
+      if (!rel || rel.diffDays > VACCINE_REMINDER_HORIZON_DAYS) return [];
+      return [
+        {
+          key: `vaccination-${v.id}`,
           icon: <VaccinesIcon />,
           label: t('overview.vaccination'),
-          detail: vaccinationDetail,
-          date: urgentVaccination.validUntil,
+          detail: t(`vaccineTypes.${v.type}`),
+          date: v.validUntil,
           accentColor: theme.palette.success.main,
-          onClick: () => setSelectedRecord({ id: urgentVaccination.id, type: 'VACCINATION' }),
-        }
-      : null,
+          onClick: () => setSelectedRecord({ id: v.id, type: 'VACCINATION' }),
+        },
+      ];
+    }
+  );
+
+  // Všetky budúce kontroly, nie len najbližšia — pes môže mať viac naplánovaných.
+  const checkupReminders: UpcomingReminderItem[] = dogVisits.flatMap((v) => {
+    if (!v.nextCheckDate) return [];
+    const rel = relativeDate(v.nextCheckDate);
+    if (!rel || rel.diffDays < 0) return [];
+    return [
+      {
+        key: `exam-${v.id}`,
+        icon: <ExamIcon />,
+        label: t('overview.examCheck'),
+        detail: v.reason || v.clinicName,
+        date: v.nextCheckDate,
+        accentColor: theme.palette.primary.main,
+        onClick: () => setSelectedVisitId(v.id),
+      },
+    ];
+  });
+
+  const upcomingReminders: UpcomingReminderItem[] = [
+    ...vaccineReminders,
     latestDeworming?.nextDueDate
       ? {
           key: 'deworming',
@@ -947,17 +971,7 @@ export default function HealthPassportPage() {
         accentColor: theme.palette.warning.main,
         onClick: () => setSelectedRecord({ id: trt.id, type: 'TREATMENT' as const }),
       })),
-    examVisit?.nextCheckDate
-      ? {
-          key: 'exam',
-          icon: <ExamIcon />,
-          label: t('overview.examCheck'),
-          detail: examVisit.reason || examVisit.clinicName,
-          date: examVisit.nextCheckDate,
-          accentColor: theme.palette.primary.main,
-          onClick: () => setSelectedVisitId(examVisit.id),
-        }
-      : null,
+    ...checkupReminders,
   ].filter((x): x is NonNullable<typeof x> => x !== null);
 
   // ── Render ─────────────────────────────────────────────────────────────────
