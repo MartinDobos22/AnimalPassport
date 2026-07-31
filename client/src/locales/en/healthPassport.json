@@ -679,8 +679,6 @@
     "diet": "Diet",
     "dietNotSet": "Not set",
     "dietActive": "Active diet",
-    "vaccinationOthers_one": "{{type}} + {{count}} more",
-    "vaccinationOthers_other": "{{type}} + {{count}} more",
     "add": "Add",
     "schedule": "Schedule",
     "viewSchedule": "View Schedule",
