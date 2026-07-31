@@ -907,6 +907,8 @@
     "reasonPlaceholder": "napr. alergia",
     "intervalDays": "Interval (dni)",
     "nextDue": "Ďalší termín: {{date}}",
+    "oneOff": "Bez plánovaného opakovania (jednorazová)",
+    "oneOffHint": "Uloží sa iba dátum podania — bez ďalšieho termínu a pripomienky.",
     "dateGiven": "Dátum podania",
     "nextDueDate": "Ďalší termín",
     "category": "Skupina / problém",

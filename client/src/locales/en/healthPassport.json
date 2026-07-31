@@ -875,6 +875,8 @@
     "reasonPlaceholder": "e.g. allergy",
     "intervalDays": "Interval (days)",
     "nextDue": "Next due: {{date}}",
+    "oneOff": "No planned repeat (one-off)",
+    "oneOffHint": "Only the date given is saved — no next due date or reminder.",
     "dateGiven": "Date given",
     "nextDueDate": "Next due",
     "category": "Group / problem",

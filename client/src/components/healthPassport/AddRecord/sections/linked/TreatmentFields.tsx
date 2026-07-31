@@ -1,5 +1,15 @@
 import { useTranslation } from 'react-i18next';
-import { FormControl, InputLabel, MenuItem, Select, Stack, TextField } from '@mui/material';
+import {
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  FormHelperText,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
+  TextField,
+} from '@mui/material';
 
 import type { TreatmentFieldsValues } from '../../formTypes';
 import { formatDate, plusDays } from '../../../utils';
@@ -7,6 +17,8 @@ import {
   TREATMENT_CATEGORY_ORDER,
   TREATMENT_FORM_ORDER,
 } from '../../../../../utils/treatmentCategories';
+
+const DEFAULT_INTERVAL_DAYS = 28;
 
 interface TreatmentFieldsProps {
   values: TreatmentFieldsValues;
@@ -26,6 +38,7 @@ export default function TreatmentFields({
 }: TreatmentFieldsProps) {
   const { t, i18n } = useTranslation('healthPassport');
   const locale = i18n.language === 'en' ? 'en-GB' : 'sk-SK';
+  const isOneOff = values.intervalDays === 0;
   const nextDue =
     baseDate && values.intervalDays > 0
       ? formatDate(plusDays(baseDate, values.intervalDays), locale)
@@ -75,16 +88,30 @@ export default function TreatmentFields({
           </Select>
         </FormControl>
       </Stack>
-      <TextField
-        size="small"
-        type="number"
-        label={t('treatment.intervalDays')}
-        value={values.intervalDays}
-        onChange={(e) => onChange('intervalDays', Number(e.target.value) || 0)}
-        inputProps={{ min: 0, step: 1 }}
-        helperText={t('treatment.nextDue', { date: nextDue })}
-        fullWidth
+      <FormControlLabel
+        control={
+          <Checkbox
+            size="small"
+            checked={isOneOff}
+            onChange={(e) => onChange('intervalDays', e.target.checked ? 0 : DEFAULT_INTERVAL_DAYS)}
+          />
+        }
+        label={t('treatment.oneOff')}
       />
+      {isOneOff ? (
+        <FormHelperText>{t('treatment.oneOffHint')}</FormHelperText>
+      ) : (
+        <TextField
+          size="small"
+          type="number"
+          label={t('treatment.intervalDays')}
+          value={values.intervalDays}
+          onChange={(e) => onChange('intervalDays', Number(e.target.value) || 0)}
+          inputProps={{ min: 0, step: 1 }}
+          helperText={t('treatment.nextDue', { date: nextDue })}
+          fullWidth
+        />
+      )}
     </Stack>
   );
 }
