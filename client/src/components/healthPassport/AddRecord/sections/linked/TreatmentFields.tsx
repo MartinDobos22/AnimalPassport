@@ -1,18 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import {
-  Checkbox,
-  FormControl,
-  FormControlLabel,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  TextField,
-} from '@mui/material';
+import { Checkbox, FormControlLabel, FormHelperText, Stack, TextField } from '@mui/material';
 
 import type { TreatmentFieldsValues } from '../../formTypes';
 import { formatDate, plusDays } from '../../../utils';
+import SearchableSelect from '../../../../ui/SearchableSelect';
 import {
   TREATMENT_CATEGORY_ORDER,
   TREATMENT_FORM_ORDER,
@@ -46,22 +37,16 @@ export default function TreatmentFields({
 
   return (
     <Stack spacing={1.5}>
-      <FormControl size="small" fullWidth>
-        <InputLabel>{t('treatment.category')}</InputLabel>
-        <Select
-          label={t('treatment.category')}
-          value={values.category}
-          onChange={(e) =>
-            onChange('category', e.target.value as TreatmentFieldsValues['category'])
-          }
-        >
-          {TREATMENT_CATEGORY_ORDER.map((c) => (
-            <MenuItem key={c} value={c}>
-              {t(`treatmentCategories.${c}`)}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <SearchableSelect
+        label={t('treatment.category')}
+        value={values.category}
+        options={TREATMENT_CATEGORY_ORDER.map((c) => ({
+          value: c,
+          label: t(`treatmentCategories.${c}`),
+        }))}
+        onChange={(next) => onChange('category', next as TreatmentFieldsValues['category'])}
+        fullWidth
+      />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
         <TextField
           size="small"
@@ -73,20 +58,16 @@ export default function TreatmentFields({
           helperText={errorName}
           fullWidth
         />
-        <FormControl size="small" sx={{ minWidth: 150 }}>
-          <InputLabel>{t('treatment.form')}</InputLabel>
-          <Select
-            label={t('treatment.form')}
-            value={values.form}
-            onChange={(e) => onChange('form', e.target.value as TreatmentFieldsValues['form'])}
-          >
-            {TREATMENT_FORM_ORDER.map((f) => (
-              <MenuItem key={f} value={f}>
-                {t(`treatmentForms.${f}`)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <SearchableSelect
+          label={t('treatment.form')}
+          value={values.form}
+          options={TREATMENT_FORM_ORDER.map((f) => ({
+            value: f,
+            label: t(`treatmentForms.${f}`),
+          }))}
+          onChange={(next) => onChange('form', next as TreatmentFieldsValues['form'])}
+          sx={{ minWidth: 150 }}
+        />
       </Stack>
       <FormControlLabel
         control={

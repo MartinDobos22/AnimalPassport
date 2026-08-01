@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { FormControl, InputLabel, MenuItem, Select, Stack, TextField } from '@mui/material';
+import { Stack, TextField } from '@mui/material';
 
 import type { EctoparasiteRecord } from '../../../../../types/petHealth';
 import type { EctoFieldsValues } from '../../formTypes';
+import SearchableSelect from '../../../../ui/SearchableSelect';
 import { formatDate, plusDays } from '../../../utils';
 
 interface EctoFieldsProps {
@@ -32,18 +33,17 @@ export default function EctoFields({ values, baseDate, errorProduct, onChange }:
           helperText={errorProduct}
           fullWidth
         />
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>{t('ectoparasite.form')}</InputLabel>
-          <Select
-            label={t('ectoparasite.form')}
-            value={values.form}
-            onChange={(e) => onChange('form', e.target.value as EctoparasiteRecord['form'])}
-          >
-            <MenuItem value="TABLET">{t('ectoparasite.formTablet')}</MenuItem>
-            <MenuItem value="SPOT_ON">{t('ectoparasite.formSpotOn')}</MenuItem>
-            <MenuItem value="COLLAR">{t('ectoparasite.formCollar')}</MenuItem>
-          </Select>
-        </FormControl>
+        <SearchableSelect
+          label={t('ectoparasite.form')}
+          value={values.form}
+          options={[
+            { value: 'TABLET', label: t('ectoparasite.formTablet') },
+            { value: 'SPOT_ON', label: t('ectoparasite.formSpotOn') },
+            { value: 'COLLAR', label: t('ectoparasite.formCollar') },
+          ]}
+          onChange={(next) => onChange('form', next as EctoparasiteRecord['form'])}
+          sx={{ minWidth: 160 }}
+        />
       </Stack>
       <TextField
         size="small"

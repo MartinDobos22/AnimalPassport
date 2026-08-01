@@ -8,7 +8,6 @@ import {
   DialogActions,
   DialogContent,
   IconButton,
-  MenuItem,
   Stack,
   TextField,
   Typography,
@@ -25,6 +24,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ExamResult, VetVisitRecord } from '../../types/petHealth';
 import AiFormattedText from '../AiFormattedText';
+import SearchableSelect from '../ui/SearchableSelect';
 
 const EXAM_RESULTS: ExamResult[] = ['NORMAL', 'ABNORMAL', 'INCONCLUSIVE'];
 
@@ -197,22 +197,15 @@ export default function VisitDetailDialog({
                   onChange={(e) => setDraft((p) => ({ ...p, nextCheckDate: e.target.value }))}
                   size="small"
                 />
-                <TextField
-                  select
+                <SearchableSelect<ExamResult | ''>
                   label={t('detail.examResult')}
                   value={draft.examResult}
-                  onChange={(e) =>
-                    setDraft((p) => ({ ...p, examResult: e.target.value as ExamResult | '' }))
-                  }
-                  size="small"
-                >
-                  <MenuItem value="">{t('examResults.none')}</MenuItem>
-                  {EXAM_RESULTS.map((r) => (
-                    <MenuItem key={r} value={r}>
-                      {t(`examResults.${r}`)}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                  options={[
+                    { value: '', label: t('examResults.none') },
+                    ...EXAM_RESULTS.map((r) => ({ value: r, label: t(`examResults.${r}`) })),
+                  ]}
+                  onChange={(next) => setDraft((p) => ({ ...p, examResult: next }))}
+                />
               </Box>
               <TextField
                 label={t('detail.visitReason')}

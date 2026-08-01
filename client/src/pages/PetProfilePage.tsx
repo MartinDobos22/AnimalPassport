@@ -35,6 +35,7 @@ import FeatureIntro from '../components/FeatureIntro';
 import PageContainer from '../components/ui/PageContainer';
 import PageHeader from '../components/ui/PageHeader';
 import SpeciesSelect from '../components/SpeciesSelect';
+import SearchableSelect from '../components/ui/SearchableSelect';
 import { usePetProfiles } from '../hooks/usePetProfiles';
 import { useHealthData } from '../hooks/useHealthData';
 import type { PetProfile, AnimalSize, AnimalLifeStage, ActivityLevel } from '../types';
@@ -668,27 +669,26 @@ export default function PetProfilePage() {
                   <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
                     {c.title}
                   </Typography>
-                  <TextField
-                    select
-                    size="small"
+                  <SearchableSelect
                     label={t('profiles.conditionStatus')}
                     value={c.status ?? 'MONITORED'}
-                    onChange={(e) =>
+                    options={[
+                      { value: 'STABLE', label: t('conditionStatuses.STABLE') },
+                      { value: 'MONITORED', label: t('conditionStatuses.MONITORED') },
+                      { value: 'ACTIVE', label: t('conditionStatuses.ACTIVE') },
+                    ]}
+                    onChange={(next) =>
                       setForm({
                         ...form,
                         chronicConditions: (form.chronicConditions ?? []).map((x) =>
                           x.id === c.id
-                            ? { ...x, status: e.target.value as NonNullable<typeof x.status> }
+                            ? { ...x, status: next as NonNullable<typeof x.status> }
                             : x
                         ),
                       })
                     }
                     sx={{ minWidth: 150 }}
-                  >
-                    <MenuItem value="STABLE">{t('conditionStatuses.STABLE')}</MenuItem>
-                    <MenuItem value="MONITORED">{t('conditionStatuses.MONITORED')}</MenuItem>
-                    <MenuItem value="ACTIVE">{t('conditionStatuses.ACTIVE')}</MenuItem>
-                  </TextField>
+                  />
                   <IconButton
                     aria-label={tCommon('actions.delete')}
                     onClick={() =>
