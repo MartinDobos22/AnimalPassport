@@ -4,11 +4,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  FormControl,
   IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
   Stack,
   TextField,
   Typography,
@@ -28,6 +24,7 @@ import type {
   ExpenseRecord,
   ExpenseCategory,
 } from '../../types/petHealth';
+import SearchableSelect from '../ui/SearchableSelect';
 import { TIMELINE_ICON_MAP, TIMELINE_TYPE_META } from './constants.ts';
 import { today } from './utils.ts';
 import { VACCINE_TYPE_ORDER } from '../../utils/vaccineTypes';
@@ -330,22 +327,18 @@ export default function TimelineRecordDetailDialog({
             onChange={(e) => setVacDraft((p) => ({ ...p, name: e.target.value }))}
             size="small"
           />
-          <FormControl size="small" fullWidth>
-            <InputLabel>{t('detail.vaccineType')}</InputLabel>
-            <Select
-              label={t('detail.vaccineType')}
-              value={vacDraft.type}
-              onChange={(e) =>
-                setVacDraft((p) => ({ ...p, type: e.target.value as VaccinationRecord['type'] }))
-              }
-            >
-              {VACCINE_TYPE_ORDER.map((type) => (
-                <MenuItem key={type} value={type}>
-                  {t(`vaccineTypes.${type}`)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <SearchableSelect
+            label={t('detail.vaccineType')}
+            value={vacDraft.type}
+            options={VACCINE_TYPE_ORDER.map((type) => ({
+              value: type,
+              label: t(`vaccineTypes.${type}`),
+            }))}
+            onChange={(next) =>
+              setVacDraft((p) => ({ ...p, type: next as VaccinationRecord['type'] }))
+            }
+            fullWidth
+          />
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
             <TextField
               label={t('detail.dateApplied')}
@@ -496,25 +489,18 @@ export default function TimelineRecordDetailDialog({
     if (state.type === 'TREATMENT') {
       return editing ? (
         <Stack spacing={1.5}>
-          <FormControl size="small" fullWidth>
-            <InputLabel>{t('treatment.category')}</InputLabel>
-            <Select
-              label={t('treatment.category')}
-              value={treatDraft.category}
-              onChange={(e) =>
-                setTreatDraft((p) => ({
-                  ...p,
-                  category: e.target.value as TreatDraft['category'],
-                }))
-              }
-            >
-              {TREATMENT_CATEGORY_ORDER.map((c) => (
-                <MenuItem key={c} value={c}>
-                  {t(`treatmentCategories.${c}`)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <SearchableSelect
+            label={t('treatment.category')}
+            value={treatDraft.category}
+            options={TREATMENT_CATEGORY_ORDER.map((c) => ({
+              value: c,
+              label: t(`treatmentCategories.${c}`),
+            }))}
+            onChange={(next) =>
+              setTreatDraft((p) => ({ ...p, category: next as TreatDraft['category'] }))
+            }
+            fullWidth
+          />
           <TextField
             label={t('treatment.name')}
             placeholder={t('treatment.namePlaceholder')}
@@ -522,22 +508,16 @@ export default function TimelineRecordDetailDialog({
             onChange={(e) => setTreatDraft((p) => ({ ...p, name: e.target.value }))}
             size="small"
           />
-          <FormControl size="small" fullWidth>
-            <InputLabel>{t('treatment.form')}</InputLabel>
-            <Select
-              label={t('treatment.form')}
-              value={treatDraft.form}
-              onChange={(e) =>
-                setTreatDraft((p) => ({ ...p, form: e.target.value as TreatDraft['form'] }))
-              }
-            >
-              {TREATMENT_FORM_ORDER.map((f) => (
-                <MenuItem key={f} value={f}>
-                  {t(`treatmentForms.${f}`)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <SearchableSelect
+            label={t('treatment.form')}
+            value={treatDraft.form}
+            options={TREATMENT_FORM_ORDER.map((f) => ({
+              value: f,
+              label: t(`treatmentForms.${f}`),
+            }))}
+            onChange={(next) => setTreatDraft((p) => ({ ...p, form: next as TreatDraft['form'] }))}
+            fullWidth
+          />
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
             <TextField
               label={t('treatment.dateGiven')}
@@ -614,20 +594,19 @@ export default function TimelineRecordDetailDialog({
             onChange={(e) => setEctoDraft((p) => ({ ...p, productName: e.target.value }))}
             size="small"
           />
-          <FormControl size="small" fullWidth>
-            <InputLabel>{t('detail.form')}</InputLabel>
-            <Select
-              label={t('detail.form')}
-              value={ectoDraft.form}
-              onChange={(e) =>
-                setEctoDraft((p) => ({ ...p, form: e.target.value as EctoparasiteRecord['form'] }))
-              }
-            >
-              <MenuItem value="TABLET">{t('detail.formTablet')}</MenuItem>
-              <MenuItem value="SPOT_ON">{t('detail.formSpotOn')}</MenuItem>
-              <MenuItem value="COLLAR">{t('detail.formCollar')}</MenuItem>
-            </Select>
-          </FormControl>
+          <SearchableSelect
+            label={t('detail.form')}
+            value={ectoDraft.form}
+            options={[
+              { value: 'TABLET', label: t('detail.formTablet') },
+              { value: 'SPOT_ON', label: t('detail.formSpotOn') },
+              { value: 'COLLAR', label: t('detail.formCollar') },
+            ]}
+            onChange={(next) =>
+              setEctoDraft((p) => ({ ...p, form: next as EctoparasiteRecord['form'] }))
+            }
+            fullWidth
+          />
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
             <TextField
               label={t('detail.dateApplied')}
@@ -807,23 +786,22 @@ export default function TimelineRecordDetailDialog({
               size="small"
             />
           </Box>
-          <FormControl size="small" fullWidth>
-            <InputLabel>{t('detail.rating')}</InputLabel>
-            <Select
-              label={t('detail.rating')}
-              value={dietDraft.suitabilityStatus}
-              onChange={(e) =>
-                setDietDraft((p) => ({
-                  ...p,
-                  suitabilityStatus: e.target.value as DietDraft['suitabilityStatus'],
-                }))
-              }
-            >
-              <MenuItem value="SUITABLE">{t('detail.suitableSuitable')}</MenuItem>
-              <MenuItem value="RISKY">{t('detail.suitableRisky')}</MenuItem>
-              <MenuItem value="UNSUITABLE">{t('detail.suitableUnsuitable')}</MenuItem>
-            </Select>
-          </FormControl>
+          <SearchableSelect
+            label={t('detail.rating')}
+            value={dietDraft.suitabilityStatus}
+            options={[
+              { value: 'SUITABLE', label: t('detail.suitableSuitable') },
+              { value: 'RISKY', label: t('detail.suitableRisky') },
+              { value: 'UNSUITABLE', label: t('detail.suitableUnsuitable') },
+            ]}
+            onChange={(next) =>
+              setDietDraft((p) => ({
+                ...p,
+                suitabilityStatus: next as DietDraft['suitabilityStatus'],
+              }))
+            }
+            fullWidth
+          />
           <TextField
             label={t('detail.reaction')}
             value={dietDraft.reactionNotes}
@@ -890,21 +868,20 @@ export default function TimelineRecordDetailDialog({
               size="small"
             />
           </Box>
-          <FormControl size="small" fullWidth>
-            <InputLabel>{t('detail.category')}</InputLabel>
-            <Select
-              label={t('detail.category')}
-              value={expDraft.category}
-              onChange={(e) =>
-                setExpDraft((p) => ({ ...p, category: e.target.value as ExpenseCategory }))
-              }
-            >
-              <MenuItem value="VET_VISIT">{t('detail.expCategoryVetVisit')}</MenuItem>
-              <MenuItem value="MEDICATION">{t('detail.expCategoryMedication')}</MenuItem>
-              <MenuItem value="FOOD">{t('detail.expCategoryFood')}</MenuItem>
-              <MenuItem value="OTHER">{t('detail.expCategoryOther')}</MenuItem>
-            </Select>
-          </FormControl>
+          <SearchableSelect
+            label={t('detail.category')}
+            value={expDraft.category}
+            options={[
+              { value: 'VET_VISIT', label: t('detail.expCategoryVetVisit') },
+              { value: 'MEDICATION', label: t('detail.expCategoryMedication') },
+              { value: 'FOOD', label: t('detail.expCategoryFood') },
+              { value: 'OTHER', label: t('detail.expCategoryOther') },
+            ]}
+            onChange={(next) =>
+              setExpDraft((p) => ({ ...p, category: next as ExpenseCategory }))
+            }
+            fullWidth
+          />
           <TextField
             label={t('detail.note')}
             value={expDraft.note}
