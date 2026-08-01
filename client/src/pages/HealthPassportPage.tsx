@@ -1002,7 +1002,9 @@ export default function HealthPassportPage() {
         accentColor: theme.palette.success.main,
         eyebrow: t('overview.vaccination'),
         title: t(`vaccineTypes.${type}`),
-        subtitle: t('detail.last', { date: formatDateShort(r.dateApplied) }),
+        subtitle: r.validUntil
+          ? t('overviewCard.dueDate', { date: formatDateShort(r.validUntil) })
+          : t('detail.last', { date: formatDateShort(r.dateApplied) }),
         ...dueMeta(
           r.validUntil,
           30,
@@ -1025,7 +1027,9 @@ export default function HealthPassportPage() {
         accentColor: theme.palette.secondary.main,
         eyebrow: t('overview.deworming'),
         title: latestDeworming.productName,
-        subtitle: t('detail.last', { date: formatDateShort(latestDeworming.dateGiven) }),
+        subtitle: latestDeworming.nextDueDate
+          ? t('overviewCard.dueDate', { date: formatDateShort(latestDeworming.nextDueDate) })
+          : t('detail.last', { date: formatDateShort(latestDeworming.dateGiven) }),
         ...dueMeta(latestDeworming.nextDueDate, 7, interval),
         onOpen: () => setSelectedRecord({ id: latestDeworming.id, type: 'DEWORMING' }),
         onHistory: () => setHistoryCategory('DEWORMING'),
@@ -1044,7 +1048,9 @@ export default function HealthPassportPage() {
         accentColor: theme.palette.info.main,
         eyebrow: t('overview.ecto'),
         title: latestEcto.productName,
-        subtitle: t('detail.last', { date: formatDateShort(latestEcto.dateGiven) }),
+        subtitle: latestEcto.nextDueDate
+          ? t('overviewCard.dueDate', { date: formatDateShort(latestEcto.nextDueDate) })
+          : t('detail.last', { date: formatDateShort(latestEcto.dateGiven) }),
         ...dueMeta(latestEcto.nextDueDate, 7, interval),
         onOpen: () => setSelectedRecord({ id: latestEcto.id, type: 'ECTOPARASITE' }),
         onHistory: () => setHistoryCategory('ECTOPARASITE'),
@@ -1060,7 +1066,9 @@ export default function HealthPassportPage() {
         accentColor: theme.palette.warning.main,
         eyebrow: `${t('overview.treatment')} · ${t(`treatmentCategories.${trt.category}`)}`,
         title: trt.name,
-        subtitle: t('detail.last', { date: formatDateShort(trt.dateGiven) }),
+        subtitle: trt.nextDueDate
+          ? t('overviewCard.dueDate', { date: formatDateShort(trt.nextDueDate) })
+          : t('detail.last', { date: formatDateShort(trt.dateGiven) }),
         ...dueMeta(trt.nextDueDate, 7, trt.intervalDays),
         onOpen: () => setSelectedRecord({ id: trt.id, type: 'TREATMENT' }),
         onHistory: () => setHistoryCategory('TREATMENT'),

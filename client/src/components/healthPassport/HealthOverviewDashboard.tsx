@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, ButtonBase, Card, Stack, Typography, alpha, useTheme } from '@mui/material';
+import { Box, ButtonBase, Card, Chip, Stack, Typography, alpha, useTheme } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
 import HealthTile, { type HealthMetricTile, type HealthTileSection } from './HealthTile';
 
 type FilterKey = 'ALL' | HealthTileSection;
@@ -15,31 +16,43 @@ export default function HealthOverviewDashboard({ metrics, onAdd }: Props) {
   const { t } = useTranslation('healthPassport');
   const theme = useTheme();
   const [filter, setFilter] = useState<FilterKey>('ALL');
+  const [hiddenIds, setHiddenIds] = useLocalStorage<string[]>(
+    'granule-check-hidden-overview-tiles',
+    []
+  );
+  const hide = (id: string) => setHiddenIds((prev) => [...new Set([...prev, id])]);
+  const restore = (id: string) => setHiddenIds((prev) => prev.filter((x) => x !== id));
+
+  const shown = useMemo(() => metrics.filter((m) => !hiddenIds.includes(m.id)), [metrics, hiddenIds]);
+  const hiddenMetrics = useMemo(
+    () => metrics.filter((m) => hiddenIds.includes(m.id)),
+    [metrics, hiddenIds]
+  );
 
   const counts = useMemo(() => {
     const base: Record<FilterKey, number> = {
-      ALL: metrics.length,
+      ALL: shown.length,
       PREVENTIVE: 0,
       CONDITION: 0,
       EXAM: 0,
     };
-    for (const m of metrics) base[m.section] += 1;
+    for (const m of shown) base[m.section] += 1;
     return base;
-  }, [metrics]);
+  }, [shown]);
 
   const summary = useMemo(() => {
     let overdue = 0;
     let soon = 0;
-    for (const m of metrics) {
+    for (const m of shown) {
       if (m.state?.tone === 'error') overdue += 1;
       else if (m.state?.tone === 'warning' || m.state?.tone === 'info') soon += 1;
     }
     return { overdue, soon };
-  }, [metrics]);
+  }, [shown]);
 
   const visible = useMemo(
-    () => (filter === 'ALL' ? metrics : metrics.filter((m) => m.section === filter)),
-    [metrics, filter]
+    () => (filter === 'ALL' ? shown : shown.filter((m) => m.section === filter)),
+    [shown, filter]
   );
 
   const filters: { key: FilterKey; label: string }[] = [
@@ -114,7 +127,7 @@ export default function HealthOverviewDashboard({ metrics, onAdd }: Props) {
         }}
       >
         {visible.map((metric) => (
-          <HealthTile key={metric.id} metric={metric} />
+          <HealthTile key={metric.id} metric={{ ...metric, onHide: () => hide(metric.id) }} />
         ))}
 
         {onAdd && (
@@ -160,6 +173,36 @@ export default function HealthOverviewDashboard({ metrics, onAdd }: Props) {
           </ButtonBase>
         )}
       </Box>
+
+      {hiddenMetrics.length > 0 && (
+        <Box sx={{ mt: 2 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+            }}
+          >
+            {t('overviewCard.hidden')} · {hiddenMetrics.length}
+          </Typography>
+          <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 1 }}>
+            {hiddenMetrics.map((m) => (
+              <Chip
+                key={m.id}
+                label={m.title}
+                onClick={() => restore(m.id)}
+                onDelete={() => restore(m.id)}
+                deleteIcon={<AddIcon />}
+                size="small"
+                variant="outlined"
+                title={t('overviewCard.restore')}
+              />
+            ))}
+          </Stack>
+        </Box>
+      )}
     </Card>
   );
 }

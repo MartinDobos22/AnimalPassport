@@ -11,7 +11,10 @@ import {
   alpha,
   useTheme,
 } from '@mui/material';
-import { HistoryOutlined as HistoryIcon } from '@mui/icons-material';
+import {
+  HistoryOutlined as HistoryIcon,
+  VisibilityOffOutlined as HideIcon,
+} from '@mui/icons-material';
 import type { Theme } from '@mui/material/styles';
 
 export type HealthTileSection = 'PREVENTIVE' | 'CONDITION' | 'EXAM';
@@ -37,6 +40,8 @@ export interface HealthMetricTile {
   onOpen?: () => void;
   /** Optional top-right affordance — e.g. per-category record history. */
   onHistory?: () => void;
+  /** Hide this tile from the overview (the underlying record is kept). */
+  onHide?: () => void;
 }
 
 function toneColor(theme: Theme, tone: HealthTileTone): string {
@@ -61,7 +66,7 @@ interface Props {
 export default function HealthTile({ metric }: Props) {
   const theme = useTheme();
   const { t } = useTranslation('healthPassport');
-  const { icon, accentColor, eyebrow, title, subtitle, state, progress, onOpen, onHistory } =
+  const { icon, accentColor, eyebrow, title, subtitle, state, progress, onOpen, onHistory, onHide } =
     metric;
   const stateColor = state ? toneColor(theme, state.tone) : accentColor;
 
@@ -73,9 +78,9 @@ export default function HealthTile({ metric }: Props) {
     }
   };
 
-  const handleHistory = (e: MouseEvent<HTMLButtonElement>) => {
+  const stop = (fn?: () => void) => (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    onHistory?.();
+    fn?.();
   };
 
   return (
@@ -128,18 +133,32 @@ export default function HealthTile({ metric }: Props) {
         >
           {icon}
         </Box>
-        {onHistory && (
-          <Tooltip title={t('history.button')}>
-            <IconButton
-              size="small"
-              onClick={handleHistory}
-              aria-label={t('history.button')}
-              sx={{ color: 'text.secondary', mt: -0.5, mr: -0.5 }}
-            >
-              <HistoryIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
-        )}
+        <Stack direction="row" sx={{ mt: -0.5, mr: -0.5 }}>
+          {onHistory && (
+            <Tooltip title={t('history.button')}>
+              <IconButton
+                size="small"
+                onClick={stop(onHistory)}
+                aria-label={t('history.button')}
+                sx={{ color: 'text.secondary' }}
+              >
+                <HistoryIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+          )}
+          {onHide && (
+            <Tooltip title={t('overviewCard.hideTile')}>
+              <IconButton
+                size="small"
+                onClick={stop(onHide)}
+                aria-label={t('overviewCard.hideTile')}
+                sx={{ color: 'text.secondary' }}
+              >
+                <HideIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Stack>
       </Stack>
 
       <Box sx={{ minWidth: 0 }}>
