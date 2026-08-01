@@ -13,6 +13,7 @@ export type VaccineType =
 export type ValidityStatus = 'VALID' | 'EXPIRING_SOON' | 'EXPIRED' | 'UNKNOWN';
 export type EctoForm = 'TABLET' | 'SPOT_ON' | 'COLLAR';
 export type ExpenseCategory = 'VET_VISIT' | 'MEDICATION' | 'FOOD' | 'OTHER';
+export type ExamResult = 'NORMAL' | 'ABNORMAL' | 'INCONCLUSIVE';
 export type TimelineType =
   | 'VACCINATION'
   | 'DEWORMING'
@@ -128,6 +129,7 @@ export interface VetVisitRecord {
   nextCheckDate?: string;
   aiExtractedText?: string;
   aiExamType?: string;
+  examResult?: ExamResult;
   medicationIds: string[];
   attachments?: AttachmentRef[];
 }

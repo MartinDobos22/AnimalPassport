@@ -427,6 +427,7 @@ export default function HealthPassportPage() {
           diagnosis: draft.diagnosis.trim() || undefined,
           recommendations: draft.recommendations.trim() || undefined,
           nextCheckDate: draft.nextCheckDate || undefined,
+          examResult: draft.examResult || undefined,
         });
         setSnack({ open: true, msg: tCommon('saved'), severity: 'success' });
       } catch {
@@ -1067,7 +1068,9 @@ export default function HealthPassportPage() {
     }
 
     // Choroby — chronické stavy z profilu
+    const conditionTone = { STABLE: 'success', MONITORED: 'neutral', ACTIVE: 'error' } as const;
     for (const cond of selectedDog?.chronicConditions ?? []) {
+      const status = cond.status ?? 'MONITORED';
       items.push({
         id: `cond-${cond.id}`,
         section: 'CONDITION',
@@ -1076,29 +1079,53 @@ export default function HealthPassportPage() {
         eyebrow: t('overviewCard.sectionCondition'),
         title: cond.title,
         subtitle: cond.description || undefined,
-        state: { label: t('overviewCard.stateChronic'), tone: 'neutral' },
+        state: { label: t(`conditionStatuses.${status}`), tone: conditionTone[status] },
         onOpen: () => navigate('/profily'),
       });
     }
 
-    // Vyšetrenia — najnovšie návštevy
-    const recentVisits = [...dogVisits]
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, EXAM_TILE_LIMIT);
-    for (const v of recentVisits) {
+    // Vyšetrenia — zoskupené podľa typu (najnovšie per typ), netypované samostatne
+    const examState = (v: VetVisitRecord): NonNullable<HealthMetricTile['state']> => {
+      if (v.examResult === 'NORMAL') return { label: t('examResults.NORMAL'), tone: 'success' };
+      if (v.examResult === 'ABNORMAL') return { label: t('examResults.ABNORMAL'), tone: 'warning' };
+      if (v.examResult === 'INCONCLUSIVE')
+        return { label: t('examResults.INCONCLUSIVE'), tone: 'neutral' };
       const rel = v.nextCheckDate ? relativeDate(v.nextCheckDate) : null;
-      const upcoming = rel !== null && rel.diffDays >= 0;
+      if (rel !== null && rel.diffDays >= 0) return { label: rel.text, tone: 'info' };
+      return { label: t('overviewCard.stateDone'), tone: 'neutral' };
+    };
+
+    const byType = new Map<string, VetVisitRecord[]>();
+    const untyped: VetVisitRecord[] = [];
+    for (const v of dogVisits) {
+      const type = (v.aiExamType ?? '').trim();
+      if (type) byType.set(type, [...(byType.get(type) ?? []), v]);
+      else untyped.push(v);
+    }
+    const examEntries = [
+      ...[...byType.entries()].map(([type, arr]) => {
+        const latest = [...arr].sort((a, b) => b.date.localeCompare(a.date))[0];
+        return { v: latest, title: type, count: arr.length };
+      }),
+      ...untyped.map((v) => ({ v, title: v.reason || t('overview.examCheck'), count: 1 })),
+    ]
+      .sort((a, b) => b.v.date.localeCompare(a.v.date))
+      .slice(0, EXAM_TILE_LIMIT);
+
+    for (const { v, title, count } of examEntries) {
+      const meta =
+        count > 1
+          ? t('overviewCard.examCount', { count })
+          : v.clinicName || formatDateShort(v.date);
       items.push({
         id: `visit-${v.id}`,
         section: 'EXAM',
         icon: <ExamIcon />,
         accentColor: theme.palette.primary.main,
         eyebrow: t('overviewCard.sectionExam'),
-        title: v.aiExamType || v.reason || t('overview.examCheck'),
-        subtitle: `${formatDateShort(v.date)}${v.clinicName ? ` · ${v.clinicName}` : ''}`,
-        state: upcoming
-          ? { label: rel.text, tone: 'info' }
-          : { label: t('overviewCard.stateDone'), tone: 'neutral' },
+        title,
+        subtitle: `${formatDateShort(v.date)} · ${meta}`,
+        state: examState(v),
         onOpen: () => setSelectedVisitId(v.id),
       });
     }

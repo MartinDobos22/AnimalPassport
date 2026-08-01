@@ -662,20 +662,47 @@ export default function PetProfilePage() {
                 {t('actions.add', { ns: 'common' })}
               </Button>
             </Stack>
-            <Stack direction="row" spacing={1} flexWrap="wrap">
+            <Stack spacing={1}>
               {(form.chronicConditions ?? []).map((c) => (
-                <Chip
-                  key={c.id}
-                  label={c.title}
-                  onDelete={() =>
-                    setForm({
-                      ...form,
-                      chronicConditions: (form.chronicConditions ?? []).filter(
-                        (x) => x.id !== c.id
-                      ),
-                    })
-                  }
-                />
+                <Stack key={c.id} direction="row" spacing={1} alignItems="center">
+                  <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
+                    {c.title}
+                  </Typography>
+                  <TextField
+                    select
+                    size="small"
+                    label={t('profiles.conditionStatus')}
+                    value={c.status ?? 'MONITORED'}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        chronicConditions: (form.chronicConditions ?? []).map((x) =>
+                          x.id === c.id
+                            ? { ...x, status: e.target.value as NonNullable<typeof x.status> }
+                            : x
+                        ),
+                      })
+                    }
+                    sx={{ minWidth: 150 }}
+                  >
+                    <MenuItem value="STABLE">{t('conditionStatuses.STABLE')}</MenuItem>
+                    <MenuItem value="MONITORED">{t('conditionStatuses.MONITORED')}</MenuItem>
+                    <MenuItem value="ACTIVE">{t('conditionStatuses.ACTIVE')}</MenuItem>
+                  </TextField>
+                  <IconButton
+                    aria-label={tCommon('actions.delete')}
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        chronicConditions: (form.chronicConditions ?? []).filter(
+                          (x) => x.id !== c.id
+                        ),
+                      })
+                    }
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
               ))}
             </Stack>
 

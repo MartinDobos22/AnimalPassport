@@ -107,6 +107,7 @@
     "expCategoryOther": "Other",
     "vetName": "Vet",
     "nextCheck": "Next check",
+    "examResult": "Exam result",
     "visitReason": "Visit reason",
     "attachments": "Attachments",
     "aiSource": "AI record source",
@@ -568,6 +569,7 @@
     "healthConditions": "Health conditions",
     "chronicTitle": "Chronic diagnoses",
     "conditionLabel": "Diagnosis name",
+    "conditionStatus": "Status",
     "proceduresTitle": "Procedures / surgeries",
     "procedurePlaceholder": "Name + date (e.g. neutering 2024-02-10)",
     "notes": "Notes — what to watch out for",
@@ -651,14 +653,26 @@
     "filterExam": "Exams",
     "sectionCondition": "Chronic",
     "sectionExam": "Exam",
-    "stateChronic": "Monitored",
     "stateDone": "Done",
+    "examCount_one": "{{count}} record",
+    "examCount_other": "{{count}} records",
     "addTitle": "Add record",
     "addSubtitle": "A new tile appears here",
     "summaryOverdue_one": "{{count}} item overdue",
     "summaryOverdue_other": "{{count}} items overdue",
     "summarySoon_one": "{{count}} item due soon",
     "summarySoon_other": "{{count}} items due soon"
+  },
+  "conditionStatuses": {
+    "STABLE": "Stable",
+    "MONITORED": "Monitored",
+    "ACTIVE": "Active"
+  },
+  "examResults": {
+    "none": "Not set",
+    "NORMAL": "Normal",
+    "ABNORMAL": "Abnormal",
+    "INCONCLUSIVE": "Inconclusive"
   },
   "insight": {
     "title": "Pawly Insight",
