@@ -47,6 +47,7 @@ import {
 } from '@mui/icons-material';
 import PageContainer from '../../components/ui/PageContainer';
 import SectionCardHeader from '../../components/ui/SectionCardHeader';
+import SearchableSelect from '../../components/ui/SearchableSelect';
 import { ANIMAL_SPECIES, type AnimalType } from '../../constants/animalSpecies';
 import ArticleRichEditor from '../../components/admin/articleEditor/ArticleRichEditor';
 import RelatedArticlesPicker from '../../components/admin/articleEditor/RelatedArticlesPicker';
@@ -612,30 +613,26 @@ export default function AdminArticleEditPage() {
                     size="small"
                   />
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={theme.spacing(2)}>
-                    <TextField
-                      select
+                    <SearchableSelect
                       label="Kategória"
                       value={form.category}
-                      onChange={(e) => set('category', e.target.value as AdminArticle['category'])}
-                      size="small"
+                      options={[
+                        { value: 'krmivo', label: 'Krmivo a výživa' },
+                        { value: 'zdravie', label: 'Zdravie a prevencia' },
+                      ]}
+                      onChange={(next) => set('category', next as AdminArticle['category'])}
                       fullWidth
-                    >
-                      <MenuItem value="krmivo">Krmivo a výživa</MenuItem>
-                      <MenuItem value="zdravie">Zdravie a prevencia</MenuItem>
-                    </TextField>
-                    <TextField
-                      select
+                    />
+                    <SearchableSelect
                       label="CTA cieľ"
                       value={form.ctaIntent}
-                      onChange={(e) =>
-                        set('ctaIntent', e.target.value as AdminArticle['ctaIntent'])
-                      }
-                      size="small"
+                      options={[
+                        { value: 'food', label: 'Analýza krmiva' },
+                        { value: 'passport', label: 'Zdravotný pas' },
+                      ]}
+                      onChange={(next) => set('ctaIntent', next as AdminArticle['ctaIntent'])}
                       fullWidth
-                    >
-                      <MenuItem value="food">Analýza krmiva</MenuItem>
-                      <MenuItem value="passport">Zdravotný pas</MenuItem>
-                    </TextField>
+                    />
                   </Stack>
                   <Autocomplete
                     multiple

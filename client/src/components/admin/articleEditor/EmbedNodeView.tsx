@@ -1,17 +1,9 @@
-import {
-  Box,
-  IconButton,
-  MenuItem,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-  useTheme,
-} from '@mui/material';
+import { Box, IconButton, Stack, TextField, Tooltip, Typography, useTheme } from '@mui/material';
 import { DeleteOutline as DeleteIcon } from '@mui/icons-material';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { detectEmbedProvider, toEmbedSrc } from '../../../utils/embedUrl';
 import type { EmbedProvider } from '../../../content/poradna/types';
+import SearchableSelect from '../../ui/SearchableSelect';
 
 const PROVIDER_LABELS: Record<EmbedProvider, string> = {
   facebook: 'Facebook',
@@ -67,20 +59,16 @@ export default function EmbedNodeView({ node, updateAttributes, deleteNode }: No
             size="small"
             fullWidth
           />
-          <TextField
-            select
+          <SearchableSelect
             label="Sieť"
             value={provider}
-            onChange={(e) => updateAttributes({ provider: e.target.value as EmbedProvider })}
-            size="small"
+            options={(Object.keys(PROVIDER_LABELS) as EmbedProvider[]).map((p) => ({
+              value: p,
+              label: PROVIDER_LABELS[p],
+            }))}
+            onChange={(next) => updateAttributes({ provider: next as EmbedProvider })}
             sx={{ minWidth: theme.spacing(16) }}
-          >
-            {(Object.keys(PROVIDER_LABELS) as EmbedProvider[]).map((p) => (
-              <MenuItem key={p} value={p}>
-                {PROVIDER_LABELS[p]}
-              </MenuItem>
-            ))}
-          </TextField>
+          />
         </Stack>
         {src ? (
           <Box
