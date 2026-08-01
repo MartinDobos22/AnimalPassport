@@ -14,6 +14,7 @@ import {
   Biotech as BiotechIcon,
   Healing as HealingIcon,
   MedicalServices as ExamIcon,
+  MonitorHeart as ConditionIcon,
 } from '@mui/icons-material';
 
 import type {
@@ -33,7 +34,7 @@ import { useHealthData } from '../hooks/useHealthData';
 import { usePetProfiles } from '../hooks/usePetProfiles';
 import { usePetPhotoUpload, validatePetPhotoFile } from '../hooks/usePetPhotoUpload';
 import { useConfirm } from '../hooks/useConfirm';
-import { relativeDate } from '../utils/relativeDate';
+import { relativeDate, formatDateShort } from '../utils/relativeDate';
 import type { VisitBundle } from '../utils/vetVisitHelper';
 
 // Sub-components
@@ -41,8 +42,8 @@ import FeatureIntro from '../components/FeatureIntro';
 import PageContainer from '../components/ui/PageContainer';
 import PassportHero, { type HeroInfoCard } from '../components/healthPassport/PassportHero';
 import PetPhotoAdjustDialog from '../components/PetPhotoAdjustDialog';
-import HealthStatusOverview from '../components/healthPassport/HealthStatusOverview.tsx';
-import { type MetricOption } from '../components/healthPassport/SelectableMetricCard';
+import HealthOverviewDashboard from '../components/healthPassport/HealthOverviewDashboard';
+import type { HealthMetricTile } from '../components/healthPassport/HealthTile';
 import { VACCINE_TYPE_ORDER } from '../utils/vaccineTypes';
 import PawlyInsightCard from '../components/healthPassport/PawlyInsightCard';
 import UpcomingRemindersCard, {
@@ -72,6 +73,9 @@ import {
 // Dosť času objednať sa na preočkovanie; expirácie ďalej v budúcnosti sú na
 // dlaždici Očkovanie a na timeline, nie medzi pripomienkami.
 const VACCINE_REMINDER_HORIZON_DAYS = 60;
+
+// Prehľad je súhrn, nie log — najnovšie vyšetrenia ako dlaždice, zvyšok v histórii/timeline.
+const EXAM_TILE_LIMIT = 6;
 
 export default function HealthPassportPage() {
   const { t, i18n } = useTranslation('healthPassport');
@@ -179,26 +183,6 @@ export default function HealthPassportPage() {
     ? statusByDate(latestDeworming.nextDueDate, 7)
     : 'UNKNOWN';
   const ectoStatus = latestEcto ? statusByDate(latestEcto.nextDueDate, 7) : 'UNKNOWN';
-
-  // Dropdown možnosti pre dlaždice: očkovanie podľa typu (proti čomu), liečba podľa záznamu.
-  const vaccinationOptions: MetricOption[] = VACCINE_TYPE_ORDER.filter((type) =>
-    latestVaccineByType.has(type)
-  ).map((type) => {
-    const r = latestVaccineByType.get(type)!;
-    return {
-      id: r.id,
-      label: t(`vaccineTypes.${type}`),
-      dueDate: r.validUntil,
-      intervalDays: computeIntervalDaysFromDates(r.dateApplied, r.validUntil, 365),
-    };
-  });
-
-  const treatmentOptions: MetricOption[] = dogTreatments.map((trt) => ({
-    id: trt.id,
-    label: `${t(`treatmentCategories.${trt.category}`)} · ${trt.name}`,
-    dueDate: trt.nextDueDate,
-    intervalDays: trt.intervalDays,
-  }));
 
   // ── Timeline ───────────────────────────────────────────────────────────────
   const timeline: TimelineEvent[] = useMemo(() => {
@@ -974,6 +958,164 @@ export default function HealthPassportPage() {
     ...checkupReminders,
   ].filter((x): x is NonNullable<typeof x> => x !== null);
 
+  // ── Dlaždice prehľadu zdravia (preventíva + choroby + vyšetrenia) ────────────
+  // Každý záznam = jedna dlaždica; pole rastie s dátami, mriežka je auto-fill.
+  const overviewMetrics: HealthMetricTile[] = useMemo(() => {
+    const items: HealthMetricTile[] = [];
+
+    const dueMeta = (
+      dueDate: string | undefined,
+      soonDays: number,
+      intervalDays?: number
+    ): { state?: HealthMetricTile['state']; progress?: number } => {
+      if (!dueDate) return {};
+      const status = statusByDate(dueDate, soonDays);
+      const rel = relativeDate(dueDate);
+      let state: HealthMetricTile['state'];
+      if (status === 'EXPIRED') {
+        state = {
+          label: t('status.overdueHeadline', { count: Math.abs(rel?.diffDays ?? 0) }),
+          tone: 'error',
+        };
+      } else if (status === 'EXPIRING_SOON') {
+        state = { label: rel?.text ?? '', tone: 'warning' };
+      } else {
+        state = { label: rel?.text ?? t('status.valid'), tone: 'success' };
+      }
+      let progress: number | undefined;
+      if (intervalDays && intervalDays > 0 && rel) {
+        const used = intervalDays - rel.diffDays;
+        progress = Math.max(0, Math.min(100, (used / intervalDays) * 100));
+      }
+      return { state, progress };
+    };
+
+    // Preventíva — očkovanie po type (proti čomu)
+    for (const type of VACCINE_TYPE_ORDER) {
+      const r = latestVaccineByType.get(type);
+      if (!r) continue;
+      items.push({
+        id: `vax-${r.id}`,
+        section: 'PREVENTIVE',
+        icon: <VaccinesIcon />,
+        accentColor: theme.palette.success.main,
+        eyebrow: t('overview.vaccination'),
+        title: t(`vaccineTypes.${type}`),
+        subtitle: t('detail.last', { date: formatDateShort(r.dateApplied) }),
+        ...dueMeta(
+          r.validUntil,
+          30,
+          computeIntervalDaysFromDates(r.dateApplied, r.validUntil, 365)
+        ),
+        onOpen: () => setSelectedRecord({ id: r.id, type: 'VACCINATION' }),
+        onHistory: () => setHistoryCategory('VACCINATION'),
+      });
+    }
+
+    // Preventíva — odčervenie
+    if (latestDeworming) {
+      const interval =
+        latestDeworming.intervalDays ??
+        computeIntervalDaysFromDates(latestDeworming.dateGiven, latestDeworming.nextDueDate, 90);
+      items.push({
+        id: `dew-${latestDeworming.id}`,
+        section: 'PREVENTIVE',
+        icon: <BiotechIcon />,
+        accentColor: theme.palette.secondary.main,
+        eyebrow: t('overview.deworming'),
+        title: latestDeworming.productName,
+        subtitle: t('detail.last', { date: formatDateShort(latestDeworming.dateGiven) }),
+        ...dueMeta(latestDeworming.nextDueDate, 7, interval),
+        onOpen: () => setSelectedRecord({ id: latestDeworming.id, type: 'DEWORMING' }),
+        onHistory: () => setHistoryCategory('DEWORMING'),
+      });
+    }
+
+    // Preventíva — kliešte/blchy
+    if (latestEcto) {
+      const interval =
+        latestEcto.intervalDays ??
+        computeIntervalDaysFromDates(latestEcto.dateGiven, latestEcto.nextDueDate, 30);
+      items.push({
+        id: `ecto-${latestEcto.id}`,
+        section: 'PREVENTIVE',
+        icon: <DewormingIcon />,
+        accentColor: theme.palette.info.main,
+        eyebrow: t('overview.ecto'),
+        title: latestEcto.productName,
+        subtitle: t('detail.last', { date: formatDateShort(latestEcto.dateGiven) }),
+        ...dueMeta(latestEcto.nextDueDate, 7, interval),
+        onOpen: () => setSelectedRecord({ id: latestEcto.id, type: 'ECTOPARASITE' }),
+        onHistory: () => setHistoryCategory('ECTOPARASITE'),
+      });
+    }
+
+    // Choroby — prebiehajúca liečba (per záznam)
+    for (const trt of dogTreatments) {
+      items.push({
+        id: `trt-${trt.id}`,
+        section: 'CONDITION',
+        icon: <HealingIcon />,
+        accentColor: theme.palette.warning.main,
+        eyebrow: `${t('overview.treatment')} · ${t(`treatmentCategories.${trt.category}`)}`,
+        title: trt.name,
+        subtitle: t('detail.last', { date: formatDateShort(trt.dateGiven) }),
+        ...dueMeta(trt.nextDueDate, 7, trt.intervalDays),
+        onOpen: () => setSelectedRecord({ id: trt.id, type: 'TREATMENT' }),
+        onHistory: () => setHistoryCategory('TREATMENT'),
+      });
+    }
+
+    // Choroby — chronické stavy z profilu
+    for (const cond of selectedDog?.chronicConditions ?? []) {
+      items.push({
+        id: `cond-${cond.id}`,
+        section: 'CONDITION',
+        icon: <ConditionIcon />,
+        accentColor: theme.palette.diet.main,
+        eyebrow: t('overviewCard.sectionCondition'),
+        title: cond.title,
+        subtitle: cond.description || undefined,
+        state: { label: t('overviewCard.stateChronic'), tone: 'neutral' },
+        onOpen: () => navigate('/profily'),
+      });
+    }
+
+    // Vyšetrenia — najnovšie návštevy
+    const recentVisits = [...dogVisits]
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, EXAM_TILE_LIMIT);
+    for (const v of recentVisits) {
+      const rel = v.nextCheckDate ? relativeDate(v.nextCheckDate) : null;
+      const upcoming = rel !== null && rel.diffDays >= 0;
+      items.push({
+        id: `visit-${v.id}`,
+        section: 'EXAM',
+        icon: <ExamIcon />,
+        accentColor: theme.palette.primary.main,
+        eyebrow: t('overviewCard.sectionExam'),
+        title: v.aiExamType || v.reason || t('overview.examCheck'),
+        subtitle: `${formatDateShort(v.date)}${v.clinicName ? ` · ${v.clinicName}` : ''}`,
+        state: upcoming
+          ? { label: rel.text, tone: 'info' }
+          : { label: t('overviewCard.stateDone'), tone: 'neutral' },
+        onOpen: () => setSelectedVisitId(v.id),
+      });
+    }
+
+    return items;
+  }, [
+    latestVaccineByType,
+    latestDeworming,
+    latestEcto,
+    dogTreatments,
+    selectedDog,
+    dogVisits,
+    theme,
+    navigate,
+    t,
+  ]);
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <PageContainer>
@@ -1026,54 +1168,7 @@ export default function HealthPassportPage() {
       </Stack>
 
       {/* ── Status overview ────────────────────────────────────────────────── */}
-      <HealthStatusOverview
-        vaccinationOptions={vaccinationOptions}
-        treatmentOptions={treatmentOptions}
-        dewormingStatus={dewormingStatus}
-        ectoStatus={ectoStatus}
-        dewormingNextDate={latestDeworming?.nextDueDate}
-        dewormingLastDate={latestDeworming?.dateGiven}
-        dewormingIntervalDays={
-          latestDeworming
-            ? (latestDeworming.intervalDays ??
-              computeIntervalDaysFromDates(
-                latestDeworming.dateGiven,
-                latestDeworming.nextDueDate,
-                90
-              ))
-            : undefined
-        }
-        dewormingPreparation={latestDeworming?.productName}
-        ectoNextDate={latestEcto?.nextDueDate}
-        ectoLastDate={latestEcto?.dateGiven}
-        ectoIntervalDays={
-          latestEcto
-            ? (latestEcto.intervalDays ??
-              computeIntervalDaysFromDates(latestEcto.dateGiven, latestEcto.nextDueDate, 30))
-            : undefined
-        }
-        ectoPreparation={latestEcto?.productName}
-        onAddVaccination={() => setWizardOpen(true)}
-        onAddDeworming={() => setWizardOpen(true)}
-        onAddEcto={() => setWizardOpen(true)}
-        onAddTreatment={() => setWizardOpen(true)}
-        onOpenVaccination={(id) => setSelectedRecord({ id, type: 'VACCINATION' })}
-        onOpenDeworming={
-          latestDeworming
-            ? () => setSelectedRecord({ id: latestDeworming.id, type: 'DEWORMING' })
-            : undefined
-        }
-        onOpenEcto={
-          latestEcto
-            ? () => setSelectedRecord({ id: latestEcto.id, type: 'ECTOPARASITE' })
-            : undefined
-        }
-        onOpenTreatment={(id) => setSelectedRecord({ id, type: 'TREATMENT' })}
-        onHistoryVaccination={() => setHistoryCategory('VACCINATION')}
-        onHistoryDeworming={() => setHistoryCategory('DEWORMING')}
-        onHistoryEcto={() => setHistoryCategory('ECTOPARASITE')}
-        onHistoryTreatment={() => setHistoryCategory('TREATMENT')}
-      />
+      <HealthOverviewDashboard metrics={overviewMetrics} onAdd={() => setWizardOpen(true)} />
 
       {/* ── Najbližšie termíny a kontroly (vrátane vyšetrení) ───────────────── */}
       <UpcomingRemindersCard items={upcomingReminders} />

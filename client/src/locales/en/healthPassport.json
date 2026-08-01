@@ -644,7 +644,21 @@
   },
   "overviewCard": {
     "title": "Health Overview",
-    "subtitle": "Key areas at a glance"
+    "subtitle": "Key areas at a glance",
+    "filterAll": "All",
+    "filterPreventive": "Preventive",
+    "filterCondition": "Conditions",
+    "filterExam": "Exams",
+    "sectionCondition": "Chronic",
+    "sectionExam": "Exam",
+    "stateChronic": "Monitored",
+    "stateDone": "Done",
+    "addTitle": "Add record",
+    "addSubtitle": "A new tile appears here",
+    "summaryOverdue_one": "{{count}} item overdue",
+    "summaryOverdue_other": "{{count}} items overdue",
+    "summarySoon_one": "{{count}} item due soon",
+    "summarySoon_other": "{{count}} items due soon"
   },
   "insight": {
     "title": "Pawly Insight",

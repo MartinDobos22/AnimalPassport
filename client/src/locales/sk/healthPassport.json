@@ -661,7 +661,25 @@
   },
   "overviewCard": {
     "title": "Prehľad zdravia",
-    "subtitle": "Kľúčové oblasti na prvý pohľad"
+    "subtitle": "Kľúčové oblasti na prvý pohľad",
+    "filterAll": "Všetko",
+    "filterPreventive": "Preventíva",
+    "filterCondition": "Choroby",
+    "filterExam": "Vyšetrenia",
+    "sectionCondition": "Chronické",
+    "sectionExam": "Vyšetrenie",
+    "stateChronic": "Sledované",
+    "stateDone": "Hotové",
+    "addTitle": "Pridať záznam",
+    "addSubtitle": "Nová dlaždica pribudne sem",
+    "summaryOverdue_one": "{{count}} položka po termíne",
+    "summaryOverdue_few": "{{count}} položky po termíne",
+    "summaryOverdue_many": "{{count}} položiek po termíne",
+    "summaryOverdue_other": "{{count}} položiek po termíne",
+    "summarySoon_one": "{{count}} položka čoskoro",
+    "summarySoon_few": "{{count}} položky čoskoro",
+    "summarySoon_many": "{{count}} položiek čoskoro",
+    "summarySoon_other": "{{count}} položiek čoskoro"
   },
   "insight": {
     "title": "Pawly Insight",
