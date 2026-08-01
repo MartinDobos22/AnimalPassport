@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Alert, Stack } from '@mui/material';
+import { Alert, Box, Stack } from '@mui/material';
 
 import { useManualEntry } from './ManualEntry';
 import VisitBasics from './sections/VisitBasics';
@@ -34,20 +34,29 @@ export default function ManualEntryBody() {
         onChange={(field, value) => dispatch({ type: 'SET_BASICS_FIELD', field, value })}
       />
 
+      <Box
+        sx={{
+          pl: { xs: 1.5, sm: 2 },
+          ml: { xs: 0.5, sm: 1 },
+          borderLeft: '2px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <LinkedRecords
+          values={state.linked}
+          errors={errors}
+          baseDate={state.basics.date}
+          expanded={linkedOpen}
+          onExpand={setLinkedOpen}
+          dispatch={dispatch}
+        />
+      </Box>
+
       <ClinicalNotes
         values={state.clinical}
         expanded={clinicalOpen}
         onExpand={setClinicalOpen}
         onChange={(field, value) => dispatch({ type: 'SET_CLINICAL_FIELD', field, value })}
-      />
-
-      <LinkedRecords
-        values={state.linked}
-        errors={errors}
-        baseDate={state.basics.date}
-        expanded={linkedOpen}
-        onExpand={setLinkedOpen}
-        dispatch={dispatch}
       />
 
       <Expenses

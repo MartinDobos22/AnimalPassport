@@ -62,7 +62,9 @@
     "titleExpense": "Výdavok {{amount}} €",
     "inDays_other": "o {{count}} dní",
     "TREATMENT": "Liečba",
-    "titleTreatment": "Liečba: {{name}}"
+    "titleTreatment": "Liečba: {{name}}",
+    "filterByType": "Typ záznamu",
+    "filterAllTypes": "Všetky typy"
   },
   "detail": {
     "title": "Detail záznamu",

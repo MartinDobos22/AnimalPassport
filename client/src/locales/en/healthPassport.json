@@ -60,7 +60,9 @@
     "titleDiet": "Diet: {{food}}",
     "titleExpense": "Expense {{amount}} €",
     "TREATMENT": "Treatment",
-    "titleTreatment": "Treatment: {{name}}"
+    "titleTreatment": "Treatment: {{name}}",
+    "filterByType": "Record type",
+    "filterAllTypes": "All types"
   },
   "detail": {
     "title": "Record detail",
