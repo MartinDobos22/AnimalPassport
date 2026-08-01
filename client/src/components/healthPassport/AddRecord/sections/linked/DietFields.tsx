@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { FormControl, InputLabel, MenuItem, Select, Stack, TextField } from '@mui/material';
+import { Stack, TextField } from '@mui/material';
 
 import type { DietEntry } from '../../../../../types/petHealth';
 import type { DietFieldsValues } from '../../formTypes';
+import SearchableSelect from '../../../../ui/SearchableSelect';
 
 type Suitability = NonNullable<DietEntry['suitabilityStatus']>;
 
@@ -26,18 +27,17 @@ export default function DietFields({ values, errorFoodName, onChange }: DietFiel
           helperText={errorFoodName}
           fullWidth
         />
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel>{t('diet.suitability')}</InputLabel>
-          <Select
-            label={t('diet.suitability')}
-            value={values.suitabilityStatus}
-            onChange={(e) => onChange('suitabilityStatus', e.target.value as Suitability)}
-          >
-            <MenuItem value="SUITABLE">{t('detail.suitableSuitable')}</MenuItem>
-            <MenuItem value="RISKY">{t('detail.suitableRisky')}</MenuItem>
-            <MenuItem value="UNSUITABLE">{t('detail.suitableUnsuitable')}</MenuItem>
-          </Select>
-        </FormControl>
+        <SearchableSelect
+          label={t('diet.suitability')}
+          value={values.suitabilityStatus}
+          options={[
+            { value: 'SUITABLE', label: t('detail.suitableSuitable') },
+            { value: 'RISKY', label: t('detail.suitableRisky') },
+            { value: 'UNSUITABLE', label: t('detail.suitableUnsuitable') },
+          ]}
+          onChange={(next) => onChange('suitabilityStatus', next as Suitability)}
+          sx={{ minWidth: 200 }}
+        />
       </Stack>
       <TextField
         size="small"
