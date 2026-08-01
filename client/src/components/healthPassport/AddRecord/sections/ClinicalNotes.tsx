@@ -22,6 +22,7 @@ export default function ClinicalNotes({
   return (
     <SectionCard
       title={t('addRecord.clinical.title')}
+      description={t('addRecord.clinical.description')}
       icon={<NotesIcon />}
       collapsible
       expanded={expanded}

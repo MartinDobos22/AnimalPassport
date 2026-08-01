@@ -210,7 +210,8 @@
     "tipSave": "Tip: {{modKey}} + Enter pre uloženie",
     "saveRecord": "Uložiť záznam",
     "clinical": {
-      "title": "Klinický záznam",
+      "title": "Poznámky z vyšetrenia",
+      "description": "Voliteľné. Nález, diagnóza a odporúčania k tejto návšteve — nevytvára ďalší záznam.",
       "findings": "Nález",
       "findingsPlaceholder": "Klinický nález pri vyšetrení…",
       "diagnosis": "Diagnóza",
@@ -377,7 +378,8 @@
     "sexUnknown": "neuvedené"
   },
   "linkedRecords": {
-    "title": "Súvisiace záznamy",
+    "title": "Úkony počas návštevy",
+    "description": "Zapni len to, čo pri návšteve naozaj prebehlo. Každý zapnutý úkon (očkovanie, odčervenie…) vytvorí vlastný samostatný záznam.",
     "vaccination": {
       "label": "Očkovanie",
       "hint": "Pridať vakcínu aplikovanú pri tejto návšteve"

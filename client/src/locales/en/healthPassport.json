@@ -205,7 +205,8 @@
     "tipSave": "Tip: {{modKey}} + Enter to save",
     "saveRecord": "Save record",
     "clinical": {
-      "title": "Clinical record",
+      "title": "Exam notes",
+      "description": "Optional. Findings, diagnosis and recommendations for this visit — doesn't create another record.",
       "findings": "Finding",
       "findingsPlaceholder": "Clinical finding on examination…",
       "diagnosis": "Diagnosis",
@@ -371,7 +372,8 @@
     "sexUnknown": "unknown"
   },
   "linkedRecords": {
-    "title": "Linked records",
+    "title": "Procedures during the visit",
+    "description": "Turn on only what actually happened at the visit. Each item (vaccination, deworming…) creates its own separate record.",
     "vaccination": {
       "label": "Vaccination",
       "hint": "Add a vaccine administered during this visit"
