@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Cropper, { type Area } from 'react-easy-crop';
+import 'react-easy-crop/react-easy-crop.css';
 import {
   Box,
   Button,

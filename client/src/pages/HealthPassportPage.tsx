@@ -31,7 +31,7 @@ import type {
 import { useActivePet } from '../hooks/useActivePet';
 import { useHealthData } from '../hooks/useHealthData';
 import { usePetProfiles } from '../hooks/usePetProfiles';
-import { usePetPhotoUpload } from '../hooks/usePetPhotoUpload';
+import { usePetPhotoUpload, validatePetPhotoFile } from '../hooks/usePetPhotoUpload';
 import { useConfirm } from '../hooks/useConfirm';
 import { relativeDate } from '../utils/relativeDate';
 import type { VisitBundle } from '../utils/vetVisitHelper';
@@ -40,6 +40,7 @@ import type { VisitBundle } from '../utils/vetVisitHelper';
 import FeatureIntro from '../components/FeatureIntro';
 import PageContainer from '../components/ui/PageContainer';
 import PassportHero, { type HeroInfoCard } from '../components/healthPassport/PassportHero';
+import PetPhotoAdjustDialog from '../components/PetPhotoAdjustDialog';
 import HealthStatusOverview from '../components/healthPassport/HealthStatusOverview.tsx';
 import { type MetricOption } from '../components/healthPassport/SelectableMetricCard';
 import { VACCINE_TYPE_ORDER } from '../utils/vaccineTypes';
@@ -115,7 +116,7 @@ export default function HealthPassportPage() {
   } = useHealthData();
   const { confirm, dialog: confirmDialog } = useConfirm();
   const { updateProfile } = usePetProfiles();
-  const { upload: uploadPhoto, uploading: photoUploading } = usePetPhotoUpload();
+  const { uploadCropped: uploadPhotoCropped, uploading: photoUploading } = usePetPhotoUpload();
 
   // ── Filtered by dog ────────────────────────────────────────────────────────
   const dogVaccinations = vaccinations.filter((v) => v.petId === selectedDogId);
@@ -313,6 +314,7 @@ export default function HealthPassportPage() {
 
   // ── Wizard / dialog state ──────────────────────────────────────────────────
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
   const [selectedRecord, setSelectedRecord] = useState<RecordDetailState | null>(null);
   const [historyCategory, setHistoryCategory] = useState<
@@ -385,21 +387,42 @@ export default function HealthPassportPage() {
   const handleQuickVisitUndo = useCallback((id: string) => removeVisit(id), [removeVisit]);
 
   const handleHeroPhoto = useCallback(
-    async (file: File) => {
-      const url = await uploadPhoto(file);
+    (file: File) => {
+      if (validatePetPhotoFile(file)) {
+        setSnack({ open: true, msg: tCommon('saveFailed'), severity: 'error' });
+        return;
+      }
+      setPendingPhotoFile(file);
+    },
+    [tCommon]
+  );
+
+  const handleHeroPhotoConfirm = useCallback(
+    async (dataUrl: string, mimeType: string) => {
+      const url = await uploadPhotoCropped(dataUrl, mimeType);
       if (!url) {
         setSnack({ open: true, msg: tCommon('saveFailed'), severity: 'error' });
         return;
       }
       try {
         await updateProfile(selectedDogId, { photoUrl: url });
+        setPendingPhotoFile(null);
         setSnack({ open: true, msg: tCommon('saved'), severity: 'success' });
       } catch {
         setSnack({ open: true, msg: tCommon('saveFailed'), severity: 'error' });
       }
     },
-    [uploadPhoto, updateProfile, selectedDogId, tCommon]
+    [uploadPhotoCropped, updateProfile, selectedDogId, tCommon]
   );
+
+  const handleHeroPhotoRemove = useCallback(async () => {
+    try {
+      await updateProfile(selectedDogId, { photoUrl: null });
+      setSnack({ open: true, msg: tCommon('saved'), severity: 'success' });
+    } catch {
+      setSnack({ open: true, msg: tCommon('saveFailed'), severity: 'error' });
+    }
+  }, [updateProfile, selectedDogId, tCommon]);
 
   // ── Timeline open detail ────────────────────────────────────────────────────
   const handleOpenDetail = useCallback((event: TimelineEvent) => {
@@ -951,9 +974,17 @@ export default function HealthPassportPage() {
           infoCards={heroInfoCards}
           onEditProfile={() => navigate('/profily')}
           onPhotoSelected={handleHeroPhoto}
+          onPhotoRemove={handleHeroPhotoRemove}
           photoUploading={photoUploading}
         />
       )}
+      <PetPhotoAdjustDialog
+        file={pendingPhotoFile}
+        open={pendingPhotoFile !== null}
+        uploading={photoUploading}
+        onCancel={() => setPendingPhotoFile(null)}
+        onConfirm={handleHeroPhotoConfirm}
+      />
 
       {/* ── Action buttons ─────────────────────────────────────────────────── */}
       <Stack direction="row" flexWrap="wrap" gap={1.5} sx={{ mb: 2.5 }}>

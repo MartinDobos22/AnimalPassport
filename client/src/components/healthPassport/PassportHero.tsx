@@ -5,6 +5,9 @@ import {
   CircularProgress,
   FormControl,
   IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
   MenuItem,
   Select,
   Stack,
@@ -14,9 +17,11 @@ import {
 } from '@mui/material';
 import {
   ChevronRight as ChevronIcon,
+  Delete as DeleteIcon,
   Edit as EditIcon,
   Favorite as FavoriteIcon,
   PhotoCamera as PhotoCameraIcon,
+  PhotoLibrary as PhotoLibraryIcon,
 } from '@mui/icons-material';
 import type { PetProfile } from '../../types';
 import { petPhotoStock, petPhotoSvg } from '../../utils/petPhotoDefaults';
@@ -41,6 +46,7 @@ interface Props {
   infoCards: HeroInfoCard[];
   onEditProfile: () => void;
   onPhotoSelected?: (file: File) => void;
+  onPhotoRemove?: () => void;
   photoUploading?: boolean;
 }
 
@@ -58,11 +64,14 @@ export default function PassportHero({
   infoCards,
   onEditProfile,
   onPhotoSelected,
+  onPhotoRemove,
   photoUploading = false,
 }: Props) {
   const { t } = useTranslation('healthPassport');
   const theme = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoMenuAnchor, setPhotoMenuAnchor] = useState<HTMLElement | null>(null);
+  const hasCustomPhoto = Boolean(dog.photoUrl);
 
   // Photo source: user's own photo → species stock photo → local SVG (offline fallback).
   const fallbackSvg = petPhotoSvg(dog.animalType);
@@ -73,6 +82,41 @@ export default function PassportHero({
   const handleImgError = () => {
     if (imgSrc !== fallbackSvg) setImgSrc(fallbackSvg);
   };
+  const isUserPhoto = imgSrc === dog.photoUrl;
+
+  // Adapt the photo fit to both the device (the hero is tall on mobile, wide on
+  // desktop) and the photo's own orientation. When the two shapes are close,
+  // object-fit: cover fills the frame nicely; when they clash, cover would zoom
+  // in hard, so the whole photo is shown (contain) over a blurred fill instead.
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [heroAspect, setHeroAspect] = useState<number | null>(null);
+  const [photoAspect, setPhotoAspect] = useState<number | null>(null);
+
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const update = () => {
+      const { width, height } = el.getBoundingClientRect();
+      if (width > 0 && height > 0) setHeroAspect(width / height);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => setPhotoAspect(null), [imgSrc]);
+
+  const handlePhotoLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = event.currentTarget;
+    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+      setPhotoAspect(img.naturalWidth / img.naturalHeight);
+    }
+  };
+
+  const coverZoom =
+    heroAspect && photoAspect ? Math.max(heroAspect / photoAspect, photoAspect / heroAspect) : null;
+  const useCover = coverZoom !== null && coverZoom <= 1.7;
 
   const computeAgeLabel = (p: PetProfile): string | null => {
     if (p.dateOfBirth) {
@@ -105,6 +149,7 @@ export default function PassportHero({
 
   return (
     <Box
+      ref={heroRef}
       sx={{
         mb: 2.5,
         position: 'relative',
@@ -118,20 +163,59 @@ export default function PassportHero({
         bgcolor: HERO_SCRIM,
       }}
     >
-      <Box
-        component="img"
-        src={imgSrc}
-        onError={handleImgError}
-        alt={dog.name}
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          objectPosition: '60% 35%',
-        }}
-      />
+      {isUserPhoto && !useCover ? (
+        // Photo shape clashes with the current hero shape: show the whole photo
+        // (contain) over a blurred, scaled copy so nothing is zoomed or cut off.
+        <>
+          <Box
+            component="img"
+            src={imgSrc}
+            onError={handleImgError}
+            alt=""
+            aria-hidden
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transform: 'scale(1.2)',
+              filter: 'blur(28px)',
+            }}
+          />
+          <Box
+            component="img"
+            src={imgSrc}
+            onError={handleImgError}
+            onLoad={handlePhotoLoad}
+            alt={dog.name}
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              objectPosition: 'center',
+            }}
+          />
+        </>
+      ) : (
+        <Box
+          component="img"
+          src={imgSrc}
+          onError={handleImgError}
+          onLoad={handlePhotoLoad}
+          alt={dog.name}
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: isUserPhoto ? 'center' : '60% 35%',
+          }}
+        />
+      )}
 
       {/* Legibility scrims */}
       <Box
@@ -199,9 +283,9 @@ export default function PassportHero({
                 {onPhotoSelected && (
                   <>
                     <IconButton
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={(e) => setPhotoMenuAnchor(e.currentTarget)}
                       disabled={photoUploading}
-                      aria-label={t('hero.changePhoto')}
+                      aria-label={t('hero.photoMenuAria')}
                       sx={{
                         color: alpha(theme.palette.common.white, 0.85),
                         '&:hover': { color: 'common.white' },
@@ -213,6 +297,36 @@ export default function PassportHero({
                         <PhotoCameraIcon />
                       )}
                     </IconButton>
+                    <Menu
+                      anchorEl={photoMenuAnchor}
+                      open={Boolean(photoMenuAnchor)}
+                      onClose={() => setPhotoMenuAnchor(null)}
+                    >
+                      <MenuItem
+                        onClick={() => {
+                          setPhotoMenuAnchor(null);
+                          fileInputRef.current?.click();
+                        }}
+                      >
+                        <ListItemIcon>
+                          <PhotoLibraryIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>{t('hero.photoMenuUpload')}</ListItemText>
+                      </MenuItem>
+                      {hasCustomPhoto && onPhotoRemove && (
+                        <MenuItem
+                          onClick={() => {
+                            setPhotoMenuAnchor(null);
+                            onPhotoRemove();
+                          }}
+                        >
+                          <ListItemIcon>
+                            <DeleteIcon fontSize="small" />
+                          </ListItemIcon>
+                          <ListItemText>{t('hero.photoMenuRemove')}</ListItemText>
+                        </MenuItem>
+                      )}
+                    </Menu>
                     <Box
                       component="input"
                       ref={fileInputRef}
