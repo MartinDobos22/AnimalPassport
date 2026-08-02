@@ -27,7 +27,12 @@ export interface PetProfile {
   allergies: string[];
   intolerances: string[];
   healthConditions: string[];
-  chronicConditions?: { id: string; title: string; description?: string }[];
+  chronicConditions?: {
+    id: string;
+    title: string;
+    description?: string;
+    status?: 'STABLE' | 'MONITORED' | 'ACTIVE';
+  }[];
   procedures?: { id: string; title: string; date: string; notes?: string }[];
   notes?: string;
 }

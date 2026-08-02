@@ -116,6 +116,7 @@ export default function LinkedRecords({
   return (
     <SectionCard
       title={t('linkedRecords.title')}
+      description={t('linkedRecords.description')}
       icon={<LinkIcon />}
       collapsible
       expanded={expanded}

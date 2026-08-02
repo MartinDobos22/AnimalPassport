@@ -1,13 +1,4 @@
-import {
-  Box,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Stack, TextField, Typography } from '@mui/material';
 import { InfoOutlined as InfoIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 
@@ -15,6 +6,7 @@ import { VISIT_CATEGORY_OPTIONS } from '../../constants';
 import type { ErrorMap, VisitBasicsValues } from '../formTypes';
 import SectionCard from './SectionCard';
 import DateField from '../../../DateField';
+import SearchableSelect from '../../../ui/SearchableSelect';
 
 interface VisitBasicsProps {
   values: VisitBasicsValues;
@@ -65,43 +57,34 @@ export default function VisitBasics({ values, errors, onChange }: VisitBasicsPro
           {t('addRecord.basics.categoryHint')}
         </Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.5 }}>
-          <FormControl size="small">
-            <InputLabel>{t('addRecord.basics.mainCategory')}</InputLabel>
-            <Select
-              label={t('addRecord.basics.mainCategory')}
-              value={values.mainCategory}
-              onChange={(e) => {
-                onChange('mainCategory', e.target.value);
-                onChange('subcategory', '');
-              }}
-            >
-              <MenuItem value="">
-                <em>{t('visitCategory.notSelected')}</em>
-              </MenuItem>
-              {VISIT_CATEGORY_OPTIONS.map((opt) => (
-                <MenuItem key={opt.key} value={opt.key}>
-                  {t(`visitCategory.${opt.key}` as never)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small" disabled={!values.mainCategory}>
-            <InputLabel>{t('addRecord.basics.subcategory')}</InputLabel>
-            <Select
-              label={t('addRecord.basics.subcategory')}
-              value={values.subcategory}
-              onChange={(e) => onChange('subcategory', e.target.value)}
-            >
-              <MenuItem value="">
-                <em>{t('visitCategory.notSelected')}</em>
-              </MenuItem>
-              {subOptions.map((sub) => (
-                <MenuItem key={sub.key} value={sub.key}>
-                  {t(`visitCategory.${sub.key}` as never)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <SearchableSelect
+            label={t('addRecord.basics.mainCategory')}
+            value={values.mainCategory}
+            options={[
+              { value: '', label: t('visitCategory.notSelected') },
+              ...VISIT_CATEGORY_OPTIONS.map((opt) => ({
+                value: opt.key,
+                label: t(`visitCategory.${opt.key}` as never),
+              })),
+            ]}
+            onChange={(next) => {
+              onChange('mainCategory', next);
+              onChange('subcategory', '');
+            }}
+          />
+          <SearchableSelect
+            label={t('addRecord.basics.subcategory')}
+            value={values.subcategory}
+            disabled={!values.mainCategory}
+            options={[
+              { value: '', label: t('visitCategory.notSelected') },
+              ...subOptions.map((sub) => ({
+                value: sub.key,
+                label: t(`visitCategory.${sub.key}` as never),
+              })),
+            ]}
+            onChange={(next) => onChange('subcategory', next)}
+          />
         </Box>
       </Stack>
     </SectionCard>

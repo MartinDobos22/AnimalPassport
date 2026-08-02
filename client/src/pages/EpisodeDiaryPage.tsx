@@ -8,10 +8,6 @@ import {
   Card,
   CardContent,
   Chip,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
   Snackbar,
   Stack,
   Typography,
@@ -26,6 +22,7 @@ import EmptyState from '../components/EmptyState';
 import FeatureIntro from '../components/FeatureIntro';
 import PageContainer from '../components/ui/PageContainer';
 import PageHeader from '../components/ui/PageHeader';
+import SearchableSelect from '../components/ui/SearchableSelect';
 import { useConfirm } from '../hooks/useConfirm';
 import EpisodeFiltersBar from '../components/episodes/EpisodeFiltersBar';
 import EpisodeListItem from '../components/episodes/EpisodeListItem';
@@ -173,24 +170,16 @@ export default function EpisodeDiaryPage() {
             spacing={2}
             alignItems={{ xs: 'stretch', sm: 'center' }}
           >
-            <FormControl size="small" sx={{ minWidth: 220 }}>
-              <InputLabel id="episode-dog-select">{t('page.dogSelect')}</InputLabel>
-              <Select
-                labelId="episode-dog-select"
-                label={t('page.dogSelect')}
-                value={selectedDogId}
-                onChange={(e) => {
-                  setSelectedDogId(e.target.value);
-                  setExpandedId(null);
-                }}
-              >
-                {dogProfiles.map((p) => (
-                  <MenuItem key={p.id} value={p.id}>
-                    {p.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <SearchableSelect
+              label={t('page.dogSelect')}
+              value={selectedDogId}
+              options={dogProfiles.map((p) => ({ value: p.id, label: p.name }))}
+              onChange={(next) => {
+                setSelectedDogId(next);
+                setExpandedId(null);
+              }}
+              sx={{ minWidth: 220 }}
+            />
             <Box sx={{ flex: 1 }} />
             {storage.isApproachingLimit && (
               <Chip

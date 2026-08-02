@@ -140,7 +140,36 @@ export default function WeightTrendCard({ petId, fallbackWeightKg }: Props) {
           </Typography>
         </Stack>
 
-        {series.length === 0 ? (
+        {series.length === 0 && fallbackWeightKg ? (
+          <Stack spacing={1.25} sx={{ py: 1 }}>
+            <Stack direction="row" alignItems="baseline" gap={1.25}>
+              <Typography sx={{ fontSize: '2.125rem', fontWeight: 800, lineHeight: 1 }}>
+                {fallbackWeightKg} kg
+              </Typography>
+              <Chip
+                size="small"
+                label={t('weightCard.fromProfile')}
+                sx={{
+                  height: 22,
+                  fontWeight: 700,
+                  bgcolor: alpha(theme.palette.primary.main, 0.12),
+                  color: theme.palette.primary.main,
+                }}
+              />
+            </Stack>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {t('weightCard.startTrendHint')}
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<AddIcon />}
+              onClick={() => setOpen(true)}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              {t('weightCard.addLog')}
+            </Button>
+          </Stack>
+        ) : series.length === 0 ? (
           <Stack alignItems="center" spacing={1.5} sx={{ py: 3, textAlign: 'center' }}>
             <Box
               sx={{

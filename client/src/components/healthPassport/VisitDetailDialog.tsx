@@ -22,8 +22,11 @@ import {
 } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { VetVisitRecord } from '../../types/petHealth';
+import type { ExamResult, VetVisitRecord } from '../../types/petHealth';
 import AiFormattedText from '../AiFormattedText';
+import SearchableSelect from '../ui/SearchableSelect';
+
+const EXAM_RESULTS: ExamResult[] = ['NORMAL', 'ABNORMAL', 'INCONCLUSIVE'];
 
 interface VisitDraft {
   date: string;
@@ -34,6 +37,7 @@ interface VisitDraft {
   diagnosis: string;
   recommendations: string;
   nextCheckDate: string;
+  examResult: ExamResult | '';
 }
 
 interface VisitDetailDialogProps {
@@ -63,6 +67,7 @@ export default function VisitDetailDialog({
     diagnosis: '',
     recommendations: '',
     nextCheckDate: '',
+    examResult: '',
   });
 
   useEffect(() => {
@@ -76,6 +81,7 @@ export default function VisitDetailDialog({
         diagnosis: visit.diagnosis ?? '',
         recommendations: visit.recommendations ?? '',
         nextCheckDate: visit.nextCheckDate ?? '',
+        examResult: visit.examResult ?? '',
       });
       setEditing(false);
     }
@@ -191,6 +197,15 @@ export default function VisitDetailDialog({
                   onChange={(e) => setDraft((p) => ({ ...p, nextCheckDate: e.target.value }))}
                   size="small"
                 />
+                <SearchableSelect<ExamResult | ''>
+                  label={t('detail.examResult')}
+                  value={draft.examResult}
+                  options={[
+                    { value: '', label: t('examResults.none') },
+                    ...EXAM_RESULTS.map((r) => ({ value: r, label: t(`examResults.${r}`) })),
+                  ]}
+                  onChange={(next) => setDraft((p) => ({ ...p, examResult: next }))}
+                />
               </Box>
               <TextField
                 label={t('detail.visitReason')}
@@ -237,6 +252,9 @@ export default function VisitDetailDialog({
                   draft.vetName ? { label: t('detail.vetName'), value: draft.vetName } : null,
                   draft.nextCheckDate
                     ? { label: t('detail.nextCheck'), value: draft.nextCheckDate }
+                    : null,
+                  draft.examResult
+                    ? { label: t('detail.examResult'), value: t(`examResults.${draft.examResult}`) }
                     : null,
                 ]
                   .filter(Boolean)

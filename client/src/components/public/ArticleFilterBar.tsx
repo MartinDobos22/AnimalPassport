@@ -1,19 +1,7 @@
-import {
-  Box,
-  Button,
-  FormControl,
-  InputLabel,
-  ListItemText,
-  MenuItem,
-  Paper,
-  Select,
-  Stack,
-  Typography,
-  useTheme,
-} from '@mui/material';
-import { Close as CloseIcon, Pets as PetsIcon, Tune as TuneIcon } from '@mui/icons-material';
-import type { SelectChangeEvent } from '@mui/material';
+import { Box, Button, Paper, Stack, Typography, useTheme } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import type { AnimalType } from '../../constants/animalSpecies';
+import SearchableSelect from '../ui/SearchableSelect';
 import { CATEGORY_LABELS } from '../../content/poradna/articles';
 import type { ArticleCategory } from '../../content/poradna/types';
 
@@ -50,14 +38,6 @@ export default function ArticleFilterBar({
   const theme = useTheme();
   const isDefault = category === 'all' && species === 'all';
 
-  const handleCategory = (event: SelectChangeEvent) => {
-    onCategoryChange(event.target.value as CategoryFilter);
-  };
-
-  const handleSpecies = (event: SelectChangeEvent) => {
-    onSpeciesChange(event.target.value as SpeciesFilter);
-  };
-
   return (
     <Paper
       variant="outlined"
@@ -73,47 +53,28 @@ export default function ArticleFilterBar({
         spacing={theme.spacing(2)}
         alignItems={{ xs: 'stretch', md: 'center' }}
       >
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 220 } }}>
-          <InputLabel id="poradna-category-label">Téma</InputLabel>
-          <Select
-            labelId="poradna-category-label"
-            id="poradna-category"
-            label="Téma"
-            value={category}
-            onChange={handleCategory}
-            startAdornment={
-              <TuneIcon fontSize="small" sx={{ mr: theme.spacing(1), color: 'text.secondary' }} />
-            }
-          >
-            {CATEGORY_OPTIONS.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <SearchableSelect<CategoryFilter>
+          label="Téma"
+          value={category}
+          options={CATEGORY_OPTIONS}
+          onChange={onCategoryChange}
+          sx={{ minWidth: { xs: '100%', md: 220 } }}
+        />
 
         {availableSpecies.length > 0 && (
-          <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 240 } }}>
-            <InputLabel id="poradna-species-label">Druh zvieraťa</InputLabel>
-            <Select
-              labelId="poradna-species-label"
-              id="poradna-species"
-              label="Druh zvieraťa"
-              value={species}
-              onChange={handleSpecies}
-              startAdornment={
-                <PetsIcon fontSize="small" sx={{ mr: theme.spacing(1), color: 'text.secondary' }} />
-              }
-            >
-              <MenuItem value="all">Všetky druhy</MenuItem>
-              {availableSpecies.map((value) => (
-                <MenuItem key={value} value={value}>
-                  <ListItemText primary={speciesLabels[value] ?? value} />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <SearchableSelect<SpeciesFilter>
+            label="Druh zvieraťa"
+            value={species}
+            options={[
+              { value: 'all', label: 'Všetky druhy' },
+              ...availableSpecies.map((value) => ({
+                value,
+                label: speciesLabels[value] ?? value,
+              })),
+            ]}
+            onChange={onSpeciesChange}
+            sx={{ minWidth: { xs: '100%', md: 240 } }}
+          />
         )}
 
         <Box sx={{ flexGrow: 1 }} />

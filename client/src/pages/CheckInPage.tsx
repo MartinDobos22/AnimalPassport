@@ -6,10 +6,6 @@ import {
   Box,
   Button,
   Card,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
   Stack,
   TextField,
   Typography,
@@ -20,6 +16,7 @@ import { Add as AddIcon, FactCheck as FactCheckIcon } from '@mui/icons-material'
 import Seo from '../components/Seo';
 import IconTile from '../components/ui/IconTile';
 import PageContainer from '../components/ui/PageContainer';
+import SearchableSelect from '../components/ui/SearchableSelect';
 import QuickCheckInStep from '../components/checkIn/QuickCheckInStep';
 import DetailedCheckInForm, {
   type DetailedState,
@@ -144,22 +141,16 @@ export default function CheckInPage() {
   }
 
   const petSelector = petProfiles.length > 1 && (
-    <FormControl fullWidth sx={{ mb: theme.spacing(3) }}>
-      <InputLabel id="checkin-pet-label">{t('checkIn.selectPet')}</InputLabel>
-      <Select
-        labelId="checkin-pet-label"
-        label={t('checkIn.selectPet')}
-        value={selectedPetId}
-        onChange={(e) => setSelectedPetId(e.target.value)}
-        disabled={step === 'quick' || step === 'detail'}
-      >
-        {petProfiles.map((p) => (
-          <MenuItem key={p.id} value={p.id}>
-            {p.name}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+    <SearchableSelect
+      label={t('checkIn.selectPet')}
+      value={selectedPetId}
+      options={petProfiles.map((p) => ({ value: p.id, label: p.name }))}
+      onChange={setSelectedPetId}
+      disabled={step === 'quick' || step === 'detail'}
+      size="medium"
+      fullWidth
+      sx={{ mb: theme.spacing(3) }}
+    />
   );
 
   const isHub = step === 'hub';

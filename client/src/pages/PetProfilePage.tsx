@@ -13,11 +13,7 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
-  FormControl,
   IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
   Snackbar,
   Stack,
   TextField,
@@ -35,6 +31,7 @@ import FeatureIntro from '../components/FeatureIntro';
 import PageContainer from '../components/ui/PageContainer';
 import PageHeader from '../components/ui/PageHeader';
 import SpeciesSelect from '../components/SpeciesSelect';
+import SearchableSelect from '../components/ui/SearchableSelect';
 import { usePetProfiles } from '../hooks/usePetProfiles';
 import { useHealthData } from '../hooks/useHealthData';
 import type { PetProfile, AnimalSize, AnimalLifeStage, ActivityLevel } from '../types';
@@ -387,23 +384,22 @@ export default function PetProfilePage() {
                 onChange={(e) => setForm({ ...form, breed: e.target.value })}
                 fullWidth
               />
-              <FormControl fullWidth>
-                <InputLabel>{t('profiles.dobPrecision')}</InputLabel>
-                <Select
-                  value={form.dateOfBirthPrecision ?? 'full'}
-                  label={t('profiles.dobPrecision')}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      dateOfBirthPrecision: e.target.value as PetProfile['dateOfBirthPrecision'],
-                    })
-                  }
-                >
-                  <MenuItem value="full">{t('profiles.dobPrecisionFull')}</MenuItem>
-                  <MenuItem value="year-month">{t('profiles.dobPrecisionYearMonth')}</MenuItem>
-                  <MenuItem value="year">{t('profiles.dobPrecisionYear')}</MenuItem>
-                </Select>
-              </FormControl>
+              <SearchableSelect
+                label={t('profiles.dobPrecision')}
+                value={form.dateOfBirthPrecision ?? 'full'}
+                options={[
+                  { value: 'full', label: t('profiles.dobPrecisionFull') },
+                  { value: 'year-month', label: t('profiles.dobPrecisionYearMonth') },
+                  { value: 'year', label: t('profiles.dobPrecisionYear') },
+                ]}
+                onChange={(next) =>
+                  setForm({
+                    ...form,
+                    dateOfBirthPrecision: next as PetProfile['dateOfBirthPrecision'],
+                  })
+                }
+                fullWidth
+              />
               {(form.dateOfBirthPrecision ?? 'full') === 'full' ? (
                 <TextField
                   label={t('profiles.dobLabel')}
@@ -461,18 +457,17 @@ export default function PetProfilePage() {
                   )}
                 </Stack>
               )}
-              <FormControl fullWidth>
-                <InputLabel>{t('profiles.sex')}</InputLabel>
-                <Select
-                  value={form.sex ?? 'UNKNOWN'}
-                  label={t('profiles.sex')}
-                  onChange={(e) => setForm({ ...form, sex: e.target.value as PetProfile['sex'] })}
-                >
-                  <MenuItem value="MALE">{t('profiles.sexMale')}</MenuItem>
-                  <MenuItem value="FEMALE">{t('profiles.sexFemale')}</MenuItem>
-                  <MenuItem value="UNKNOWN">{t('profiles.sexUnknown')}</MenuItem>
-                </Select>
-              </FormControl>
+              <SearchableSelect
+                label={t('profiles.sex')}
+                value={form.sex ?? 'UNKNOWN'}
+                options={[
+                  { value: 'MALE', label: t('profiles.sexMale') },
+                  { value: 'FEMALE', label: t('profiles.sexFemale') },
+                  { value: 'UNKNOWN', label: t('profiles.sexUnknown') },
+                ]}
+                onChange={(next) => setForm({ ...form, sex: next as PetProfile['sex'] })}
+                fullWidth
+              />
               <TextField
                 label={t('profiles.weight')}
                 type="number"
@@ -505,67 +500,58 @@ export default function PetProfilePage() {
             </Box>
 
             {form.animalType === 'dog' && (
-              <FormControl fullWidth>
-                <InputLabel>{t('profiles.size')}</InputLabel>
-                <Select
-                  value={form.size ?? ''}
-                  label={t('profiles.size')}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      size: (e.target.value || undefined) as AnimalSize | undefined,
-                    })
-                  }
-                >
-                  <MenuItem value="">–</MenuItem>
-                  <MenuItem value="mini">{t('profiles.sizeMini')}</MenuItem>
-                  <MenuItem value="small">{t('profiles.sizeSmall')}</MenuItem>
-                  <MenuItem value="medium">{t('profiles.sizeMedium')}</MenuItem>
-                  <MenuItem value="large">{t('profiles.sizeLarge')}</MenuItem>
-                  <MenuItem value="giant">{t('profiles.sizeGiant')}</MenuItem>
-                </Select>
-              </FormControl>
+              <SearchableSelect
+                label={t('profiles.size')}
+                value={form.size ?? ''}
+                options={[
+                  { value: '', label: '–' },
+                  { value: 'mini', label: t('profiles.sizeMini') },
+                  { value: 'small', label: t('profiles.sizeSmall') },
+                  { value: 'medium', label: t('profiles.sizeMedium') },
+                  { value: 'large', label: t('profiles.sizeLarge') },
+                  { value: 'giant', label: t('profiles.sizeGiant') },
+                ]}
+                onChange={(next) =>
+                  setForm({ ...form, size: (next || undefined) as AnimalSize | undefined })
+                }
+                fullWidth
+              />
             )}
 
-            <FormControl fullWidth>
-              <InputLabel>{t('profiles.lifeStage')}</InputLabel>
-              <Select
-                value={form.lifeStage ?? ''}
-                label={t('profiles.lifeStage')}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    lifeStage: (e.target.value || undefined) as AnimalLifeStage | undefined,
-                  })
-                }
-              >
-                <MenuItem value="">–</MenuItem>
-                <MenuItem value="puppy">{t('profiles.lifeStagePuppy')}</MenuItem>
-                <MenuItem value="junior">{t('profiles.lifeStageJunior')}</MenuItem>
-                <MenuItem value="adult">{t('profiles.lifeStageAdult')}</MenuItem>
-                <MenuItem value="senior">{t('profiles.lifeStageSenior')}</MenuItem>
-              </Select>
-            </FormControl>
+            <SearchableSelect
+              label={t('profiles.lifeStage')}
+              value={form.lifeStage ?? ''}
+              options={[
+                { value: '', label: '–' },
+                { value: 'puppy', label: t('profiles.lifeStagePuppy') },
+                { value: 'junior', label: t('profiles.lifeStageJunior') },
+                { value: 'adult', label: t('profiles.lifeStageAdult') },
+                { value: 'senior', label: t('profiles.lifeStageSenior') },
+              ]}
+              onChange={(next) =>
+                setForm({ ...form, lifeStage: (next || undefined) as AnimalLifeStage | undefined })
+              }
+              fullWidth
+            />
 
-            <FormControl fullWidth>
-              <InputLabel>{t('profiles.activityLevel')}</InputLabel>
-              <Select
-                value={form.activityLevel ?? ''}
-                label={t('profiles.activityLevel')}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    activityLevel: (e.target.value || undefined) as ActivityLevel | undefined,
-                  })
-                }
-              >
-                <MenuItem value="">–</MenuItem>
-                <MenuItem value="low">{t('profiles.activityLow')}</MenuItem>
-                <MenuItem value="moderate">{t('profiles.activityModerate')}</MenuItem>
-                <MenuItem value="high">{t('profiles.activityHigh')}</MenuItem>
-                <MenuItem value="working">{t('profiles.activityWorking')}</MenuItem>
-              </Select>
-            </FormControl>
+            <SearchableSelect
+              label={t('profiles.activityLevel')}
+              value={form.activityLevel ?? ''}
+              options={[
+                { value: '', label: '–' },
+                { value: 'low', label: t('profiles.activityLow') },
+                { value: 'moderate', label: t('profiles.activityModerate') },
+                { value: 'high', label: t('profiles.activityHigh') },
+                { value: 'working', label: t('profiles.activityWorking') },
+              ]}
+              onChange={(next) =>
+                setForm({
+                  ...form,
+                  activityLevel: (next || undefined) as ActivityLevel | undefined,
+                })
+              }
+              fullWidth
+            />
 
             <Autocomplete
               multiple
@@ -662,20 +648,46 @@ export default function PetProfilePage() {
                 {t('actions.add', { ns: 'common' })}
               </Button>
             </Stack>
-            <Stack direction="row" spacing={1} flexWrap="wrap">
+            <Stack spacing={1}>
               {(form.chronicConditions ?? []).map((c) => (
-                <Chip
-                  key={c.id}
-                  label={c.title}
-                  onDelete={() =>
-                    setForm({
-                      ...form,
-                      chronicConditions: (form.chronicConditions ?? []).filter(
-                        (x) => x.id !== c.id
-                      ),
-                    })
-                  }
-                />
+                <Stack key={c.id} direction="row" spacing={1} alignItems="center">
+                  <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
+                    {c.title}
+                  </Typography>
+                  <SearchableSelect
+                    label={t('profiles.conditionStatus')}
+                    value={c.status ?? 'MONITORED'}
+                    options={[
+                      { value: 'STABLE', label: t('conditionStatuses.STABLE') },
+                      { value: 'MONITORED', label: t('conditionStatuses.MONITORED') },
+                      { value: 'ACTIVE', label: t('conditionStatuses.ACTIVE') },
+                    ]}
+                    onChange={(next) =>
+                      setForm({
+                        ...form,
+                        chronicConditions: (form.chronicConditions ?? []).map((x) =>
+                          x.id === c.id
+                            ? { ...x, status: next as NonNullable<typeof x.status> }
+                            : x
+                        ),
+                      })
+                    }
+                    sx={{ minWidth: 150 }}
+                  />
+                  <IconButton
+                    aria-label={tCommon('actions.delete')}
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        chronicConditions: (form.chronicConditions ?? []).filter(
+                          (x) => x.id !== c.id
+                        ),
+                      })
+                    }
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
               ))}
             </Stack>
 

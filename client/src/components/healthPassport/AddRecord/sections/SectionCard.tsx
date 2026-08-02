@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 interface Props {
   title: string;
+  description?: string;
   icon?: ReactNode;
   collapsible?: boolean;
   defaultExpanded?: boolean;
@@ -16,6 +17,7 @@ interface Props {
 
 export default function SectionCard({
   title,
+  description,
   icon,
   collapsible = false,
   defaultExpanded = true,
@@ -126,6 +128,14 @@ export default function SectionCard({
         </Box>
       ) : (
         <Box sx={{ px: 2, pt: 1.5, pb: 0.5 }}>{headerContent}</Box>
+      )}
+      {description && (
+        <Typography
+          variant="body2"
+          sx={{ px: 2, pt: collapsible ? 0 : 0.5, pb: 0.5, color: 'text.secondary' }}
+        >
+          {description}
+        </Typography>
       )}
       <Collapse in={expanded} unmountOnExit={false}>
         <Box sx={{ px: 2, pb: 2, pt: collapsible ? 0.5 : 1 }}>{children}</Box>

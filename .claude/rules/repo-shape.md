@@ -59,14 +59,14 @@ AnimalPassport/
 | Súbor | Endpoint | Rate limit | Účel |
 |---|---|---|---|
 | `analyze.ts` | `POST /api/analyze` | `aiHeavyLimiter` (20/min) | Textová alebo súborová analýza krmiva |
-| `episodes.ts` | `GET/POST /api/episodes/*` | `globalLimiter` (120/min) | Epizódy + `POST /similar-summary` (AI) |
+| `episodes.ts` | `GET/POST /api/episodes/*` | `aiHeavyLimiter` (20/min) | Epizódy + `POST /similar-summary` (AI, navyše `requireAiQuota()` per-route) |
 | `extractText.ts` | `POST /api/extract-text` | `aiHeavyLimiter` | OCR fallback ladder (Vision → OpenAI → pdf-parser) |
 | `interpretPassport.ts` | `POST /api/interpret-passport` | `aiHeavyLimiter` | AI parsing zdravotného pasu (vakcinácie, …) |
 | `articles.ts` | `GET /api/articles`, `GET /api/articles/:slug` | `globalLimiter`, **bez auth** | Verejné články poradne (read-only z DB). Mountnuté PRED `firebaseAuth`. |
 | `admin.ts` | `GET /api/admin/status`, `GET/POST/PUT/DELETE /api/admin/articles[/:slug]`, `POST /api/admin/articles/upload-image`, `POST /api/admin/articles/publish` | `firebaseAuth` + `ensureUser` (+ `requireAdmin` na `/articles`) | Admin správa článkov (write, upload cover obrázka, publish = Netlify build hook). Gate cez env `ADMIN_EMAILS`. `status` vráti `{ isAdmin }`. |
 | `index.ts` | `GET /api/health` | (žiadny) | Health check |
 
-> **Pozor:** `/api/episodes/similar-summary` je AI volanie, ale dnes spadá pod celý `episodesRouter` bez `aiHeavyLimiter`. Pri pridávaní AI endpointu pod existujúci router zváž split.
+> **Vzor:** `/api/episodes/similar-summary` je AI volanie pod `episodesRouter`. Celý router je za `aiHeavyLimiter`, ale `requireAiQuota()` je aplikované **per-route** len na `/similar-summary` (`episodes.ts`), aby bežné CRUD čítania/zápisy epizód nekonzumovali denný AI cap. Tento vzor (router-wide limiter + per-route quota) replikuj pri pridávaní AI endpointu pod zmiešaný router.
 
 ## Kde čo pridať
 

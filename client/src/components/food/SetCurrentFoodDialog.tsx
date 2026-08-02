@@ -7,13 +7,13 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  MenuItem,
   Stack,
   TextField,
 } from '@mui/material';
 import { useSetCurrentFood } from '../../hooks/useSetCurrentFood';
 import { useHealthData } from '../../hooks/useHealthData';
 import { today } from '../healthPassport/utils';
+import SearchableSelect from '../ui/SearchableSelect';
 import type { DietEntry, FoodType } from '../../types/petHealth';
 
 interface Props {
@@ -107,19 +107,14 @@ export default function SetCurrentFoodDialog({
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
-          <TextField
-            select
+          <SearchableSelect
             label={t('food.type')}
             value={foodType}
-            onChange={(e) => setFoodType(e.target.value as FoodType)}
+            options={TYPE_OPTIONS.map((ty) => ({ value: ty, label: typeLabel(ty) }))}
+            onChange={(next) => setFoodType(next as FoodType)}
+            size="medium"
             fullWidth
-          >
-            {TYPE_OPTIONS.map((ty) => (
-              <MenuItem key={ty} value={ty}>
-                {typeLabel(ty)}
-              </MenuItem>
-            ))}
-          </TextField>
+          />
           {replacedName && (
             <Alert severity="warning">
               {t('food.overwriteWarning', { name: replacedName })}

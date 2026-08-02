@@ -32,6 +32,7 @@ import {
   TIMELINE_TYPE_META,
   type TimelineTypeColor,
 } from './constants.ts';
+import SearchableMultiSelect from '../ui/SearchableMultiSelect';
 
 const localeTag = (lang: string) => (lang === 'en' ? 'en-US' : 'sk-SK');
 
@@ -83,18 +84,14 @@ export default function HealthTimeline({
     return date.toLocaleDateString(lang, { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
-  const toggleType = (type: SelectableType | 'ALL') => {
-    if (type === 'ALL') {
-      setSelected(new Set());
-      return;
-    }
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(type)) next.delete(type);
-      else next.add(type);
-      return next;
-    });
-  };
+  const typeFilterOptions = useMemo(
+    () =>
+      TIMELINE_FILTER_VALUES.filter((v) => v !== 'ALL').map((v) => ({
+        value: v as SelectableType,
+        label: t(`filter.${v}`),
+      })),
+    [t]
+  );
 
   // type + search filtered (drives both the calendar day-markers and the list)
   const filteredBase = useMemo(() => {
@@ -127,7 +124,6 @@ export default function HealthTimeline({
   const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
   const shown = viewAll ? visible : visible.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  const isAllActive = selected.size === 0;
 
   const EventDay = (props: PickersDayProps<Date>) => {
     const { day, outsideCurrentMonth } = props;
@@ -265,31 +261,17 @@ export default function HealthTimeline({
       <Stack
         direction="row"
         alignItems="center"
-        gap={0.75}
-        sx={{ mb: 3, flexWrap: 'wrap', rowGap: 0.75 }}
+        gap={1}
+        sx={{ mb: 3, flexWrap: 'wrap', rowGap: 1 }}
       >
-        <Chip
-          label={t('filter.ALL')}
-          size="small"
-          clickable
-          variant={isAllActive ? 'filled' : 'outlined'}
-          color={isAllActive ? 'primary' : 'default'}
-          onClick={() => toggleType('ALL')}
+        <SearchableMultiSelect
+          label={t('timeline.filterByType')}
+          placeholder={t('timeline.filterAllTypes')}
+          values={Array.from(selected)}
+          options={typeFilterOptions}
+          onChange={(next) => setSelected(new Set(next))}
+          sx={{ flex: '1 1 260px', minWidth: 220, maxWidth: 420 }}
         />
-        {TIMELINE_FILTER_VALUES.filter((v) => v !== 'ALL').map((v) => {
-          const isActive = selected.has(v as SelectableType);
-          return (
-            <Chip
-              key={v}
-              label={t(`filter.${v}`)}
-              size="small"
-              clickable
-              variant={isActive ? 'filled' : 'outlined'}
-              color={isActive ? 'primary' : 'default'}
-              onClick={() => toggleType(v as SelectableType)}
-            />
-          );
-        })}
         {dayFilter && (
           <Chip
             label={t('timeline.filteredByDay', { date: formatDate(dayFilter) })}
@@ -297,7 +279,6 @@ export default function HealthTimeline({
             color="primary"
             variant="outlined"
             onDelete={() => setDayFilter(null)}
-            sx={{ ml: 0.5 }}
           />
         )}
       </Stack>

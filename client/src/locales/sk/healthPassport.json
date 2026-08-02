@@ -62,7 +62,9 @@
     "titleExpense": "Výdavok {{amount}} €",
     "inDays_other": "o {{count}} dní",
     "TREATMENT": "Liečba",
-    "titleTreatment": "Liečba: {{name}}"
+    "titleTreatment": "Liečba: {{name}}",
+    "filterByType": "Typ záznamu",
+    "filterAllTypes": "Všetky typy"
   },
   "detail": {
     "title": "Detail záznamu",
@@ -109,6 +111,7 @@
     "expCategoryOther": "Ostatné",
     "vetName": "Veterinár",
     "nextCheck": "Ďalšia kontrola",
+    "examResult": "Výsledok vyšetrenia",
     "visitReason": "Dôvod návštevy",
     "attachments": "Prílohy",
     "aiSource": "Zdroj AI záznamu",
@@ -209,7 +212,8 @@
     "tipSave": "Tip: {{modKey}} + Enter pre uloženie",
     "saveRecord": "Uložiť záznam",
     "clinical": {
-      "title": "Klinický záznam",
+      "title": "Poznámky z vyšetrenia",
+      "description": "Voliteľné. Nález, diagnóza a odporúčania k tejto návšteve — nevytvára ďalší záznam.",
       "findings": "Nález",
       "findingsPlaceholder": "Klinický nález pri vyšetrení…",
       "diagnosis": "Diagnóza",
@@ -376,7 +380,8 @@
     "sexUnknown": "neuvedené"
   },
   "linkedRecords": {
-    "title": "Súvisiace záznamy",
+    "title": "Úkony počas návštevy",
+    "description": "Zapni len to, čo pri návšteve naozaj prebehlo. Každý zapnutý úkon (očkovanie, odčervenie…) vytvorí vlastný samostatný záznam.",
     "vaccination": {
       "label": "Očkovanie",
       "hint": "Pridať vakcínu aplikovanú pri tejto návšteve"
@@ -574,6 +579,7 @@
     "healthConditions": "Zdravotné ťažkosti",
     "chronicTitle": "Chronické diagnózy",
     "conditionLabel": "Názov diagnózy",
+    "conditionStatus": "Stav",
     "proceduresTitle": "Procedúry / operácie",
     "procedurePlaceholder": "Názov + dátum (napr. kastrácia 2024-02-10)",
     "notes": "Poznámky - na čo si dať pozor",
@@ -661,7 +667,43 @@
   },
   "overviewCard": {
     "title": "Prehľad zdravia",
-    "subtitle": "Kľúčové oblasti na prvý pohľad"
+    "subtitle": "Kľúčové oblasti na prvý pohľad",
+    "filterAll": "Všetko",
+    "filterPreventive": "Preventíva",
+    "filterCondition": "Choroby",
+    "filterExam": "Vyšetrenia",
+    "sectionCondition": "Chronické",
+    "sectionExam": "Vyšetrenie",
+    "stateDone": "Hotové",
+    "dueDate": "Termín {{date}}",
+    "hidden": "Skryté z prehľadu",
+    "hideTile": "Skryť z prehľadu",
+    "restore": "Vrátiť",
+    "examCount_one": "{{count}} záznam",
+    "examCount_few": "{{count}} záznamy",
+    "examCount_many": "{{count}} záznamov",
+    "examCount_other": "{{count}} záznamov",
+    "addTitle": "Pridať záznam",
+    "addSubtitle": "Nová dlaždica pribudne sem",
+    "summaryOverdue_one": "{{count}} položka po termíne",
+    "summaryOverdue_few": "{{count}} položky po termíne",
+    "summaryOverdue_many": "{{count}} položiek po termíne",
+    "summaryOverdue_other": "{{count}} položiek po termíne",
+    "summarySoon_one": "{{count}} položka čoskoro",
+    "summarySoon_few": "{{count}} položky čoskoro",
+    "summarySoon_many": "{{count}} položiek čoskoro",
+    "summarySoon_other": "{{count}} položiek čoskoro"
+  },
+  "conditionStatuses": {
+    "STABLE": "Stabilné",
+    "MONITORED": "Sledované",
+    "ACTIVE": "Aktívne"
+  },
+  "examResults": {
+    "none": "Neuvedené",
+    "NORMAL": "V norme",
+    "ABNORMAL": "Odchýlka",
+    "INCONCLUSIVE": "Nejednoznačné"
   },
   "insight": {
     "title": "Pawly Insight",
@@ -698,10 +740,6 @@
     "diet": "Diéta",
     "dietNotSet": "Nie je nastavená",
     "dietActive": "Aktívna diéta",
-    "vaccinationOthers_one": "{{type}} + {{count}} ďalšia",
-    "vaccinationOthers_few": "{{type}} + {{count}} ďalšie",
-    "vaccinationOthers_many": "{{type}} + {{count}} ďalších",
-    "vaccinationOthers_other": "{{type}} + {{count}} ďalších",
     "add": "Pridať",
     "schedule": "Naplánovať",
     "viewSchedule": "Zobraziť plán",
@@ -755,6 +793,8 @@
     "addLog": "Pridať váženie",
     "addLogAria": "Pridať váženie",
     "emptyDescription": "Pridaj prvé váženie a uvidíš trend hmotnosti v čase.",
+    "fromProfile": "Z profilu",
+    "startTrendHint": "Hmotnosť z profilu. Pridaj váženie a začne sa sledovať trend v čase.",
     "stable": "stabilná",
     "vsLastMonth": "oproti min. mesiacu",
     "lastEntry": "Posledné {{date}}",
@@ -907,6 +947,8 @@
     "reasonPlaceholder": "napr. alergia",
     "intervalDays": "Interval (dni)",
     "nextDue": "Ďalší termín: {{date}}",
+    "oneOff": "Bez plánovaného opakovania (jednorazová)",
+    "oneOffHint": "Uloží sa iba dátum podania — bez ďalšieho termínu a pripomienky.",
     "dateGiven": "Dátum podania",
     "nextDueDate": "Ďalší termín",
     "category": "Skupina / problém",

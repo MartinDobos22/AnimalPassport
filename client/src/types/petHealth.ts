@@ -32,11 +32,16 @@ export interface AttachmentRef {
   createdAt: string;
 }
 
+export type ConditionStatus = 'STABLE' | 'MONITORED' | 'ACTIVE';
+
 export interface ChronicCondition {
   id: string;
   title: string;
   description?: string;
+  status?: ConditionStatus;
 }
+
+export type ExamResult = 'NORMAL' | 'ABNORMAL' | 'INCONCLUSIVE';
 
 export interface ProcedureRecord {
   id: string;
@@ -128,6 +133,7 @@ export interface VetVisitRecord {
   nextCheckDate?: string;
   aiExtractedText?: string;
   aiExamType?: string;
+  examResult?: ExamResult;
   medicationIds: string[];
   attachments?: AttachmentRef[];
 }

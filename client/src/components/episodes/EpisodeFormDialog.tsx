@@ -21,6 +21,7 @@ import {
 } from '@mui/material';
 import StringListEditor from './StringListEditor';
 import AttachmentGallery from './AttachmentGallery';
+import SearchableSelect from '../ui/SearchableSelect';
 import {
   EPISODE_CATEGORIES,
   EPISODE_OUTCOMES,
@@ -212,51 +213,39 @@ export default function EpisodeFormDialog({
                 fullWidth
               />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <FormControl fullWidth>
-                  <InputLabel id="episode-form-category">{t('form.category')}</InputLabel>
-                  <Select
-                    labelId="episode-form-category"
-                    label={t('form.category')}
-                    value={state.category}
-                    onChange={(e) => update('category', e.target.value as EpisodeCategory)}
-                  >
-                    {EPISODE_CATEGORIES.map((c) => (
-                      <MenuItem key={c} value={c}>
-                        {t(`category.${c}` as never)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth>
-                  <InputLabel id="episode-form-severity">{t('form.severity')}</InputLabel>
-                  <Select
-                    labelId="episode-form-severity"
-                    label={t('form.severity')}
-                    value={state.severity}
-                    onChange={(e) => update('severity', e.target.value as EpisodeSeverity)}
-                  >
-                    {EPISODE_SEVERITIES.map((s) => (
-                      <MenuItem key={s} value={s}>
-                        {t(`severity.${s}` as never)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth>
-                  <InputLabel id="episode-form-outcome">{t('form.outcome')}</InputLabel>
-                  <Select
-                    labelId="episode-form-outcome"
-                    label={t('form.outcome')}
-                    value={state.outcome}
-                    onChange={(e) => update('outcome', e.target.value as EpisodeOutcome)}
-                  >
-                    {EPISODE_OUTCOMES.map((o) => (
-                      <MenuItem key={o} value={o}>
-                        {t(`outcome.${o}` as never)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <SearchableSelect<EpisodeCategory>
+                  label={t('form.category')}
+                  value={state.category}
+                  options={EPISODE_CATEGORIES.map((c) => ({
+                    value: c,
+                    label: t(`category.${c}` as never),
+                  }))}
+                  onChange={(next) => update('category', next)}
+                  size="medium"
+                  fullWidth
+                />
+                <SearchableSelect<EpisodeSeverity>
+                  label={t('form.severity')}
+                  value={state.severity}
+                  options={EPISODE_SEVERITIES.map((s) => ({
+                    value: s,
+                    label: t(`severity.${s}` as never),
+                  }))}
+                  onChange={(next) => update('severity', next)}
+                  size="medium"
+                  fullWidth
+                />
+                <SearchableSelect<EpisodeOutcome>
+                  label={t('form.outcome')}
+                  value={state.outcome}
+                  options={EPISODE_OUTCOMES.map((o) => ({
+                    value: o,
+                    label: t(`outcome.${o}` as never),
+                  }))}
+                  onChange={(next) => update('outcome', next)}
+                  size="medium"
+                  fullWidth
+                />
               </Stack>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <TextField
@@ -307,25 +296,22 @@ export default function EpisodeFormDialog({
                 minRows={2}
                 fullWidth
               />
-              <FormControl fullWidth>
-                <InputLabel id="episode-form-visit">{t('form.vetVisitLabel')}</InputLabel>
-                <Select
-                  labelId="episode-form-visit"
-                  label={t('form.vetVisitLabel')}
-                  value={state.vetVisitId}
-                  onChange={(e) => update('vetVisitId', e.target.value)}
-                >
-                  <MenuItem value="">
-                    <em>{t('form.noVetVisit')}</em>
-                  </MenuItem>
-                  {dogVetVisits.map((v) => (
-                    <MenuItem key={v.id} value={v.id}>
-                      {v.clinicName}
-                      {v.date ? ` – ${new Date(v.date).toLocaleDateString()}` : ''}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <SearchableSelect
+                label={t('form.vetVisitLabel')}
+                value={state.vetVisitId}
+                options={[
+                  { value: '', label: t('form.noVetVisit') },
+                  ...dogVetVisits.map((v) => ({
+                    value: v.id,
+                    label: `${v.clinicName}${
+                      v.date ? ` – ${new Date(v.date).toLocaleDateString()}` : ''
+                    }`,
+                  })),
+                ]}
+                onChange={(next) => update('vetVisitId', next)}
+                size="medium"
+                fullWidth
+              />
               <FormControl fullWidth>
                 <InputLabel id="episode-form-meds">{t('form.medications')}</InputLabel>
                 <Select

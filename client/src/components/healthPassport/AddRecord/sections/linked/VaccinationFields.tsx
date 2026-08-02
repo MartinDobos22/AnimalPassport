@@ -1,19 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Stack, TextField, Typography } from '@mui/material';
 
 import type { VaccinationRecord } from '../../../../../types/petHealth';
 import type { VaccinationFieldsValues } from '../../formTypes';
 import DateField from '../../../../DateField';
 import HelpHint from '../../../../HelpHint';
+import SearchableSelect from '../../../../ui/SearchableSelect';
 import { VACCINE_TYPE_ORDER, inferVaccineType } from '../../../../../utils/vaccineTypes';
 
 interface VaccinationFieldsProps {
@@ -59,23 +52,19 @@ export default function VaccinationFields({
           helperText={errorName || t('vaccination.nameHelper')}
           fullWidth
         />
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>{t('vaccination.type')}</InputLabel>
-          <Select
-            label={t('vaccination.type')}
-            value={values.type}
-            onChange={(e) => {
-              setTypeTouched(true);
-              onChange('type', e.target.value as VaccinationRecord['type']);
-            }}
-          >
-            {VACCINE_TYPE_ORDER.map((type) => (
-              <MenuItem key={type} value={type}>
-                {t(`vaccineTypes.${type}`)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <SearchableSelect
+          label={t('vaccination.type')}
+          value={values.type}
+          options={VACCINE_TYPE_ORDER.map((type) => ({
+            value: type,
+            label: t(`vaccineTypes.${type}`),
+          }))}
+          onChange={(next) => {
+            setTypeTouched(true);
+            onChange('type', next as VaccinationRecord['type']);
+          }}
+          sx={{ minWidth: 160 }}
+        />
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
         <DateField

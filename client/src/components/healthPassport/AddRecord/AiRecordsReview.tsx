@@ -7,10 +7,6 @@ import {
   Card,
   CardContent,
   Chip,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
   Stack,
   TextField,
   Typography,
@@ -18,6 +14,7 @@ import {
 import { FactCheck as FactCheckIcon } from '@mui/icons-material';
 
 import type { AiDetectedDraftRecord, AiDetectedRecordType } from '../hpTypes';
+import SearchableSelect from '../../ui/SearchableSelect';
 
 interface AiRecordsReviewProps {
   records: AiDetectedDraftRecord[];
@@ -208,22 +205,17 @@ export default function AiRecordsReview({
                   gap: 1.25,
                 }}
               >
-                <FormControl size="small">
-                  <InputLabel>{t('aiRecordsReview.targetTypeLabel')}</InputLabel>
-                  <Select
-                    label={t('aiRecordsReview.targetTypeLabel')}
-                    value={record.targetType}
-                    onChange={(e) =>
-                      onChange(record.id, { targetType: e.target.value as AiDetectedRecordType })
-                    }
-                  >
-                    {TARGET_TYPES.map((key) => (
-                      <MenuItem key={key} value={key}>
-                        {t(`aiRecordsReview.type.${key}` as never)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <SearchableSelect
+                  label={t('aiRecordsReview.targetTypeLabel')}
+                  value={record.targetType}
+                  options={TARGET_TYPES.map((key) => ({
+                    value: key,
+                    label: t(`aiRecordsReview.type.${key}` as never),
+                  }))}
+                  onChange={(next) =>
+                    onChange(record.id, { targetType: next as AiDetectedRecordType })
+                  }
+                />
                 <TextField
                   size="small"
                   label={t('aiRecordsReview.fieldName')}

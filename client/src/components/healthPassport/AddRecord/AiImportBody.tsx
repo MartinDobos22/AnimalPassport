@@ -3,12 +3,8 @@ import {
   Box,
   Card,
   Checkbox,
-  FormControl,
   FormControlLabel,
-  InputLabel,
   LinearProgress,
-  MenuItem,
-  Select,
   Stack,
   Step,
   StepLabel,
@@ -20,6 +16,7 @@ import {
 import { useTranslation } from 'react-i18next';
 
 import { VISIT_CATEGORY_OPTIONS } from '../constants';
+import SearchableSelect from '../../ui/SearchableSelect';
 import { useAiImportContext } from './AiImport';
 import AttachmentUpload from './AttachmentUpload';
 import AiRecordsReview from './AiRecordsReview';
@@ -86,40 +83,31 @@ export default function AiImportBody() {
                 gap: 1.5,
               }}
             >
-              <FormControl size="small">
-                <InputLabel>{t('addRecord.basics.mainCategoryOptional')}</InputLabel>
-                <Select
-                  label={t('addRecord.basics.mainCategoryOptional')}
-                  value={state.selectedMainCategory}
-                  onChange={(e) => setMainCategory(e.target.value)}
-                >
-                  <MenuItem value="">
-                    <em>{t('visitCategory.notSelected')}</em>
-                  </MenuItem>
-                  {VISIT_CATEGORY_OPTIONS.map((opt) => (
-                    <MenuItem key={opt.key} value={opt.key}>
-                      {t(`visitCategory.${opt.key}` as never)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl size="small" disabled={!state.selectedMainCategory}>
-                <InputLabel>{t('addRecord.basics.subcategory')}</InputLabel>
-                <Select
-                  label={t('addRecord.basics.subcategory')}
-                  value={state.selectedSubcategory}
-                  onChange={(e) => setSubcategory(e.target.value)}
-                >
-                  <MenuItem value="">
-                    <em>{t('visitCategory.notSelected')}</em>
-                  </MenuItem>
-                  {subOptions.map((sub) => (
-                    <MenuItem key={sub.key} value={sub.key}>
-                      {t(`visitCategory.${sub.key}` as never)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <SearchableSelect
+                label={t('addRecord.basics.mainCategoryOptional')}
+                value={state.selectedMainCategory}
+                options={[
+                  { value: '', label: t('visitCategory.notSelected') },
+                  ...VISIT_CATEGORY_OPTIONS.map((opt) => ({
+                    value: opt.key,
+                    label: t(`visitCategory.${opt.key}` as never),
+                  })),
+                ]}
+                onChange={setMainCategory}
+              />
+              <SearchableSelect
+                label={t('addRecord.basics.subcategory')}
+                value={state.selectedSubcategory}
+                disabled={!state.selectedMainCategory}
+                options={[
+                  { value: '', label: t('visitCategory.notSelected') },
+                  ...subOptions.map((sub) => ({
+                    value: sub.key,
+                    label: t(`visitCategory.${sub.key}` as never),
+                  })),
+                ]}
+                onChange={setSubcategory}
+              />
             </Box>
 
             <Alert severity="info">{t('addRecord.aiImport.privacyNotice')}</Alert>
