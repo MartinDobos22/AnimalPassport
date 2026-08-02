@@ -42,6 +42,7 @@ import HealthRemindersDemo from '../components/landing/HealthRemindersDemo';
 import PetSpeciesShowcase from '../components/landing/PetSpeciesShowcase';
 import RevealOnScroll from '../components/landing/RevealOnScroll';
 import AppPreview from '../components/landing/AppPreview';
+import Testimonials from '../components/landing/Testimonials';
 import FinalCta from '../components/landing/FinalCta';
 import LandingFooter from '../components/landing/LandingFooter';
 import PawlyLogo from '../components/PawlyLogo';
@@ -309,6 +310,9 @@ export default function LandingPage({ darkMode, onToggleTheme }: Props) {
         </RevealOnScroll>
         <RevealOnScroll>
           <PetSpeciesShowcase />
+        </RevealOnScroll>
+        <RevealOnScroll>
+          <Testimonials />
         </RevealOnScroll>
         <RevealOnScroll>
           <FinalCta />

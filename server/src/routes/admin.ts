@@ -17,6 +17,8 @@ import { listAiGenerations } from '../services/articleAiService';
 import type { ArticleStatus } from '../types/article';
 import { uploadArticleImage } from '../services/articleImageService';
 import { deleteMediaImage, listMediaImages, updateMediaImage } from '../services/mediaImageService';
+import { deleteReview, listAllReviews, setReviewStatus } from '../services/reviewService';
+import type { ReviewStatus } from '../types/review';
 import {
   isPublishConfigured,
   requestNetlifyRedeploy,
@@ -335,5 +337,38 @@ users.post('/:id/admin', async (req: Request, res: Response, next: NextFunction)
 });
 
 router.use('/users', requireAdmin, users);
+
+// Moderácia používateľských recenzií — zoznam, schválenie/zamietnutie, mazanie.
+const reviews = Router();
+
+reviews.get('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const status = typeof req.query.status === 'string' ? req.query.status : undefined;
+    res.json({ reviews: await listAllReviews(status) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+reviews.post('/:id/status', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const status = (req.body as { status?: unknown })?.status as ReviewStatus;
+    const review = await setReviewStatus(String(req.params.id), status, req.user?.email ?? null);
+    res.json({ review });
+  } catch (err) {
+    next(err);
+  }
+});
+
+reviews.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await deleteReview(String(req.params.id));
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.use('/reviews', requireAdmin, reviews);
 
 export default router;

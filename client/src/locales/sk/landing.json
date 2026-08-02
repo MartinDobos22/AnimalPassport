@@ -1,4 +1,9 @@
 {
+  "testimonials": {
+    "title": "Čo hovoria majitelia",
+    "subtitle": "Skutočné recenzie ľudí, ktorí sa cez Pawly starajú o svojich miláčikov.",
+    "anonymous": "Používateľ Pawly"
+  },
   "about": {
     "title": "O aplikácii",
     "subtitle": "Malý pomocník pre veľkú lásku k tvojim zvieratkám.",
