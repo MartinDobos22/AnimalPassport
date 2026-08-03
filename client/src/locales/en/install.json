@@ -38,20 +38,36 @@
           "a": "In Profiles, add your pet — name, species, breed and any allergies or intolerances. You can have multiple profiles and switch between pets at the top."
         },
         {
-          "q": "2. Fill in the health passport",
+          "q": "2. Check the Overview",
+          "a": "The Overview is your home screen — see at a glance whether everything's fine for your pet, or something needs attention (an overdue reminder, an open episode, and so on)."
+        },
+        {
+          "q": "3. Fill in the health passport",
           "a": "In the Health Passport you record vaccinations, dewormings, parasite treatments and chronic conditions. Got an old paper card? Use AI import — snap a photo and Pawly extracts the records for you."
         },
         {
-          "q": "3. Analyze food",
+          "q": "4. Set the current food",
+          "a": "In Food, note what your pet is currently eating — main food, treats and supplements. This lets Pawly flag health connections when the food changes."
+        },
+        {
+          "q": "5. Analyze food",
           "a": "In Analysis, paste the food's ingredients as text or photograph the packaging. The AI rates the quality and flags ingredients that clash with the allergies in your pet's profile."
         },
         {
-          "q": "4. Log episodes in the diary",
+          "q": "6. Do a weekly check-in",
+          "a": "Once a week, quickly note how your pet's been doing — a couple of taps is enough. If a symptom keeps recurring, Pawly suggests logging it as a health episode."
+        },
+        {
+          "q": "7. Log episodes in the diary",
           "a": "In the Diary you record health episodes — vomiting, limping, skin issues or behaviour changes — with a date, category and note. For each new episode the AI pulls a summary of similar past records so you can spot the connections."
         },
         {
-          "q": "5. Prepare the vet card",
+          "q": "8. Prepare the vet card",
           "a": "The Vet Card produces a clean, print-ready (A4) summary — take it to a check-up or share it with your treating vet."
+        },
+        {
+          "q": "9. Set up notifications",
+          "a": "In Notifications, choose how many days in advance you want an email before a vaccination, deworming or other reminder is due, and which record types to be notified about."
         }
       ]
     }

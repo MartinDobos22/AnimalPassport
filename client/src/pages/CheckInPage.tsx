@@ -1,19 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  Stack,
-  TextField,
-  Typography,
-  useTheme,
-} from '@mui/material';
+import { Alert, Box, Button, Card, Stack, TextField, Typography, useTheme } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { Add as AddIcon, FactCheck as FactCheckIcon } from '@mui/icons-material';
 import Seo from '../components/Seo';
+import FeatureIntro from '../components/FeatureIntro';
 import IconTile from '../components/ui/IconTile';
 import PageContainer from '../components/ui/PageContainer';
 import SearchableSelect from '../components/ui/SearchableSelect';
@@ -173,6 +165,8 @@ export default function CheckInPage() {
         <CheckInResult severity={resultSeverity} petName={petName} onDone={resetFlow} />
       ) : step === 'hub' ? (
         <Stack spacing={theme.spacing(2)}>
+          <FeatureIntro featureKey="checkIn" icon={<FactCheckIcon />} />
+
           {petSelector}
 
           <Card

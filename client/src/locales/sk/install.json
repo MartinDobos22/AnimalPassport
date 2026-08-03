@@ -38,20 +38,36 @@
           "a": "V sekcii Profily pridaj svojho miláčika — meno, druh, plemeno a prípadné alergie či intolerancie. Profilov môžeš mať viac a medzi zvieratami sa prepínaš hore."
         },
         {
-          "q": "2. Vyplň zdravotný pas",
+          "q": "2. Skontroluj Prehľad",
+          "a": "Prehľad je tvoja domovská obrazovka — na jeden pohľad vidíš, či je u zvieraťa všetko v poriadku, alebo treba niečo doriešiť (pripomienka po termíne, otvorená epizóda a pod.)."
+        },
+        {
+          "q": "3. Vyplň zdravotný pas",
           "a": "V Zdravotnom pase zaznamenáš očkovania, odčervenia, ošetrenia proti parazitom a chronické stavy. Máš starú papierovú kartu? Použi AI import — odfoť ju a Pawly z nej vytiahne záznamy za teba."
         },
         {
-          "q": "3. Analyzuj krmivo",
+          "q": "4. Nastav si krmivo",
+          "a": "V sekcii Krmivo si zaznač, čo zviera aktuálne je — hlavné krmivo, pamlsky aj doplnky. Pawly vďaka tomu vie upozorniť na súvislosti so zdravím pri zmene krmiva."
+        },
+        {
+          "q": "5. Analyzuj krmivo",
           "a": "V Analýze vlož zloženie krmiva textom alebo odfoť obal. AI vyhodnotí kvalitu a upozorní na zložky, ktoré nesedia s alergiami z profilu tvojho zvieraťa."
         },
         {
-          "q": "4. Zapisuj epizódy do denníka",
+          "q": "6. Vyplň týždenný check-in",
+          "a": "Raz za týždeň rýchlo zaznač, ako sa zviera malo — pár klikov stačí. Ak sa nejaký príznak opakuje, Pawly ti navrhne založiť z neho zdravotnú epizódu."
+        },
+        {
+          "q": "7. Zapisuj epizódy do denníka",
           "a": "V Denníku si zaznamenáš zdravotné epizódy — zvracanie, kuľhanie, kožné problémy či zmeny správania — s dátumom, kategóriou a poznámkou. AI ti k novej epizóde vytiahne zhrnutie podobných minulých záznamov a hneď uvidíš súvislosti."
         },
         {
-          "q": "5. Priprav kartu pre veterinára",
+          "q": "8. Priprav kartu pre veterinára",
           "a": "Karta pre veterinára spraví prehľadný súhrn na tlač (A4) — vezmi ho so sebou na kontrolu alebo ho zdieľaj s ošetrujúcim lekárom."
+        },
+        {
+          "q": "9. Nastav si notifikácie",
+          "a": "V Notifikáciách si vyber, koľko dní vopred chceš dostať e-mail pred termínom vakcinácie, odčervenia či inej pripomienky, a ktoré typy záznamov chceš hlásiť."
         }
       ]
     }

@@ -7,7 +7,7 @@
     "tabInstall": "Inštalácia",
     "tabTour": "Sprievodca",
     "restartTourTitle": "Spustiť úvodný sprievodca",
-    "restartTourDescription": "Krátky 4-krokový tutoriál ti ukáže hlavné funkcie aplikácie.",
+    "restartTourDescription": "Krátky 5-krokový tutoriál ti ukáže hlavné funkcie aplikácie.",
     "restartTourCta": "Spustiť sprievodcu",
     "close": "Zavrieť"
   },
@@ -42,6 +42,26 @@
       "title": "Na čo slúžia Profily zvierat",
       "body": "Maj tu plemeno, vek, alergie a stavy každého zvieraťa — využíva ich analýza aj pas.",
       "example": "Napr. pridaj alergiu na kura a analýza ťa automaticky upozorní."
+    },
+    "overview": {
+      "title": "Na čo slúži Prehľad",
+      "body": "Tvoja domovská obrazovka — na prvý pohľad vidíš, či je u každého zvieraťa všetko v poriadku, alebo treba niečo doriešiť.",
+      "example": "Napr. farebný stav upozorní na pripomienku po termíne alebo otvorenú zdravotnú epizódu."
+    },
+    "food": {
+      "title": "Na čo slúži Krmivo",
+      "body": "Sleduj, aké krmivo, pamlsky a doplnky zviera aktuálne dostáva, a Pawly ti pomôže všimnúť si súvislosti so zdravím.",
+      "example": "Napr. po zmene krmiva sa v check-inoch objaví zmena stolice — Pawly ti to ukáže."
+    },
+    "checkIn": {
+      "title": "Na čo slúži Týždenný check-in",
+      "body": "Raz za týždeň rýchlo zaznač, ako sa zviera malo — pár klikov stačí, a pri opakujúcom sa probléme ti Pawly navrhne založiť zdravotnú epizódu.",
+      "example": "Napr. „Všetko v poriadku“ na dva kliky, alebo doplň apetít, energiu a stolicu detailnejšie."
+    },
+    "notifications": {
+      "title": "Na čo slúžia Notifikácie",
+      "body": "Nastav si, koľko dní vopred chceš dostať e-mail pred termínom vakcinácie, odčervenia či inej pripomienky.",
+      "example": "Napr. pripomienka 14 aj 1 deň pred preočkovaním, nech na nič nezabudneš."
     }
   },
   "onboarding": {
@@ -54,6 +74,10 @@
       "welcome": {
         "title": "Vitaj v Pawly",
         "body": "Analyzuj krmivo z fotky alebo textu — AI ti povie, či sedí tvojmu zvieraťu, a varuje pred alergénmi."
+      },
+      "dashboard": {
+        "title": "Prehľad, krmivo a check-in",
+        "body": "Na domovskej obrazovke Prehľad vidíš stav zvieraťa na prvý pohľad. V sekcii Krmivo si zaznač, čo zviera je, a raz za týždeň vyplň rýchly check-in, ako sa malo."
       },
       "profile": {
         "title": "Profily a zdravotný pas",

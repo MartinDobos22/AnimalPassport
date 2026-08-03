@@ -7,7 +7,7 @@
     "tabInstall": "Install",
     "tabTour": "Tour",
     "restartTourTitle": "Start the welcome tour",
-    "restartTourDescription": "A short 4-step tutorial that walks you through the main features.",
+    "restartTourDescription": "A short 5-step tutorial that walks you through the main features.",
     "restartTourCta": "Start tour",
     "close": "Close"
   },
@@ -42,6 +42,26 @@
       "title": "What Pet Profiles are for",
       "body": "Keep each pet's breed, age, allergies and conditions here — analyses and the passport use them.",
       "example": "e.g. add a chicken allergy so food analysis warns you automatically."
+    },
+    "overview": {
+      "title": "What the Overview is for",
+      "body": "Your home screen — see at a glance whether everything's fine for each pet, or something needs attention.",
+      "example": "e.g. the status color flags an overdue reminder or an open health episode."
+    },
+    "food": {
+      "title": "What Food is for",
+      "body": "Track what food, treats and supplements your pet is currently getting, and Pawly helps spot health connections.",
+      "example": "e.g. after a food change, check-ins show a change in stool — Pawly points it out."
+    },
+    "checkIn": {
+      "title": "What the Weekly Check-in is for",
+      "body": "Once a week, quickly note how your pet's been doing — a couple of taps is enough, and if a problem keeps recurring, Pawly suggests logging a health episode.",
+      "example": "e.g. \"All fine\" in two taps, or add appetite, energy and stool in more detail."
+    },
+    "notifications": {
+      "title": "What Notifications are for",
+      "body": "Set how many days in advance you want an email before a vaccination, deworming or other reminder is due.",
+      "example": "e.g. a reminder 14 and 1 day before a booster shot, so nothing slips through."
     }
   },
   "onboarding": {
@@ -54,6 +74,10 @@
       "welcome": {
         "title": "Welcome to Pawly",
         "body": "Analyze pet food from a photo or text — AI tells you whether it suits your pet and warns about allergens."
+      },
+      "dashboard": {
+        "title": "Overview, food and check-ins",
+        "body": "The Overview home screen shows your pet's status at a glance. In Food, note what your pet is eating, and once a week fill in a quick check-in on how they've been doing."
       },
       "profile": {
         "title": "Profiles and health passport",

@@ -21,7 +21,7 @@ type SectionKey = 'platforms' | 'usage';
 
 const SECTION_ITEM_COUNT: Record<SectionKey, number> = {
   platforms: 3,
-  usage: 5,
+  usage: 9,
 };
 
 function GuideAccordion({ sectionKey }: { sectionKey: SectionKey }) {

@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { NotificationsActive as NotifyIcon } from '@mui/icons-material';
 
+import FeatureIntro from '../components/FeatureIntro';
 import IconTile from '../components/ui/IconTile';
 import PageContainer from '../components/ui/PageContainer';
 import { useAuth } from '../hooks/useAuth';
@@ -110,6 +111,8 @@ export default function NotificationsPage() {
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         {t('notifications.description')}
       </Typography>
+
+      <FeatureIntro featureKey="notifications" icon={<NotifyIcon />} />
 
       {(error || localError) && (
         <Alert severity="warning" sx={{ mb: 2 }}>

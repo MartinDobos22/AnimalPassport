@@ -17,8 +17,10 @@ import {
   Add as AddIcon,
   FactCheck as FactCheckIcon,
   InfoOutlined as InfoOutlinedIcon,
+  SpaceDashboard as SpaceDashboardIcon,
 } from '@mui/icons-material';
 import Seo from '../components/Seo';
+import FeatureIntro from '../components/FeatureIntro';
 import PageContainer from '../components/ui/PageContainer';
 import PetStatusCard from '../components/overview/PetStatusCard';
 import CareStatusChip from '../components/overview/CareStatusChip';
@@ -154,6 +156,8 @@ export default function OverviewPage() {
       <Typography variant="body1" color="text.secondary" sx={{ mb: theme.spacing(3) }}>
         {t('overview.subtitle')}
       </Typography>
+
+      <FeatureIntro featureKey="overview" icon={<SpaceDashboardIcon />} />
 
       {error && (
         <Alert severity="error" sx={{ mb: theme.spacing(2) }}>
