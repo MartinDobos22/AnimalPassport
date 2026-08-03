@@ -4,7 +4,7 @@ import { Stack, TextField } from '@mui/material';
 import type { EctoparasiteRecord } from '../../../../../types/petHealth';
 import type { EctoFieldsValues } from '../../formTypes';
 import SearchableSelect from '../../../../ui/SearchableSelect';
-import { formatDate, plusDays } from '../../../utils';
+import NextDueFields from './NextDueFields';
 
 interface EctoFieldsProps {
   values: EctoFieldsValues;
@@ -14,12 +14,7 @@ interface EctoFieldsProps {
 }
 
 export default function EctoFields({ values, baseDate, errorProduct, onChange }: EctoFieldsProps) {
-  const { t, i18n } = useTranslation('healthPassport');
-  const locale = i18n.language === 'en' ? 'en-GB' : 'sk-SK';
-  const nextDue =
-    baseDate && values.intervalDays > 0
-      ? formatDate(plusDays(baseDate, values.intervalDays), locale)
-      : '—';
+  const { t } = useTranslation('healthPassport');
 
   return (
     <Stack spacing={1.5}>
@@ -45,15 +40,13 @@ export default function EctoFields({ values, baseDate, errorProduct, onChange }:
           sx={{ minWidth: 160 }}
         />
       </Stack>
-      <TextField
-        size="small"
-        type="number"
-        label={t('ectoparasite.intervalDays')}
-        value={values.intervalDays}
-        onChange={(e) => onChange('intervalDays', Number(e.target.value) || 0)}
-        inputProps={{ min: 1, step: 1 }}
-        helperText={t('ectoparasite.nextDue', { date: nextDue })}
-        fullWidth
+      <NextDueFields
+        intervalLabel={t('ectoparasite.intervalDays')}
+        intervalDays={values.intervalDays}
+        validUntil={values.validUntil}
+        baseDate={baseDate}
+        onChangeInterval={(days) => onChange('intervalDays', days)}
+        onChangeValidUntil={(date) => onChange('validUntil', date)}
       />
     </Stack>
   );

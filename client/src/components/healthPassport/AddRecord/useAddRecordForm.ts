@@ -51,6 +51,7 @@ const DEFAULT_TREATMENT: TreatmentFieldsValues = {
   category: 'ALLERGY_SKIN',
   name: '',
   form: 'TABLET',
+  validUntil: '',
   intervalDays: 28,
 };
 
@@ -58,7 +59,7 @@ const DEFAULT_MEDICATION: MedicationFieldsValues = {
   name: '',
   reason: '',
   dose: '',
-  frequency: '2x denne',
+  frequency: '',
   endDate: '',
 };
 
