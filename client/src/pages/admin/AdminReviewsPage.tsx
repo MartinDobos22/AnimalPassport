@@ -23,11 +23,7 @@ import {
 } from '@mui/icons-material';
 import PageContainer from '../../components/ui/PageContainer';
 import PageHeader from '../../components/ui/PageHeader';
-import {
-  deleteAdminReview,
-  listAdminReviews,
-  setReviewStatus,
-} from '../../services/adminApi';
+import { deleteAdminReview, listAdminReviews, setReviewStatus } from '../../services/adminApi';
 import type { AdminReview, ReviewStatus } from '../../types/review';
 
 type Filter = 'all' | ReviewStatus;

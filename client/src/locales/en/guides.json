@@ -118,6 +118,25 @@
       },
       "tip": "AI import handles multiple pages at once. Photograph the whole booklet page by page and upload them together to save yourself the typing."
     },
+    "addRecord": {
+      "title": "New record",
+      "intro": "The form for logging what happened — from a single vaccination to a whole vet visit with medication and expenses.",
+      "steps": {
+        "0": {
+          "title": "Choose what you're recording",
+          "body": "You can pick a quick single-item entry, the manual form, or AI import from a photo of the paper booklet. Use AI import for old history and the manual form for today's visit."
+        },
+        "1": {
+          "title": "Fill in the visit basics",
+          "body": "Date, clinic and reason. This is the backbone of the record — everything else hangs off it."
+        },
+        "2": {
+          "title": "Attach what happened during the visit",
+          "body": "In the linked records section you enable a vaccination, deworming, parasite treatment, therapy, medication or food change. They are saved together with expenses and notes, so the visit stays in one piece."
+        }
+      },
+      "tip": "You don't have to fill in everything. A date and a record type are enough — you can add the rest later from the record detail."
+    },
     "diary": {
       "title": "Health diary",
       "intro": "A place for health episodes — vomiting, limping, skin problems, behaviour changes. It exists so that next time you know what worked.",

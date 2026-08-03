@@ -37,7 +37,12 @@ export default function Testimonials() {
             return (
               <Card key={review.id} sx={{ height: '100%', borderRadius: 3 }}>
                 <CardContent
-                  sx={{ p: { xs: 2.5, md: 3 }, height: '100%', display: 'flex', flexDirection: 'column' }}
+                  sx={{
+                    p: { xs: 2.5, md: 3 },
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
                 >
                   <FormatQuoteIcon
                     sx={{ color: theme.palette.primary.main, opacity: 0.5, fontSize: 32 }}

@@ -5,6 +5,7 @@ export type PageGuideKey =
   | 'analyze'
   | 'profiles'
   | 'passport'
+  | 'addRecord'
   | 'diary'
   | 'vetCard'
   | 'history'
@@ -23,6 +24,7 @@ interface RouteGuide {
 // Poradie určuje prioritu — dlhšie prefixy musia byť pred kratšími,
 // inak by `/zdravotny-pas/zaznamy` spadlo na všeobecnejší match.
 const ROUTE_GUIDES: readonly RouteGuide[] = [
+  { path: '/zdravotny-pas/novy-zaznam', key: 'addRecord' },
   { path: '/zdravotny-pas', key: 'passport' },
   { path: '/karta-pre-veterinara', key: 'vetCard' },
   { path: '/notifikacie', key: 'notifications' },

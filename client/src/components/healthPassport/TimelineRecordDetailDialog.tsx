@@ -877,9 +877,7 @@ export default function TimelineRecordDetailDialog({
               { value: 'FOOD', label: t('detail.expCategoryFood') },
               { value: 'OTHER', label: t('detail.expCategoryOther') },
             ]}
-            onChange={(next) =>
-              setExpDraft((p) => ({ ...p, category: next as ExpenseCategory }))
-            }
+            onChange={(next) => setExpDraft((p) => ({ ...p, category: next as ExpenseCategory }))}
             fullWidth
           />
           <TextField

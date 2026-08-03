@@ -1,12 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Dialog, DialogContent, DialogTitle, IconButton, Stack, Typography } from '@mui/material';
 import { Close as CloseIcon, RateReview as RateReviewIcon } from '@mui/icons-material';
 import ReviewForm from './ReviewForm';
 

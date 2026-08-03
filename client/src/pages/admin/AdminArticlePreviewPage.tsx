@@ -31,7 +31,9 @@ export default function AdminArticlePreviewPage({ darkMode, onToggleTheme }: Pro
 
   return (
     <BlogLayout darkMode={darkMode} onToggleTheme={onToggleTheme}>
-      <Box sx={{ bgcolor: 'warning.main', color: 'warning.contrastText', py: 1, textAlign: 'center' }}>
+      <Box
+        sx={{ bgcolor: 'warning.main', color: 'warning.contrastText', py: 1, textAlign: 'center' }}
+      >
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           Náhľad konceptu — takto bude článok vyzerať na webe (zatiaľ nie je verejný).
         </Typography>

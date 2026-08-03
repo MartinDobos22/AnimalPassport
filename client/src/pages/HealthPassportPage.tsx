@@ -1001,6 +1001,7 @@ export default function HealthPassportPage() {
         icon: <VaccinesIcon />,
         accentColor: theme.palette.success.main,
         eyebrow: t('overview.vaccination'),
+        hint: t('hints.vaccination'),
         title: t(`vaccineTypes.${type}`),
         subtitle: r.validUntil
           ? t('overviewCard.dueDate', { date: formatDateShort(r.validUntil) })
@@ -1026,6 +1027,7 @@ export default function HealthPassportPage() {
         icon: <BiotechIcon />,
         accentColor: theme.palette.secondary.main,
         eyebrow: t('overview.deworming'),
+        hint: t('hints.deworming'),
         title: latestDeworming.productName,
         subtitle: latestDeworming.nextDueDate
           ? t('overviewCard.dueDate', { date: formatDateShort(latestDeworming.nextDueDate) })
@@ -1047,6 +1049,7 @@ export default function HealthPassportPage() {
         icon: <DewormingIcon />,
         accentColor: theme.palette.info.main,
         eyebrow: t('overview.ecto'),
+        hint: t('hints.ectoparasite'),
         title: latestEcto.productName,
         subtitle: latestEcto.nextDueDate
           ? t('overviewCard.dueDate', { date: formatDateShort(latestEcto.nextDueDate) })
@@ -1065,6 +1068,7 @@ export default function HealthPassportPage() {
         icon: <HealingIcon />,
         accentColor: theme.palette.warning.main,
         eyebrow: `${t('overview.treatment')} · ${t(`treatmentCategories.${trt.category}`)}`,
+        hint: t('hints.treatment'),
         title: trt.name,
         subtitle: trt.nextDueDate
           ? t('overviewCard.dueDate', { date: formatDateShort(trt.nextDueDate) })

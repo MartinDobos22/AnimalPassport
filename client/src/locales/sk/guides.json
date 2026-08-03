@@ -118,6 +118,25 @@
       },
       "tip": "AI import zvláda aj viac strán naraz. Odfoť celý preukaz stranu po strane a nahraj ich spolu — ušetríš si prepisovanie."
     },
+    "addRecord": {
+      "title": "Nový záznam",
+      "intro": "Formulár na zapísanie toho, čo sa udialo — od jednej vakcíny až po celú návštevu veterinára s liekmi a výdavkami.",
+      "steps": {
+        "0": {
+          "title": "Vyber, čo zapisuješ",
+          "body": "Máš na výber rýchly zápis jednej veci, ručný formulár, alebo AI import z fotky papierového preukazu. Na starú históriu použi AI import, na dnešnú návštevu ručný formulár."
+        },
+        "1": {
+          "title": "Vyplň základ návštevy",
+          "body": "Dátum, ambulancia a dôvod. Toto je kostra záznamu — všetko ostatné sa na ňu vešia."
+        },
+        "2": {
+          "title": "Pripoj, čo sa na návšteve udialo",
+          "body": "V sekcii prepojených záznamov zapneš vakcináciu, odčervenie, ošetrenie proti parazitom, liečbu, lieky či zmenu krmiva. Uložia sa naraz aj s výdavkami a poznámkami, takže návšteva zostane pokope."
+        }
+      },
+      "tip": "Nemusíš vyplniť všetko. Dátum a typ záznamu stačia — zvyšok doplníš neskôr cez detail záznamu."
+    },
     "diary": {
       "title": "Zdravotný denník",
       "intro": "Miesto na zdravotné epizódy — zvracanie, kuľhanie, kožné problémy, zmeny správania. Slúži na to, aby si pri opakovaní vedel, čo minule zabralo.",

@@ -95,9 +95,7 @@ export default function AdminUsersPage() {
                 <TableRow key={user.id}>
                   <TableCell>{user.email ?? '—'}</TableCell>
                   <TableCell>
-                    {user.createdAt
-                      ? new Date(user.createdAt).toLocaleDateString('sk-SK')
-                      : '—'}
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString('sk-SK') : '—'}
                   </TableCell>
                   <TableCell align="right">
                     <Switch

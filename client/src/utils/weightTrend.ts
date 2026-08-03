@@ -23,18 +23,12 @@ export function computeWeightTrend(logs: WeightLog[]): WeightTrend | null {
   const previous = points[points.length - 2].kg;
   const deltaKg = latest - previous;
   const deltaPct = previous !== 0 ? (deltaKg / previous) * 100 : 0;
-  const direction =
-    Math.abs(deltaKg) < FLAT_THRESHOLD_KG ? 'flat' : deltaKg > 0 ? 'up' : 'down';
+  const direction = Math.abs(deltaKg) < FLAT_THRESHOLD_KG ? 'flat' : deltaKg > 0 ? 'up' : 'down';
 
   return { points, latest, previous, deltaKg, deltaPct, direction };
 }
 
-export function sparklinePath(
-  values: number[],
-  width: number,
-  height: number,
-  pad = 2
-): string {
+export function sparklinePath(values: number[], width: number, height: number, pad = 2): string {
   if (values.length < 2) return '';
   const min = Math.min(...values);
   const max = Math.max(...values);

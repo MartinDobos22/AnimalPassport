@@ -160,7 +160,7 @@ export default function VetCardActionBar({
             <TuneIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title={t('actionBar.printPreview')}>
+        <Tooltip title={t('hints.print')}>
           <IconButton
             onClick={onPrintPreview}
             aria-label={t('actionBar.printPreview')}
@@ -170,7 +170,7 @@ export default function VetCardActionBar({
             <PrintIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title={t('actionBar.exportPdf')}>
+        <Tooltip title={t('hints.export')}>
           <span>
             <Button
               variant="contained"

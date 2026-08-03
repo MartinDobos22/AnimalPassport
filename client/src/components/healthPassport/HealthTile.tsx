@@ -16,6 +16,7 @@ import {
   VisibilityOffOutlined as HideIcon,
 } from '@mui/icons-material';
 import type { Theme } from '@mui/material/styles';
+import HelpHint from '../HelpHint';
 
 export type HealthTileSection = 'PREVENTIVE' | 'CONDITION' | 'EXAM';
 export type HealthTileTone = 'error' | 'warning' | 'success' | 'info' | 'neutral';
@@ -32,6 +33,8 @@ export interface HealthMetricTile {
   /** Domain color for the icon chip and left accent bar. */
   accentColor: string;
   eyebrow: string;
+  /** Voliteľné vysvetlenie kategórie — „?“ vedľa eyebrow. */
+  hint?: string;
   title: string;
   subtitle?: string;
   state?: HealthTileState;
@@ -66,8 +69,19 @@ interface Props {
 export default function HealthTile({ metric }: Props) {
   const theme = useTheme();
   const { t } = useTranslation('healthPassport');
-  const { icon, accentColor, eyebrow, title, subtitle, state, progress, onOpen, onHistory, onHide } =
-    metric;
+  const {
+    icon,
+    accentColor,
+    eyebrow,
+    hint,
+    title,
+    subtitle,
+    state,
+    progress,
+    onOpen,
+    onHistory,
+    onHide,
+  } = metric;
   const stateColor = state ? toneColor(theme, state.tone) : accentColor;
 
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -178,6 +192,7 @@ export default function HealthTile({ metric }: Props) {
           >
             {eyebrow}
           </Typography>
+          {hint && <HelpHint text={hint} size={14} />}
         </Stack>
         <Typography sx={{ fontSize: '1.05rem', fontWeight: 700, lineHeight: 1.2, mt: 0.5 }} noWrap>
           {title}

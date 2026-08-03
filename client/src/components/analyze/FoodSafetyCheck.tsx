@@ -23,6 +23,7 @@ import {
   WarningAmber as CautionIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import HelpHint from '../HelpHint';
 import { useActivePet } from '../../hooks/useActivePet';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { askFoodSafety } from '../../services/api';
@@ -213,6 +214,7 @@ export default function FoodSafetyCheck() {
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
           {t('foodSafety.title')}
         </Typography>
+        <HelpHint text={t('hints.foodSafety')} />
       </Stack>
 
       <Stack direction="row" gap={1} alignItems="stretch">

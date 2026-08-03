@@ -62,13 +62,7 @@ function formatDate(iso: string): string {
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleString('sk-SK');
 }
 
-export default function ArticleVersionsDrawer({
-  open,
-  slug,
-  current,
-  onClose,
-  onRestored,
-}: Props) {
+export default function ArticleVersionsDrawer({ open, slug, current, onClose, onRestored }: Props) {
   const theme = useTheme();
   const [versions, setVersions] = useState<ArticleVersionMeta[]>([]);
   const [loading, setLoading] = useState(false);
@@ -175,7 +169,11 @@ export default function ArticleVersionsDrawer({
                   v{v.versionNumber}
                   {v.changeSummary ? ` · ${v.changeSummary}` : ''}
                 </Typography>
-                <Chip size="small" label={KIND_CONFIG[v.kind].label} color={KIND_CONFIG[v.kind].color} />
+                <Chip
+                  size="small"
+                  label={KIND_CONFIG[v.kind].label}
+                  color={KIND_CONFIG[v.kind].color}
+                />
               </Stack>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                 {formatDate(v.createdAt)}
@@ -207,9 +205,7 @@ export default function ArticleVersionsDrawer({
       )}
 
       <Dialog open={Boolean(preview)} onClose={() => setPreview(null)} fullWidth maxWidth="md">
-        <DialogTitle>
-          Náhľad verzie {preview ? `v${preview.versionNumber}` : ''}
-        </DialogTitle>
+        <DialogTitle>Náhľad verzie {preview ? `v${preview.versionNumber}` : ''}</DialogTitle>
         <DialogContent dividers>
           {preview && (
             <Box>
@@ -245,9 +241,7 @@ export default function ArticleVersionsDrawer({
       </Dialog>
 
       <Dialog open={Boolean(diff)} onClose={() => setDiff(null)} fullWidth maxWidth="md">
-        <DialogTitle>
-          Porovnanie: v{diff?.versionNumber} → aktuálny stav
-        </DialogTitle>
+        <DialogTitle>Porovnanie: v{diff?.versionNumber} → aktuálny stav</DialogTitle>
         <DialogContent dividers>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
             <Box component="span" sx={{ color: 'success.main' }}>

@@ -116,9 +116,7 @@ export default function SetCurrentFoodDialog({
             fullWidth
           />
           {replacedName && (
-            <Alert severity="warning">
-              {t('food.overwriteWarning', { name: replacedName })}
-            </Alert>
+            <Alert severity="warning">{t('food.overwriteWarning', { name: replacedName })}</Alert>
           )}
           <TextField
             label={t('food.foodName')}

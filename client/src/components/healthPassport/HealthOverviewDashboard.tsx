@@ -23,7 +23,10 @@ export default function HealthOverviewDashboard({ metrics, onAdd }: Props) {
   const hide = (id: string) => setHiddenIds((prev) => [...new Set([...prev, id])]);
   const restore = (id: string) => setHiddenIds((prev) => prev.filter((x) => x !== id));
 
-  const shown = useMemo(() => metrics.filter((m) => !hiddenIds.includes(m.id)), [metrics, hiddenIds]);
+  const shown = useMemo(
+    () => metrics.filter((m) => !hiddenIds.includes(m.id)),
+    [metrics, hiddenIds]
+  );
   const hiddenMetrics = useMemo(
     () => metrics.filter((m) => hiddenIds.includes(m.id)),
     [metrics, hiddenIds]

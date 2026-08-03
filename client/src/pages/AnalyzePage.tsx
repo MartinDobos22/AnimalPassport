@@ -229,6 +229,7 @@ export default function AnalyzePage() {
             >
               {extractingText ? t('form.scanning') : t('form.scanLabel')}
             </Button>
+            <HelpHint text={t('hints.fileUpload')} />
           </Stack>
 
           {scanInfo && (

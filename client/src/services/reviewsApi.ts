@@ -20,7 +20,12 @@ async function authedRequest<T>(path: string, init?: RequestInit): Promise<T> {
     const body = (await res.json().catch(() => null)) as {
       error?: { message?: string; code?: string };
     } | null;
-    logger.error('Reviews API zlyhal', { method, url, status: res.status, code: body?.error?.code });
+    logger.error('Reviews API zlyhal', {
+      method,
+      url,
+      status: res.status,
+      code: body?.error?.code,
+    });
     throw new Error(body?.error?.message ?? `Chyba servera (${res.status})`);
   }
   if (res.status === 204) return undefined as T;

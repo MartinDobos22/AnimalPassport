@@ -666,9 +666,7 @@ export default function PetProfilePage() {
                       setForm({
                         ...form,
                         chronicConditions: (form.chronicConditions ?? []).map((x) =>
-                          x.id === c.id
-                            ? { ...x, status: next as NonNullable<typeof x.status> }
-                            : x
+                          x.id === c.id ? { ...x, status: next as NonNullable<typeof x.status> } : x
                         ),
                       })
                     }
