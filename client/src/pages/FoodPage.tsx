@@ -2,8 +2,13 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Card, Stack, Typography, useTheme } from '@mui/material';
-import { Add as AddIcon, Science as ScienceIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  Restaurant as RestaurantIcon,
+  Science as ScienceIcon,
+} from '@mui/icons-material';
 import Seo from '../components/Seo';
+import FeatureIntro from '../components/FeatureIntro';
 import PageContainer from '../components/ui/PageContainer';
 import SearchableSelect from '../components/ui/SearchableSelect';
 import CurrentFoodCard from '../components/food/CurrentFoodCard';
@@ -80,6 +85,8 @@ export default function FoodPage() {
       <Typography variant="body1" color="text.secondary" sx={{ mb: theme.spacing(2) }}>
         {t('food.subtitle')}
       </Typography>
+
+      <FeatureIntro featureKey="food" icon={<RestaurantIcon />} />
 
       <Stack
         direction={{ xs: 'column', sm: 'row' }}

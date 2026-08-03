@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Button, Stack, Typography, useTheme } from '@mui/material';
+import HelpHint from '../HelpHint';
 import type { CheckInOverallStatus } from '../../types/petHealth';
 
 interface Props {
@@ -13,7 +14,12 @@ export default function QuickCheckInStep({ petName, onSelect }: Props) {
 
   return (
     <Stack spacing={theme.spacing(2)}>
-      <Typography variant="h6">{t('checkIn.question', { name: petName })}</Typography>
+      <Stack direction="row" alignItems="center">
+        <Typography variant="h6" sx={{ minWidth: 0 }}>
+          {t('checkIn.question', { name: petName })}
+        </Typography>
+        <HelpHint text={t('hints.checkInQuestion')} />
+      </Stack>
       <Button variant="contained" size="large" onClick={() => onSelect('ok')}>
         {t('checkIn.optionOk')}
       </Button>

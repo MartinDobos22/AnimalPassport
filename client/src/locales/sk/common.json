@@ -7,7 +7,7 @@
     "tabInstall": "Inštalácia",
     "tabTour": "Sprievodca",
     "restartTourTitle": "Spustiť úvodný sprievodca",
-    "restartTourDescription": "Krátky 4-krokový tutoriál ti ukáže hlavné funkcie aplikácie.",
+    "restartTourDescription": "Krátky sprievodca ti ukáže hlavné funkcie aplikácie.",
     "restartTourCta": "Spustiť sprievodcu",
     "close": "Zavrieť"
   },
@@ -42,6 +42,21 @@
       "title": "Na čo slúžia Profily zvierat",
       "body": "Maj tu plemeno, vek, alergie a stavy každého zvieraťa — využíva ich analýza aj pas.",
       "example": "Napr. pridaj alergiu na kura a analýza ťa automaticky upozorní."
+    },
+    "checkIn": {
+      "title": "Na čo slúži Check-in",
+      "body": "Raz týždenne odklikni, ako sa zvieraťu darí — z pravidelných záznamov sa dajú vyčítať súvislosti.",
+      "example": "Napr. „Bez zmien“ každú nedeľu; keď sa niečo pokazí, hneď uvidíš, odkedy."
+    },
+    "food": {
+      "title": "Na čo slúži Krmivo",
+      "body": "Eviduj, čo zviera aktuálne žerie, vrátane pamlskov — Pawly to prepojí s tvojimi check-inmi.",
+      "example": "Napr. tráviace ťažkosti sa objavili až dva týždne po zmene granúl."
+    },
+    "notifications": {
+      "title": "Na čo slúžia Pripomienky",
+      "body": "Nastav si, o ktorých termínoch a s akým predstihom ti má prísť e-mail.",
+      "example": "Napr. upozornenie 30 dní pred preočkovaním proti besnote."
     }
   },
   "onboarding": {
@@ -53,19 +68,23 @@
     "steps": {
       "welcome": {
         "title": "Vitaj v Pawly",
-        "body": "Analyzuj krmivo z fotky alebo textu — AI ti povie, či sedí tvojmu zvieraťu, a varuje pred alergénmi."
+        "body": "Pawly ti drží zdravie zvieraťa na jednom mieste — zloženie krmiva, očkovania, termíny aj to, čo sa kedy dialo. Nič si nemusíš pamätať ani hľadať v papieroch."
       },
       "profile": {
-        "title": "Profily a zdravotný pas",
-        "body": "Vytvor profil zvieraťa, doplň alergie a veď zdravotný pas — vakcinácie, odčervenia, lieky aj váhu."
+        "title": "Začni profilom zvieraťa",
+        "body": "Vytvor profil — meno, plemeno, vek a hlavne alergie a zdravotné stavy. Z profilu čerpá celá aplikácia, takže analýza krmiva ťa vie upozorniť presne na to, čo tvojmu zvieraťu nesedí."
       },
-      "diary": {
-        "title": "Zdravotný denník a karta pre veterinára",
-        "body": "Zapisuj zdravotné záznamy a pred návštevou veterinára si vytlač prehľadnú kartu so všetkým, čo potrebuje vedieť."
+      "passport": {
+        "title": "Zdravotný pas a termíny",
+        "body": "Zapíš očkovania, odčervenia a lieky — alebo starý papierový preukaz jednoducho odfoť a Pawly z neho záznamy vytiahne. Blížiace sa termíny ti potom sám pripomenie a pred návštevou si vytlačíš kartu pre veterinára."
+      },
+      "routine": {
+        "title": "Krátka týždenná rutina",
+        "body": "Raz týždenne odklikni check-in, zapíš aktuálne krmivo a väčšie ťažkosti do denníka. Z týchto drobností Pawly poskladá súvislosti — napríklad že problémy začali po zmene granúl."
       },
       "install": {
         "title": "Nainštaluj si appku",
-        "body": "Pridaj Pawly na plochu telefónu alebo počítača a používaj ju ako natívnu aplikáciu — aj offline. Pomoc nájdeš kedykoľvek cez tlačidlo „?“ vpravo dole."
+        "body": "Pridaj Pawly na plochu telefónu alebo počítača a používaj ju ako natívnu aplikáciu — aj offline. Tlačidlo „?“ vpravo dole má vždy návod ku stránke, na ktorej práve si."
       }
     }
   },
@@ -396,5 +415,12 @@
     "week_other": "týždňov",
     "month_other": "mesiacov",
     "year_other": "rokov"
+  },
+  "hints": {
+    "currentFood": "Aktuálne krmivo je to, čo zviera žerie teraz. Keď ho zmeníš, predchádzajúce sa automaticky uzavrie dnešným dátumom a presunie do histórie — tak vieš spätne dohľadať, odkedy dokedy čo žralo.",
+    "treats": "Pamlsky, maškrty a doplnky stravy. Bývajú najčastejším skrytým zdrojom alergénov — aj keď hlavné krmivo sedí, reakciu môže spôsobiť niečo z tohto zoznamu.",
+    "foodInsights": "Porovnanie zmien krmiva s príznakmi z tvojich check-inov. Ide o štatistickú súvislosť, nie diagnózu — čím viac check-inov máš, tým je spoľahlivejšia.",
+    "checkInQuestion": "Stačí jedna odpoveď a check-in môžeš uložiť. Podrobnosti sú dobrovoľné — pridaj ich, keď si niečo všimneš.",
+    "leadDays": "Koľko dní pred termínom ti príde e-mail. Môžeš zvoliť viac hodnôt naraz — napríklad 30 dní na objednanie k veterinárovi a 7 dní ako pripomienku."
   }
 }

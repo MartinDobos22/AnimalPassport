@@ -1,0 +1,217 @@
+{
+  "onThisPage": "Na tejto stránke",
+  "stepsTitle": "Ako na to",
+  "tipLabel": "Tip",
+  "moreHelp": "Ďalšie návody nájdeš v záložke „Ako používať“.",
+  "pages": {
+    "overview": {
+      "title": "Prehľad",
+      "intro": "Domovská obrazovka ti na jednom mieste ukáže, ako je na tom tvoje zviera dnes a čo ho čaká.",
+      "steps": {
+        "0": {
+          "title": "Prečítaj si farebný stav",
+          "body": "Zelená znamená, že je všetko v poriadku. Oranžová upozorňuje, že sa blíži termín — napríklad preočkovanie alebo odčervenie. Červená hovorí, že je niečo po termíne a treba to riešiť."
+        },
+        "1": {
+          "title": "Sprav ďalší krok",
+          "body": "Karta „Ďalší krok“ ti vždy ponúkne jednu konkrétnu akciu — doplniť chýbajúci údaj, spraviť check-in alebo zapísať návštevu veterinára. Stačí ju kliknúť."
+        },
+        "2": {
+          "title": "Prepínaj medzi zvieratami",
+          "body": "Ak máš viac miláčikov, prepínač hore v hlavičke mení, ktorého zvieraťa údaje vidíš. Prehľad sa prepočíta okamžite."
+        }
+      },
+      "tip": "Ak sa ti stav zdá prísny, skontroluj v Zdravotnom pase dátumy posledných záznamov — prehľad počíta termíny práve z nich."
+    },
+    "checkIn": {
+      "title": "Check-in",
+      "intro": "Krátke týždenné odškrtnutie, ako sa zvieraťu darí. Za pár sekúnd tak vzniká história, z ktorej sa dajú vyčítať súvislosti.",
+      "steps": {
+        "0": {
+          "title": "Odpovedz na jednu otázku",
+          "body": "Vyber, či je všetko v poriadku, či si zaznamenal zmenu, alebo si nie si istý. Toto samo o sebe stačí — check-in môžeš hneď uložiť."
+        },
+        "1": {
+          "title": "Doplň detaily, ak chceš",
+          "body": "Cez „Pridať podrobnosti“ zapíšeš váhu, chuť do jedla, energiu, trus, kožu a srsť či zmeny správania. Čím viac vyplníš, tým presnejšie budú neskoršie súvislosti."
+        },
+        "2": {
+          "title": "Sleduj trend",
+          "body": "Pod formulárom nájdeš históriu a trend. Ak sa ten istý príznak opakuje, Pawly ťa na to upozorní a ponúkne založiť zdravotnú epizódu."
+        }
+      },
+      "tip": "Najväčšiu hodnotu má pravidelnosť. Aj samé „všetko v poriadku“ raz týždenne je cenný záznam — bez neho sa nedá povedať, čo je pre tvoje zviera normál."
+    },
+    "food": {
+      "title": "Krmivo",
+      "intro": "Evidencia toho, čo zviera aktuálne žerie — vrátane pamlskov a doplnkov. Pawly to potom prepája s check-inmi.",
+      "steps": {
+        "0": {
+          "title": "Nastav aktuálne krmivo",
+          "body": "Zadaj názov granúl a dátum, odkedy ich zviera žerie. Predchádzajúce krmivo sa automaticky uzavrie a presunie do histórie."
+        },
+        "1": {
+          "title": "Pridaj pamlsky a doplnky",
+          "body": "Do samostatného zoznamu zapíš, čo zviera dostáva okrem hlavného krmiva. Práve pamlsky bývajú skrytým zdrojom alergénov."
+        },
+        "2": {
+          "title": "Pozri si súvislosti",
+          "body": "Karta so súvislosťami porovná zmeny krmiva s príznakmi z check-inov — napríklad či sa tráviace ťažkosti objavili až po prechode na nové granule."
+        }
+      },
+      "tip": "Ak chceš vedieť, či krmivo sedí alergiám tvojho zvieraťa, pošli jeho zloženie do Analýzy — výsledok sa premietne späť sem."
+    },
+    "analyze": {
+      "title": "Analýza krmiva",
+      "intro": "Vlož zloženie krmiva a AI ho vyhodnotí voči profilu tvojho zvieraťa — vrátane alergénov.",
+      "steps": {
+        "0": {
+          "title": "Vlož zloženie",
+          "body": "Buď prepíš zloženie z obalu do textového poľa, alebo rovno odfoť či nahraj obal a Pawly z neho text prečíta sám."
+        },
+        "1": {
+          "title": "Skontroluj, ktoré zviera analyzuješ",
+          "body": "Analýza sa robí voči profilu vybraného zvieraťa. Alergie a zdravotné stavy z profilu určujú, na čo ťa aplikácia upozorní."
+        },
+        "2": {
+          "title": "Prečítaj si výsledok",
+          "body": "Dostaneš skóre, rozpad kladov a záporov a zvýraznené rizikové zložky. Výsledok sa automaticky uloží do Histórie, aby si sa k nemu vedel vrátiť."
+        }
+      },
+      "tip": "Kvalita fotky rozhoduje. Fotograf zloženie zblízka, kolmo a pri dobrom svetle — rozmazaný text AI prečíta horšie."
+    },
+    "profiles": {
+      "title": "Profily zvierat",
+      "intro": "Základ celej aplikácie. Z profilu čerpá analýza krmiva, zdravotný pas aj karta pre veterinára.",
+      "steps": {
+        "0": {
+          "title": "Vyplň základné údaje",
+          "body": "Meno, druh, plemeno, dátum narodenia a váha. Podľa veku a plemena vie Pawly lepšie posúdiť odporúčania."
+        },
+        "1": {
+          "title": "Doplň alergie a zdravotné stavy",
+          "body": "Toto je najdôležitejšia časť. Každá zapísaná alergia či intolerancia sa premietne do varovaní pri analýze krmiva."
+        },
+        "2": {
+          "title": "Pridaj ďalšie zvieratá",
+          "body": "Profilov môžeš mať viac. Medzi zvieratami sa prepínaš v hlavičke a každé má vlastný pas, denník aj históriu."
+        }
+      },
+      "tip": "Profil nie je jednorazová vec. Keď sa zviera niečo nové zistí — nová alergia, chronický stav — vráť sa sem a doplň to."
+    },
+    "passport": {
+      "title": "Zdravotný pas",
+      "intro": "Digitálna náhrada papierovej karty. Vakcinácie, odčervenia, ošetrenia proti parazitom, lieky, návštevy aj váha na jednom mieste.",
+      "steps": {
+        "0": {
+          "title": "Naimportuj starú kartu",
+          "body": "Máš papierový preukaz? Cez AI import ho odfoť a Pawly z neho vytiahne jednotlivé záznamy. Pred uložením ti ich ukáže na kontrolu — vždy si ich prejdi."
+        },
+        "1": {
+          "title": "Pridávaj záznamy priebežne",
+          "body": "Cez „Nový záznam“ zapíšeš vakcináciu, odčervenie, návštevu či liek. Pri návšteve veterinára môžeš naraz pridať aj všetko, čo sa na nej udialo."
+        },
+        "2": {
+          "title": "Sleduj termíny",
+          "body": "Záznamy s dátumom ďalšej dávky sa automaticky objavia v Prehľade a v Pripomienkach. O preočkovaní tak nemusíš premýšľať."
+        }
+      },
+      "tip": "AI import zvláda aj viac strán naraz. Odfoť celý preukaz stranu po strane a nahraj ich spolu — ušetríš si prepisovanie."
+    },
+    "diary": {
+      "title": "Zdravotný denník",
+      "intro": "Miesto na zdravotné epizódy — zvracanie, kuľhanie, kožné problémy, zmeny správania. Slúži na to, aby si pri opakovaní vedel, čo minule zabralo.",
+      "steps": {
+        "0": {
+          "title": "Zapíš, čo sa stalo",
+          "body": "Dátum, kategória a krátky popis. Môžeš priložiť aj fotku — napríklad vyrážky, ktorá o týždeň vyzerá inak."
+        },
+        "1": {
+          "title": "Dopíš, čo zabralo",
+          "body": "Toto je časť, na ktorú sa najčastejšie zabúda a ktorá má najväčšiu hodnotu. Zapíš liečbu a či pomohla."
+        },
+        "2": {
+          "title": "Využi zhrnutie podobných epizód",
+          "body": "K novej epizóde ti AI vytiahne súhrn podobných minulých záznamov, takže hneď vidíš, či ide o opakujúci sa problém a ako sa riešil."
+        }
+      },
+      "tip": "Filtre nad zoznamom ti pomôžu nájsť všetky epizódy jednej kategórie — napríklad všetky tráviace ťažkosti za posledný rok."
+    },
+    "vetCard": {
+      "title": "Karta pre veterinára",
+      "intro": "Súhrn na jednu A4, ktorý si vytlačíš alebo ukážeš na mobile pri návšteve veterinára.",
+      "steps": {
+        "0": {
+          "title": "Skontroluj obsah",
+          "body": "Karta čerpá z profilu, zdravotného pasu a denníka. Prejdi si ju a over, že sú v nej aktuálne údaje — najmä aktívne lieky."
+        },
+        "1": {
+          "title": "Vytlač alebo ulož ako PDF",
+          "body": "Tlačidlo tlače pripraví verziu bez ovládacích prvkov. V dialógu tlače si môžeš zvoliť uloženie do PDF a poslať ho e-mailom."
+        },
+        "2": {
+          "title": "Vezmi ju na kontrolu",
+          "body": "Veterinár tak hneď vidí históriu vakcinácií, chronické stavy aj nedávne ťažkosti bez toho, aby si si musel všetko pamätať."
+        }
+      },
+      "tip": "Kartu si priprav ešte doma. Na mieste býva málo času a niečo dôležité sa ľahko zabudne spomenúť."
+    },
+    "history": {
+      "title": "História analýz",
+      "intro": "Archív všetkých analýz krmiva, ktoré si spravil.",
+      "steps": {
+        "0": {
+          "title": "Nájdi staršiu analýzu",
+          "body": "Záznamy sú zoradené od najnovšieho. Otvorením ktoréhokoľvek sa dostaneš na kompletný výsledok aj s odôvodnením."
+        },
+        "1": {
+          "title": "Porovnaj krmivá",
+          "body": "Keď sa rozhoduješ medzi dvoma granulami, otvor si obe analýzy a porovnaj skóre aj zoznam rizikových zložiek."
+        },
+        "2": {
+          "title": "Nastav víťaza ako aktuálne krmivo",
+          "body": "Keď sa rozhodneš, zapíš krmivo na stránke Krmivo — odvtedy sa bude prepájať s check-inmi."
+        }
+      },
+      "tip": "História je viazaná na tvoj účet, nie na zariadenie. Po prihlásení na inom telefóne ju nájdeš tak, ako si ju nechal."
+    },
+    "notifications": {
+      "title": "Pripomienky",
+      "intro": "Nastav si, o čom a s akým predstihom ti má Pawly dať vedieť e-mailom.",
+      "steps": {
+        "0": {
+          "title": "Zapni e-mailové pripomienky",
+          "body": "Hlavný prepínač riadi, či ti vôbec chodia e-maily. Bez neho sa termíny stále počítajú a vidíš ich v Prehľade, len ti nepríde upozornenie."
+        },
+        "1": {
+          "title": "Vyber typy záznamov",
+          "body": "Samostatne si zapneš vakcinácie, odčervenia, ošetrenia proti parazitom, kontroly a lieky. Čo ťa nezaujíma, jednoducho vypni."
+        },
+        "2": {
+          "title": "Nastav predstih",
+          "body": "Vyber, koľko dní pred termínom chceš upozorniť. Môžeš zvoliť aj viac hodnôt naraz — napríklad 30 dní aj 7 dní pred očkovaním."
+        }
+      },
+      "tip": "Pripomienky vychádzajú z dátumov v Zdravotnom pase. Ak ti nič nechodí, skontroluj, či majú záznamy vyplnený termín ďalšej dávky."
+    },
+    "settings": {
+      "title": "Nastavenia",
+      "intro": "Vzhľad aplikácie, jazyk a správa účtu vrátane tvojich údajov.",
+      "steps": {
+        "0": {
+          "title": "Zvoľ si vzhľad a jazyk",
+          "body": "Prepínač svetlého a tmavého režimu a voľba jazyka. Nastavenie zostáva na tomto zariadení."
+        },
+        "1": {
+          "title": "Exportuj si svoje dáta",
+          "body": "Kedykoľvek si môžeš stiahnuť všetko, čo o tvojich zvieratách evidujeme, v strojovo čitateľnom formáte."
+        },
+        "2": {
+          "title": "Sprav si poriadok v účte",
+          "body": "Tu sa aj odhlásiš alebo trvalo zmažeš účet. Zmazanie účtu je nevratné a odstráni aj všetky zdravotné záznamy."
+        }
+      },
+      "tip": "Pred zmazaním účtu si urob export. Po potvrdení sa dáta nedajú obnoviť."
+    }
+  }
+}

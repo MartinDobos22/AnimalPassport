@@ -19,8 +19,8 @@ import {
   Pets as PetsIcon,
   Science as ScienceIcon,
   HealthAndSafety as HealthAndSafetyIcon,
-  MenuBook as MenuBookIcon,
   InstallMobile as InstallMobileIcon,
+  FactCheck as FactCheckIcon,
 } from '@mui/icons-material';
 
 interface OnboardingTourProps {
@@ -28,12 +28,13 @@ interface OnboardingTourProps {
   onClose: () => void;
 }
 
-type StepKey = 'welcome' | 'profile' | 'diary' | 'install';
+type StepKey = 'welcome' | 'profile' | 'passport' | 'routine' | 'install';
 
 const STEP_ICONS: Record<StepKey, typeof ScienceIcon> = {
   welcome: ScienceIcon,
   profile: PetsIcon,
-  diary: MenuBookIcon,
+  passport: HealthAndSafetyIcon,
+  routine: FactCheckIcon,
   install: InstallMobileIcon,
 };
 
@@ -45,7 +46,10 @@ export default function OnboardingTour({ open, onClose }: OnboardingTourProps) {
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [activeStep, setActiveStep] = useState(0);
 
-  const steps: StepKey[] = useMemo(() => ['welcome', 'profile', 'diary', 'install'], []);
+  const steps: StepKey[] = useMemo(
+    () => ['welcome', 'profile', 'passport', 'routine', 'install'],
+    []
+  );
   const totalSteps = steps.length;
   const isLast = activeStep === totalSteps - 1;
   const currentKey = steps[activeStep];

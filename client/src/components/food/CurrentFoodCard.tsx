@@ -20,6 +20,7 @@ export default function CurrentFoodCard({ current, onSetFood }: Props) {
         icon={<FoodIcon />}
         accent={theme.palette.diet.main}
         title={t('food.current')}
+        hint={t('hints.currentFood')}
         action={
           <Button
             size="small"

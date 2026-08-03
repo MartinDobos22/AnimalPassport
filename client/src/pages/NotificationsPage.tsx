@@ -16,6 +16,8 @@ import {
 } from '@mui/material';
 import { NotificationsActive as NotifyIcon } from '@mui/icons-material';
 
+import FeatureIntro from '../components/FeatureIntro';
+import HelpHint from '../components/HelpHint';
 import IconTile from '../components/ui/IconTile';
 import PageContainer from '../components/ui/PageContainer';
 import { useAuth } from '../hooks/useAuth';
@@ -45,6 +47,7 @@ export default function NotificationsPage() {
   const [localError, setLocalError] = useState<string | null>(null);
   const [customDay, setCustomDay] = useState('');
   const { t } = useTranslation('landing');
+  const { t: tCommon } = useTranslation('common');
 
   const dueText = (days: number): string => {
     if (days < 0) return t('notifications.dueText.overdue', { count: -days });
@@ -111,6 +114,8 @@ export default function NotificationsPage() {
         {t('notifications.description')}
       </Typography>
 
+      <FeatureIntro featureKey="notifications" icon={<NotifyIcon />} />
+
       {(error || localError) && (
         <Alert severity="warning" sx={{ mb: 2 }}>
           {localError ?? error}
@@ -150,9 +155,12 @@ export default function NotificationsPage() {
 
           <Card sx={{ p: 2, borderRadius: 2 }}>
             <Stack spacing={1.5}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                {t('notifications.leadDaysTitle')}
-              </Typography>
+              <Stack direction="row" alignItems="center">
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, minWidth: 0 }}>
+                  {t('notifications.leadDaysTitle')}
+                </Typography>
+                <HelpHint text={tCommon('hints.leadDays')} />
+              </Stack>
               <Stack direction="row" gap={1} flexWrap="wrap">
                 {LEAD_DAY_OPTIONS.map((day) => (
                   <Chip

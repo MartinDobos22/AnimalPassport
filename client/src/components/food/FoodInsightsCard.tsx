@@ -44,6 +44,7 @@ export default function FoodInsightsCard({ dietEntries, checkIns }: Props) {
         icon={<InsightsIcon />}
         accent={theme.palette.info.main}
         title={t('food.insightsTitle')}
+        hint={t('hints.foodInsights')}
       />
 
       {insights.length === 0 ? (

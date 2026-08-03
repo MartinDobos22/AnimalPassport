@@ -25,6 +25,7 @@ export default function TreatsList({ entries, onAdd }: Props) {
         icon={<CookieIcon />}
         accent={theme.palette.secondary.main}
         title={t('food.treatsTitle')}
+        hint={t('hints.treats')}
         action={
           <Button size="small" startIcon={<AddIcon />} onClick={onAdd}>
             {t('food.addTreat')}
