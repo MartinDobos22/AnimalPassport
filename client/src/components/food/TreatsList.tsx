@@ -1,5 +1,14 @@
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Chip, Divider, IconButton, Stack, Typography, useTheme } from '@mui/material';
+import {
+  Button,
+  Card,
+  Chip,
+  Divider,
+  IconButton,
+  Stack,
+  Typography,
+  useTheme,
+} from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Cookie as CookieIcon } from '@mui/icons-material';
 import FoodCardHeader from './FoodCardHeader';
 import { useHealthData } from '../../hooks/useHealthData';
@@ -25,6 +34,7 @@ export default function TreatsList({ entries, onAdd }: Props) {
         icon={<CookieIcon />}
         accent={theme.palette.secondary.main}
         title={t('food.treatsTitle')}
+        hint={t('hints.treats')}
         action={
           <Button size="small" startIcon={<AddIcon />} onClick={onAdd}>
             {t('food.addTreat')}
@@ -46,7 +56,9 @@ export default function TreatsList({ entries, onAdd }: Props) {
               <Chip
                 size="small"
                 variant="outlined"
-                label={d.foodType === 'supplement' ? t('food.typeSupplement') : t('food.typeTreats')}
+                label={
+                  d.foodType === 'supplement' ? t('food.typeSupplement') : t('food.typeTreats')
+                }
               />
               <IconButton
                 size="small"

@@ -432,15 +432,13 @@
   "deworming": {
     "product": "Product name",
     "validUntil": "Valid until",
-    "intervalDays": "Interval (days)",
-    "nextDue": "Next due: {{date}}"
+    "intervalDays": "Interval (days)"
   },
   "ectoparasite": {
     "product": "Product name",
     "form": "Form",
     "validUntil": "Valid until",
     "intervalDays": "Interval (days)",
-    "nextDue": "Next due: {{date}}",
     "formTablet": "Tablet",
     "formSpotOn": "Spot-on",
     "formCollar": "Collar"
@@ -910,7 +908,6 @@
     "reason": "Reason (optional)",
     "reasonPlaceholder": "e.g. allergy",
     "intervalDays": "Interval (days)",
-    "nextDue": "Next due: {{date}}",
     "oneOff": "No planned repeat (one-off)",
     "oneOffHint": "Only the date given is saved — no next due date or reminder.",
     "dateGiven": "Date given",
@@ -941,5 +938,9 @@
     "TOPICAL": "Ointment / shampoo",
     "DIET": "Diet",
     "OTHER": "Other"
+  },
+  "nextDue": {
+    "dateLabel": "Next dose date",
+    "helper": "Changing the interval shifts the date; entering a date recalculates the interval."
   }
 }

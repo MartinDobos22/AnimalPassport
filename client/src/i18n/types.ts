@@ -6,6 +6,7 @@ import type skVetCard from '../locales/sk/vetCard.json';
 import type skAuth from '../locales/sk/auth.json';
 import type skLanding from '../locales/sk/landing.json';
 import type skInstall from '../locales/sk/install.json';
+import type skGuides from '../locales/sk/guides.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -19,6 +20,7 @@ declare module 'i18next' {
       auth: typeof skAuth;
       landing: typeof skLanding;
       install: typeof skInstall;
+      guides: typeof skGuides;
     };
   }
 }

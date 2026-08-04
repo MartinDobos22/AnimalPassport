@@ -66,7 +66,10 @@ export default function PetSwitcher({ variant = 'sidebar' }: Props) {
 
   const empty = !activePet;
   const subtitle = activePet
-    ? [activePet.breed || speciesLabel(activePet), activePet.weightKg ? `${activePet.weightKg} kg` : null]
+    ? [
+        activePet.breed || speciesLabel(activePet),
+        activePet.weightKg ? `${activePet.weightKg} kg` : null,
+      ]
         .filter(Boolean)
         .join(' · ')
     : t('petSwitcher.noProfile');

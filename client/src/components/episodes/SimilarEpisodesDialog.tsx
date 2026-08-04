@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import AiFormattedText from '../AiFormattedText';
 import AiDisclaimer from '../AiDisclaimer';
+import HelpHint from '../HelpHint';
 import { type HealthEpisodeRecord, type SimilarEpisodeSummary } from '../../types/healthEpisode';
 import { fetchSimilarEpisodeSummary } from '../../services/api';
 import { logger } from '../../utils/logger';
@@ -163,9 +164,12 @@ export default function SimilarEpisodesDialog({
             <AiDisclaimer />
             {state.result.summary && (
               <Box>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
-                  {t('similar.summary')}
-                </Typography>
+                <Stack direction="row" alignItems="center" sx={{ mb: 0.5 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, minWidth: 0 }}>
+                    {t('similar.summary')}
+                  </Typography>
+                  <HelpHint text={t('hints.similarSummary')} />
+                </Stack>
                 <AiFormattedText text={state.result.summary} />
               </Box>
             )}

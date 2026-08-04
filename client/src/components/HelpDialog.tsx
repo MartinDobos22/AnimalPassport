@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -16,6 +17,8 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon, PlayArrow as PlayArrowIcon } from '@mui/icons-material';
 import { InstallSection, UsageSection } from './InstallGuideContent';
+import PageGuide from './PageGuide';
+import { getPageGuideKey } from '../content/pageGuides';
 
 interface HelpDialogProps {
   open: boolean;
@@ -23,13 +26,21 @@ interface HelpDialogProps {
   onStartTour: () => void;
 }
 
-type TabKey = 'usage' | 'install' | 'tour';
+type TabKey = 'page' | 'usage' | 'install' | 'tour';
 
 export default function HelpDialog({ open, onClose, onStartTour }: HelpDialogProps) {
   const { t } = useTranslation();
+  const { t: tGuides } = useTranslation('guides');
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const [tab, setTab] = useState<TabKey>('usage');
+  const { pathname } = useLocation();
+  const guideKey = getPageGuideKey(pathname);
+  const [tab, setTab] = useState<TabKey>(guideKey ? 'page' : 'usage');
+
+  // Otvorenie dialógu na inej stránke musí ukázať návod k nej, nie naposledy zvolenú záložku.
+  useEffect(() => {
+    if (open) setTab(guideKey ? 'page' : 'usage');
+  }, [open, guideKey]);
 
   return (
     <Dialog
@@ -61,15 +72,25 @@ export default function HelpDialog({ open, onClose, onStartTour }: HelpDialogPro
       <Tabs
         value={tab}
         onChange={(_e, v: TabKey) => setTab(v)}
-        variant="fullWidth"
+        variant={guideKey ? 'scrollable' : 'fullWidth'}
+        scrollButtons={false}
         sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}
       >
+        {guideKey && <Tab value="page" label={tGuides('onThisPage')} />}
         <Tab value="usage" label={t('help.tabUsage')} />
         <Tab value="install" label={t('help.tabInstall')} />
         <Tab value="tour" label={t('help.tabTour')} />
       </Tabs>
 
       <DialogContent sx={{ pt: 2 }}>
+        {tab === 'page' && guideKey && (
+          <>
+            <PageGuide guideKey={guideKey} />
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2.5 }}>
+              {tGuides('moreHelp')}
+            </Typography>
+          </>
+        )}
         {tab === 'usage' && <UsageSection />}
         {tab === 'install' && <InstallSection />}
         {tab === 'tour' && (

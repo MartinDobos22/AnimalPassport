@@ -10,6 +10,7 @@ import skVetCard from '../locales/sk/vetCard.json';
 import skAuth from '../locales/sk/auth.json';
 import skLanding from '../locales/sk/landing.json';
 import skInstall from '../locales/sk/install.json';
+import skGuides from '../locales/sk/guides.json';
 
 import enCommon from '../locales/en/common.json';
 import enAnalyze from '../locales/en/analyze.json';
@@ -19,6 +20,7 @@ import enVetCard from '../locales/en/vetCard.json';
 import enAuth from '../locales/en/auth.json';
 import enLanding from '../locales/en/landing.json';
 import enInstall from '../locales/en/install.json';
+import enGuides from '../locales/en/guides.json';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -31,6 +33,7 @@ export const namespaces = [
   'auth',
   'landing',
   'install',
+  'guides',
 ];
 
 export const resources = {
@@ -43,6 +46,7 @@ export const resources = {
     auth: skAuth,
     landing: skLanding,
     install: skInstall,
+    guides: skGuides,
   },
   en: {
     common: enCommon,
@@ -53,6 +57,7 @@ export const resources = {
     auth: enAuth,
     landing: enLanding,
     install: enInstall,
+    guides: enGuides,
   },
 };
 

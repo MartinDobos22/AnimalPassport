@@ -1,0 +1,236 @@
+{
+  "onThisPage": "On this page",
+  "stepsTitle": "How to use it",
+  "tipLabel": "Tip",
+  "moreHelp": "You'll find more guides under the “How to use” tab.",
+  "pages": {
+    "overview": {
+      "title": "Overview",
+      "intro": "Your home screen shows how your pet is doing today and what's coming up, all in one place.",
+      "steps": {
+        "0": {
+          "title": "Read the colour status",
+          "body": "Green means everything is fine. Orange warns that a due date is approaching — a booster shot or deworming, for example. Red means something is overdue and needs attention."
+        },
+        "1": {
+          "title": "Take the next step",
+          "body": "The “Next step” card always offers one concrete action — fill in missing data, do a check-in or record a vet visit. Just tap it."
+        },
+        "2": {
+          "title": "Switch between pets",
+          "body": "If you have several pets, the switcher in the header changes whose data you see. The overview recalculates instantly."
+        }
+      },
+      "tip": "If the status seems strict, check the dates of your latest records in the Health Passport — the overview calculates due dates from them."
+    },
+    "checkIn": {
+      "title": "Check-in",
+      "intro": "A quick weekly note on how your pet is doing. In a few seconds you build up a history that reveals patterns later.",
+      "steps": {
+        "0": {
+          "title": "Answer one question",
+          "body": "Choose whether everything is fine, you noticed a change, or you're not sure. That alone is enough — you can save the check-in right away."
+        },
+        "1": {
+          "title": "Add details if you want",
+          "body": "Under “Add details” you can record weight, appetite, energy, stool, skin and coat, and behaviour changes. The more you fill in, the sharper the later insights."
+        },
+        "2": {
+          "title": "Watch the trend",
+          "body": "Below the form you'll find the history and trend. If the same symptom keeps coming back, Pawly flags it and offers to open a health episode."
+        }
+      },
+      "tip": "Consistency matters most. Even a weekly “all fine” is a valuable record — without it there's no way to tell what normal looks like for your pet."
+    },
+    "food": {
+      "title": "Food",
+      "intro": "A record of what your pet currently eats — including treats and supplements. Pawly then links it to your check-ins.",
+      "steps": {
+        "0": {
+          "title": "Set the current food",
+          "body": "Enter the product name and the date your pet started eating it. The previous food is closed automatically and moved to history."
+        },
+        "1": {
+          "title": "Add treats and supplements",
+          "body": "Keep a separate list of everything your pet gets besides the main food. Treats are a common hidden source of allergens."
+        },
+        "2": {
+          "title": "Look at the insights",
+          "body": "The insights card compares food changes with symptoms from your check-ins — for example, whether digestive trouble started only after switching to a new food."
+        }
+      },
+      "tip": "To find out whether a food suits your pet's allergies, send its ingredient list to Analysis — the result feeds back here."
+    },
+    "analyze": {
+      "title": "Food analysis",
+      "intro": "Enter a food's ingredient list and AI evaluates it against your pet's profile, allergens included.",
+      "steps": {
+        "0": {
+          "title": "Enter the ingredients",
+          "body": "Either type the ingredient list from the packaging, or simply photograph or upload the label and Pawly will read the text for you."
+        },
+        "1": {
+          "title": "Check which pet you're analysing for",
+          "body": "The analysis runs against the selected pet's profile. The allergies and health conditions stored there decide what the app warns you about."
+        },
+        "2": {
+          "title": "Read the result",
+          "body": "You get a score, a breakdown of pros and cons, and highlighted risky ingredients. The result is saved to History automatically so you can come back to it."
+        }
+      },
+      "tip": "Photo quality decides the outcome. Shoot the ingredient list close up, straight on and in good light — blurry text is harder for the AI to read."
+    },
+    "profiles": {
+      "title": "Pet profiles",
+      "intro": "The foundation of the whole app. Food analysis, the health passport and the vet card all draw on the profile.",
+      "steps": {
+        "0": {
+          "title": "Fill in the basics",
+          "body": "Name, species, breed, date of birth and weight. Age and breed let Pawly judge its recommendations better."
+        },
+        "1": {
+          "title": "Add allergies and health conditions",
+          "body": "This is the most important part. Every allergy or intolerance you record turns into a warning during food analysis."
+        },
+        "2": {
+          "title": "Add more pets",
+          "body": "You can keep several profiles. Switch between pets in the header — each one has its own passport, diary and history."
+        }
+      },
+      "tip": "A profile isn't a one-off. When something new turns up — a new allergy, a chronic condition — come back and add it."
+    },
+    "passport": {
+      "title": "Health passport",
+      "intro": "A digital replacement for the paper booklet. Vaccinations, dewormings, parasite treatments, medication, visits and weight in one place.",
+      "steps": {
+        "0": {
+          "title": "Import your old booklet",
+          "body": "Got a paper record? Photograph it via AI import and Pawly will extract the individual entries. It shows them for review before saving — always go through them."
+        },
+        "1": {
+          "title": "Add records as you go",
+          "body": "Use “New record” to log a vaccination, deworming, visit or medication. For a vet visit you can add everything that happened during it at once."
+        },
+        "2": {
+          "title": "Keep track of due dates",
+          "body": "Records with a next-dose date show up automatically in the Overview and in Reminders, so booster shots take care of themselves."
+        }
+      },
+      "tip": "AI import handles multiple pages at once. Photograph the whole booklet page by page and upload them together to save yourself the typing."
+    },
+    "addRecord": {
+      "title": "New record",
+      "intro": "The form for logging what happened — from a single vaccination to a whole vet visit with medication and expenses.",
+      "steps": {
+        "0": {
+          "title": "Choose what you're recording",
+          "body": "You can pick a quick single-item entry, the manual form, or AI import from a photo of the paper booklet. Use AI import for old history and the manual form for today's visit."
+        },
+        "1": {
+          "title": "Fill in the visit basics",
+          "body": "Date, clinic and reason. This is the backbone of the record — everything else hangs off it."
+        },
+        "2": {
+          "title": "Attach what happened during the visit",
+          "body": "In the linked records section you enable a vaccination, deworming, parasite treatment, therapy, medication or food change. They are saved together with expenses and notes, so the visit stays in one piece."
+        }
+      },
+      "tip": "You don't have to fill in everything. A date and a record type are enough — you can add the rest later from the record detail."
+    },
+    "diary": {
+      "title": "Health diary",
+      "intro": "A place for health episodes — vomiting, limping, skin problems, behaviour changes. It exists so that next time you know what worked.",
+      "steps": {
+        "0": {
+          "title": "Record what happened",
+          "body": "Date, category and a short description. You can attach a photo too — a rash, for instance, looks different a week later."
+        },
+        "1": {
+          "title": "Write down what helped",
+          "body": "This is the part people most often skip and the one with the most value. Record the treatment and whether it worked."
+        },
+        "2": {
+          "title": "Use the similar-episode summary",
+          "body": "For each new episode the AI pulls together a summary of similar past records, so you can immediately see whether it's a recurring problem and how it was handled."
+        }
+      },
+      "tip": "The filters above the list help you find every episode in one category — all digestive problems over the past year, for example."
+    },
+    "vetCard": {
+      "title": "Vet card",
+      "intro": "A one-page summary you can print or show on your phone during a vet visit.",
+      "steps": {
+        "0": {
+          "title": "Check the contents",
+          "body": "The card draws on the profile, health passport and diary. Go through it and confirm the data is current — especially active medication."
+        },
+        "1": {
+          "title": "Print it or save as PDF",
+          "body": "The print button prepares a version without on-screen controls. In the print dialog you can choose to save as PDF and send it by e-mail."
+        },
+        "2": {
+          "title": "Take it to the appointment",
+          "body": "Your vet immediately sees the vaccination history, chronic conditions and recent problems without you having to remember everything."
+        }
+      },
+      "tip": "Prepare the card before you leave home. There's rarely enough time at the clinic and it's easy to forget something important."
+    },
+    "history": {
+      "title": "Analysis history",
+      "intro": "An archive of every food analysis you've run.",
+      "steps": {
+        "0": {
+          "title": "Find an older analysis",
+          "body": "Records are sorted newest first. Open any of them to get the full result along with the reasoning."
+        },
+        "1": {
+          "title": "Compare foods",
+          "body": "When choosing between two products, open both analyses and compare the scores and the lists of risky ingredients."
+        },
+        "2": {
+          "title": "Set the winner as current food",
+          "body": "Once you decide, record the food on the Food page — from then on it links up with your check-ins."
+        }
+      },
+      "tip": "History is tied to your account, not your device. Sign in on another phone and you'll find it exactly as you left it."
+    },
+    "notifications": {
+      "title": "Reminders",
+      "intro": "Choose what Pawly should e-mail you about, and how far in advance.",
+      "steps": {
+        "0": {
+          "title": "Turn on e-mail reminders",
+          "body": "The main switch controls whether you get e-mails at all. Without it, due dates are still calculated and visible in the Overview — you just won't be notified."
+        },
+        "1": {
+          "title": "Pick the record types",
+          "body": "Enable vaccinations, dewormings, parasite treatments, check-ups and medication separately. Simply switch off whatever you don't need."
+        },
+        "2": {
+          "title": "Set the lead time",
+          "body": "Choose how many days ahead you want to be warned. You can pick several values at once — 30 days and 7 days before a vaccination, for example."
+        }
+      },
+      "tip": "Reminders are based on the dates in your Health Passport. If nothing arrives, check that your records have a next-dose date filled in."
+    },
+    "settings": {
+      "title": "Settings",
+      "intro": "App appearance, language and account management, including your data.",
+      "steps": {
+        "0": {
+          "title": "Choose appearance and language",
+          "body": "The light and dark mode switch and the language selector. The setting stays on this device."
+        },
+        "1": {
+          "title": "Export your data",
+          "body": "You can download everything we hold about your pets at any time, in a machine-readable format."
+        },
+        "2": {
+          "title": "Tidy up your account",
+          "body": "This is also where you sign out or permanently delete your account. Deleting is irreversible and removes all health records too."
+        }
+      },
+      "tip": "Export your data before deleting the account. Once confirmed, it cannot be recovered."
+    }
+  }
+}

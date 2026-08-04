@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Checkbox, FormControlLabel, FormHelperText, Stack, TextField } from '@mui/material';
 
 import type { TreatmentFieldsValues } from '../../formTypes';
-import { formatDate, plusDays } from '../../../utils';
+import NextDueFields from './NextDueFields';
 import SearchableSelect from '../../../../ui/SearchableSelect';
 import {
   TREATMENT_CATEGORY_ORDER,
@@ -27,13 +27,8 @@ export default function TreatmentFields({
   errorName,
   onChange,
 }: TreatmentFieldsProps) {
-  const { t, i18n } = useTranslation('healthPassport');
-  const locale = i18n.language === 'en' ? 'en-GB' : 'sk-SK';
+  const { t } = useTranslation('healthPassport');
   const isOneOff = values.intervalDays === 0;
-  const nextDue =
-    baseDate && values.intervalDays > 0
-      ? formatDate(plusDays(baseDate, values.intervalDays), locale)
-      : '—';
 
   return (
     <Stack spacing={1.5}>
@@ -74,7 +69,10 @@ export default function TreatmentFields({
           <Checkbox
             size="small"
             checked={isOneOff}
-            onChange={(e) => onChange('intervalDays', e.target.checked ? 0 : DEFAULT_INTERVAL_DAYS)}
+            onChange={(e) => {
+              onChange('intervalDays', e.target.checked ? 0 : DEFAULT_INTERVAL_DAYS);
+              if (e.target.checked) onChange('validUntil', '');
+            }}
           />
         }
         label={t('treatment.oneOff')}
@@ -82,15 +80,13 @@ export default function TreatmentFields({
       {isOneOff ? (
         <FormHelperText>{t('treatment.oneOffHint')}</FormHelperText>
       ) : (
-        <TextField
-          size="small"
-          type="number"
-          label={t('treatment.intervalDays')}
-          value={values.intervalDays}
-          onChange={(e) => onChange('intervalDays', Number(e.target.value) || 0)}
-          inputProps={{ min: 0, step: 1 }}
-          helperText={t('treatment.nextDue', { date: nextDue })}
-          fullWidth
+        <NextDueFields
+          intervalLabel={t('treatment.intervalDays')}
+          intervalDays={values.intervalDays}
+          validUntil={values.validUntil}
+          baseDate={baseDate}
+          onChangeInterval={(days) => onChange('intervalDays', days)}
+          onChangeValidUntil={(date) => onChange('validUntil', date)}
         />
       )}
     </Stack>

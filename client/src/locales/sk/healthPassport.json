@@ -438,15 +438,13 @@
   "deworming": {
     "product": "Názov prípravku",
     "validUntil": "Platnosť do",
-    "intervalDays": "Interval (dni)",
-    "nextDue": "Ďalší termín: {{date}}"
+    "intervalDays": "Interval (dni)"
   },
   "ectoparasite": {
     "product": "Názov prípravku",
     "form": "Forma",
     "validUntil": "Platnosť do",
     "intervalDays": "Interval (dni)",
-    "nextDue": "Ďalší termín: {{date}}",
     "formTablet": "Tableta",
     "formSpotOn": "Spot-on",
     "formCollar": "Obojok"
@@ -946,7 +944,6 @@
     "reason": "Dôvod (voliteľné)",
     "reasonPlaceholder": "napr. alergia",
     "intervalDays": "Interval (dni)",
-    "nextDue": "Ďalší termín: {{date}}",
     "oneOff": "Bez plánovaného opakovania (jednorazová)",
     "oneOffHint": "Uloží sa iba dátum podania — bez ďalšieho termínu a pripomienky.",
     "dateGiven": "Dátum podania",
@@ -977,5 +974,9 @@
     "TOPICAL": "Masť / šampón",
     "DIET": "Diéta",
     "OTHER": "Iné"
+  },
+  "nextDue": {
+    "dateLabel": "Dátum ďalšej dávky",
+    "helper": "Zmena intervalu posunie dátum; zadaním dátumu sa prepočíta interval."
   }
 }

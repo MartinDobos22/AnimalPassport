@@ -101,7 +101,13 @@ export default function HealthScoreRing({
           spacing={0}
           sx={{ position: 'absolute', inset: 0, color: 'common.white' }}
         >
-          <FavoriteIcon sx={{ fontSize: size * 0.12, mb: 0.25, filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.3))' }} />
+          <FavoriteIcon
+            sx={{
+              fontSize: size * 0.12,
+              mb: 0.25,
+              filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.3))',
+            }}
+          />
           <Typography
             sx={{
               fontSize: size * 0.28,
@@ -115,7 +121,12 @@ export default function HealthScoreRing({
           </Typography>
           {hasScore && (
             <Typography
-              sx={{ fontSize: size * 0.08, fontWeight: 700, mt: 0.4, textShadow: '0 1px 6px rgba(0,0,0,0.28)' }}
+              sx={{
+                fontSize: size * 0.08,
+                fontWeight: 700,
+                mt: 0.4,
+                textShadow: '0 1px 6px rgba(0,0,0,0.28)',
+              }}
             >
               {labelForScore(value)}
             </Typography>

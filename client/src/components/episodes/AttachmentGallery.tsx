@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Box, Button, IconButton, TextField, Typography, useTheme } from '@mui/material';
+import HelpHint from '../HelpHint';
 import { AddPhotoAlternate as AddPhotoIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { downscaleImage, fileToDataUrl } from '../../utils/imageDownscale';
 import type { EpisodeAttachment } from '../../types/healthEpisode';
@@ -129,9 +130,11 @@ export default function AttachmentGallery({
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, flex: 1 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
           {t('attachments.title')}
         </Typography>
+        <HelpHint text={t('hints.attachments')} />
+        <Box sx={{ flex: 1 }} />
         <Button
           size="small"
           variant="outlined"

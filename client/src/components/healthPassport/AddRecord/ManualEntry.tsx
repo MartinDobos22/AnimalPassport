@@ -105,7 +105,8 @@ export default function ManualEntryProvider({
         form: tr.form,
         dateGiven: state.basics.date,
         intervalDays: tr.intervalDays > 0 ? tr.intervalDays : undefined,
-        nextDueDate: tr.intervalDays > 0 ? plusDays(state.basics.date, tr.intervalDays) : '',
+        nextDueDate:
+          tr.intervalDays > 0 ? tr.validUntil || plusDays(state.basics.date, tr.intervalDays) : '',
       });
     }
     onSave(bundle);

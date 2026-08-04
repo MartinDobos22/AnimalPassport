@@ -7,7 +7,7 @@
     "tabInstall": "Install",
     "tabTour": "Tour",
     "restartTourTitle": "Start the welcome tour",
-    "restartTourDescription": "A short 4-step tutorial that walks you through the main features.",
+    "restartTourDescription": "A short walkthrough of the app's main features.",
     "restartTourCta": "Start tour",
     "close": "Close"
   },
@@ -42,6 +42,21 @@
       "title": "What Pet Profiles are for",
       "body": "Keep each pet's breed, age, allergies and conditions here — analyses and the passport use them.",
       "example": "e.g. add a chicken allergy so food analysis warns you automatically."
+    },
+    "checkIn": {
+      "title": "What Check-in is for",
+      "body": "Tick off how your pet is doing once a week — regular records reveal patterns over time.",
+      "example": "E.g. “No changes” every Sunday; when something goes wrong you see exactly when it started."
+    },
+    "food": {
+      "title": "What Food is for",
+      "body": "Track what your pet currently eats, treats included — Pawly links it to your check-ins.",
+      "example": "E.g. digestive trouble only appeared two weeks after switching food."
+    },
+    "notifications": {
+      "title": "What Reminders are for",
+      "body": "Choose which due dates you want an e-mail about, and how far in advance.",
+      "example": "E.g. a warning 30 days before the rabies booster."
     }
   },
   "onboarding": {
@@ -53,19 +68,23 @@
     "steps": {
       "welcome": {
         "title": "Welcome to Pawly",
-        "body": "Analyze pet food from a photo or text — AI tells you whether it suits your pet and warns about allergens."
+        "body": "Pawly keeps your pet's health in one place — food ingredients, vaccinations, due dates and a record of what happened when. Nothing to memorise, nothing to dig out of a drawer."
       },
       "profile": {
-        "title": "Profiles and health passport",
-        "body": "Create a pet profile, add allergies and keep a health passport — vaccinations, dewormings, medications and weight."
+        "title": "Start with a pet profile",
+        "body": "Create a profile — name, breed, age and, above all, allergies and health conditions. The whole app draws on it, so food analysis can warn you about exactly what doesn't suit your pet."
       },
-      "diary": {
-        "title": "Health diary and vet card",
-        "body": "Log health records and print a clear vet card with everything the vet needs before each visit."
+      "passport": {
+        "title": "Health passport and due dates",
+        "body": "Record vaccinations, dewormings and medication — or simply photograph the old paper booklet and Pawly will extract the entries. It then reminds you of upcoming dates, and you can print a vet card before an appointment."
+      },
+      "routine": {
+        "title": "A short weekly routine",
+        "body": "Tick off a check-in once a week, note the current food and log bigger problems in the diary. From these small entries Pawly builds up the connections — that trouble started after a food change, for instance."
       },
       "install": {
         "title": "Install the app",
-        "body": "Add Pawly to your phone or desktop home screen and use it like a native app — even offline. You can find help anytime via the “?” button in the bottom-right."
+        "body": "Add Pawly to your phone or desktop home screen and use it like a native app — offline too. The “?” button in the bottom right always has a guide for the page you're on."
       }
     }
   },
@@ -386,5 +405,12 @@
     "month_other": "months",
     "year_one": "year",
     "year_other": "years"
+  },
+  "hints": {
+    "currentFood": "The current food is what your pet eats right now. When you change it, the previous one is closed automatically with today's date and moved to history — so you can look back and see what it ate and when.",
+    "treats": "Treats, snacks and supplements. They are the most common hidden source of allergens — even when the main food is fine, something from this list can cause a reaction.",
+    "foodInsights": "A comparison of food changes with symptoms from your check-ins. This is a statistical link, not a diagnosis — the more check-ins you have, the more reliable it gets.",
+    "checkInQuestion": "One answer is enough to save a check-in. Details are optional — add them when you notice something.",
+    "leadDays": "How many days before the due date you get an e-mail. You can pick several values at once — 30 days to book the vet and 7 days as a reminder, for example."
   }
 }

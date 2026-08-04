@@ -111,8 +111,7 @@ export default function HealthTimeline({
       ? filteredBase.filter((e) => e.date.slice(0, 10) === dayFilter)
       : filteredBase;
     return [...list].sort(
-      (a, b) =>
-        b.date.localeCompare(a.date) || (b.createdAt ?? '').localeCompare(a.createdAt ?? '')
+      (a, b) => b.date.localeCompare(a.date) || (b.createdAt ?? '').localeCompare(a.createdAt ?? '')
     );
   }, [filteredBase, dayFilter]);
 

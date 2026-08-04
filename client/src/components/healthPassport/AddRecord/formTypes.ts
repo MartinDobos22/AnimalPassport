@@ -46,6 +46,7 @@ export interface TreatmentFieldsValues {
   category: TreatmentCategory;
   name: string;
   form: TreatmentForm;
+  validUntil: string;
   intervalDays: number;
 }
 

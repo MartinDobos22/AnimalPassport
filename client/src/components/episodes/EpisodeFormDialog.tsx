@@ -232,6 +232,7 @@ export default function EpisodeFormDialog({
                     label: t(`severity.${s}` as never),
                   }))}
                   onChange={(next) => update('severity', next)}
+                  helperText={t('hints.severity')}
                   size="medium"
                   fullWidth
                 />

@@ -85,13 +85,10 @@ export async function uploadArticleImage(payload: {
   width?: number;
   height?: number;
 }): Promise<{ url: string; objectPath: string; media: MediaImage }> {
-  return request<{ url: string; objectPath: string; media: MediaImage }>(
-    '/articles/upload-image',
-    {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }
-  );
+  return request<{ url: string; objectPath: string; media: MediaImage }>('/articles/upload-image', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function listMedia(): Promise<MediaImage[]> {
@@ -141,10 +138,10 @@ export async function listAdminReviews(status?: ReviewStatus): Promise<AdminRevi
 }
 
 export async function setReviewStatus(id: string, status: ReviewStatus): Promise<AdminReview> {
-  const data = await request<{ review: AdminReview }>(
-    `/reviews/${encodeURIComponent(id)}/status`,
-    { method: 'POST', body: JSON.stringify({ status }) }
-  );
+  const data = await request<{ review: AdminReview }>(`/reviews/${encodeURIComponent(id)}/status`, {
+    method: 'POST',
+    body: JSON.stringify({ status }),
+  });
   return data.review;
 }
 

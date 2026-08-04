@@ -1,6 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { Box, Button, Card, IconButton, Typography, useTheme } from '@mui/material';
-import { Add as AddIcon, Close as CloseIcon, Celebration as CelebrationIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  Close as CloseIcon,
+  Celebration as CelebrationIcon,
+} from '@mui/icons-material';
 import type { OnboardingIntent } from '../../utils/onboardingIntent';
 
 interface Props {

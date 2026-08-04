@@ -8,7 +8,16 @@ import {
 import IconTile from './ui/IconTile';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-type FeatureKey = 'diary' | 'passport' | 'vetCard' | 'analyze' | 'history' | 'profiles';
+type FeatureKey =
+  | 'diary'
+  | 'passport'
+  | 'vetCard'
+  | 'analyze'
+  | 'history'
+  | 'profiles'
+  | 'checkIn'
+  | 'food'
+  | 'notifications';
 
 interface FeatureIntroProps {
   featureKey: FeatureKey;

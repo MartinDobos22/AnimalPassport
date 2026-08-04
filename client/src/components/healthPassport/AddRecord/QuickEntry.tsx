@@ -58,13 +58,14 @@ const DEFAULTS = {
     category: 'ALLERGY_SKIN',
     name: '',
     form: 'TABLET',
+    validUntil: '',
     intervalDays: 28,
   } as TreatmentFieldsValues,
   medication: {
     name: '',
     reason: '',
     dose: '',
-    frequency: '2x denne',
+    frequency: '',
     endDate: '',
   } as MedicationFieldsValues,
   diet: { foodName: '', reactionNotes: '', suitabilityStatus: 'SUITABLE' } as DietFieldsValues,
@@ -213,7 +214,10 @@ export default function QuickEntryProvider({
         form: treatment.form,
         dateGiven: date,
         intervalDays: treatment.intervalDays > 0 ? treatment.intervalDays : undefined,
-        nextDueDate: treatment.intervalDays > 0 ? plusDays(date, treatment.intervalDays) : '',
+        nextDueDate:
+          treatment.intervalDays > 0
+            ? treatment.validUntil || plusDays(date, treatment.intervalDays)
+            : '',
       });
       return;
     }

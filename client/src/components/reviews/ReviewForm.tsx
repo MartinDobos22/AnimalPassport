@@ -25,7 +25,10 @@ const BODY_MAX = 800;
 const NAME_MAX = 60;
 const PET_MAX = 40;
 
-function defaultAuthorName(displayName: string | null | undefined, email: string | null | undefined): string {
+function defaultAuthorName(
+  displayName: string | null | undefined,
+  email: string | null | undefined
+): string {
   if (displayName && displayName.trim().length > 0) return displayName.trim();
   if (email && email.includes('@')) return email.split('@')[0];
   return '';
@@ -86,7 +89,8 @@ export default function ReviewForm({ onSubmitted }: Props) {
     );
   }
 
-  const statusSeverity = status === 'approved' ? 'success' : status === 'rejected' ? 'warning' : 'info';
+  const statusSeverity =
+    status === 'approved' ? 'success' : status === 'rejected' ? 'warning' : 'info';
   const statusHint =
     status === 'approved'
       ? t('review.statusApprovedHint')

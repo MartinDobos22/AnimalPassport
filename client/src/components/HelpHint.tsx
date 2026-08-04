@@ -6,9 +6,11 @@ import { HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
 interface HelpHintProps {
   text: string;
   size?: number;
+  /** Farba ikony — na farebných podkladoch nastav napr. 'inherit'. */
+  color?: string;
 }
 
-export default function HelpHint({ text, size = 16 }: HelpHintProps) {
+export default function HelpHint({ text, size = 16, color = 'text.secondary' }: HelpHintProps) {
   const { t } = useTranslation();
   const hasHover = useMediaQuery('(hover: hover) and (pointer: fine)');
   const [open, setOpen] = useState(false);
@@ -74,7 +76,7 @@ export default function HelpHint({ text, size = 16 }: HelpHintProps) {
           onKeyDown={handleKeyDown}
           sx={{
             p: 0.25,
-            color: 'text.secondary',
+            color,
             verticalAlign: 'middle',
             '@media print': { display: 'none' },
           }}

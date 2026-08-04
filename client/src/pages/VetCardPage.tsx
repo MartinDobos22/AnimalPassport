@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useActivePet } from '../hooks/useActivePet';
 import { useHealthData } from '../hooks/useHealthData';
 import FeatureIntro from '../components/FeatureIntro';
+import HelpHint from '../components/HelpHint';
 import ClinicalHistory from '../components/vetCard/ClinicalHistory';
 import {
   DEFAULT_EXPORT_SECTIONS,
@@ -466,6 +467,7 @@ const PRINT_STYLES = `
 
 export default function VetCardPage() {
   const { t, i18n } = useTranslation('healthPassport');
+  const { t: tVetCardNs } = useTranslation('vetCard');
   const lang = i18n.language === 'en' ? 'en-US' : 'sk-SK';
   const fmtDateShort = useCallback(
     (value?: string) => {
@@ -1304,6 +1306,11 @@ export default function VetCardPage() {
   return (
     <Box sx={{ maxWidth: '100%', overflowX: 'clip' }}>
       <FeatureIntro featureKey="vetCard" icon={<DescriptionIcon />} hideOnPrint />
+      <Box
+        sx={{ display: 'flex', justifyContent: 'flex-end', '@media print': { display: 'none' } }}
+      >
+        <HelpHint text={tVetCardNs('hints.card')} />
+      </Box>
       <VetCardActionBar
         exportSections={exportSections}
         onChangeSections={setExportSections}

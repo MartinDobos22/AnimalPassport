@@ -233,7 +233,9 @@ export default function AiProfileMergeReview({ petId, patch, onDone, onSkip }: P
               value={allergyAccept}
               onChange={(_e, newValue) =>
                 setAllergyAccept(
-                  newValue.map((v) => v.trim()).filter((v, i, arr) => v !== '' && arr.indexOf(v) === i)
+                  newValue
+                    .map((v) => v.trim())
+                    .filter((v, i, arr) => v !== '' && arr.indexOf(v) === i)
                 )
               }
               renderTags={(value, getTagProps) =>
