@@ -1,11 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Box, Card, Chip, Stack, Typography, alpha, useTheme } from '@mui/material';
-import {
-  HealthAndSafety as HealthIcon,
-  Coronavirus as AllergyIcon,
-  NoFood as IntoleranceIcon,
-  WarningAmber as ChronicIcon,
-} from '@mui/icons-material';
+import { HealthAndSafety as HealthIcon, WarningAmber as ChronicIcon } from '@mui/icons-material';
 import type { PetProfile } from '../../types';
 import { dedupList, subtractList } from '../../utils/healthProfileDedup';
 
@@ -82,8 +77,10 @@ export default function HealthProfileChips({ dog }: Props) {
   const chronic = dedupList(dog.chronicConditions?.map((c) => c.title) ?? dog.healthConditions);
   const allergies = dedupList(dog.allergies);
   const intolerances = subtractList(allergies, dog.intolerances);
-  const hasContent =
-    chronic.length > 0 || allergies.length > 0 || intolerances.length > 0 || Boolean(dog.notes);
+  const hasContent = chronic.length > 0 || Boolean(dog.notes);
+
+  // Allergies/intolerances live in SafetyAlertBanner above; repeating them here was duplicate noise.
+  if (!hasContent && (allergies.length > 0 || intolerances.length > 0)) return null;
 
   if (!hasContent) {
     return (
@@ -148,18 +145,6 @@ export default function HealthProfileChips({ dog }: Props) {
           icon={<ChronicIcon />}
           items={chronic}
           tone="primary"
-        />
-        <Subsection
-          label={t('healthProfile.allergies')}
-          icon={<AllergyIcon />}
-          items={allergies}
-          tone="error"
-        />
-        <Subsection
-          label={t('healthProfile.intolerances')}
-          icon={<IntoleranceIcon />}
-          items={intolerances}
-          tone="warning"
         />
       </Stack>
       {dog.notes && (

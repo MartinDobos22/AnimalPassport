@@ -968,6 +968,13 @@ export default function VetCardPage() {
   </section>`
         : '';
 
+    // Allergies/intolerances are already in the alert banner above, so the health block only
+    // renders when it has something else to say (or when there is no banner at all).
+    const hasConditionsContent = Boolean(chronicList.length || dog.procedures?.length || dog.notes);
+    const showConditionsSection =
+      sections.conditions &&
+      (hasConditionsContent || !(allergyList.length || intoleranceList.length));
+
     const wt = data.weightTrend;
     const weightTrendHtml = wt
       ? (() => {
@@ -1037,7 +1044,7 @@ export default function VetCardPage() {
   ${weightTrendHtml}
 
   ${
-    sections.conditions
+    showConditionsSection
       ? `
   <section class="block">
     <h2 class="block-title">${t('vetPage.sectionHealth')}</h2>
@@ -1046,20 +1053,6 @@ export default function VetCardPage() {
         ? `
     <div class="sub-label">${t('vetPage.labelChronicDiagnoses')}</div>
     <div class="tags">${tagHtml(chronicList, 'tag-blue')}</div>`
-        : ''
-    }
-    ${
-      allergyList.length
-        ? `
-    <div class="sub-label warn">${t('vetPage.labelAllergies')}</div>
-    <div class="tags">${tagHtml(allergyList, 'tag-red')}</div>`
-        : ''
-    }
-    ${
-      intoleranceList.length
-        ? `
-    <div class="sub-label">${t('vetPage.labelIntolerances')}</div>
-    <div class="tags">${tagHtml(intoleranceList, 'tag-amber')}</div>`
         : ''
     }
     ${
@@ -1079,17 +1072,7 @@ export default function VetCardPage() {
     <div class="notes">${dog.notes}</div>`
         : ''
     }
-    ${
-      !(
-        chronicList.length ||
-        allergyList.length ||
-        intoleranceList.length ||
-        dog.procedures?.length ||
-        dog.notes
-      )
-        ? `<div class="empty">${t('vetPage.emptyHealth')}</div>`
-        : ''
-    }
+    ${!hasConditionsContent ? `<div class="empty">${t('vetPage.emptyHealth')}</div>` : ''}
   </section>`
       : ''
   }

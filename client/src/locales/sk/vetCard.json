@@ -53,7 +53,9 @@
   "safetyAlert": {
     "title": "Dôležité upozornenie pre veterinára",
     "allergies": "Alergie",
-    "intolerances": "Intolerancie"
+    "intolerances": "Intolerancie",
+    "showAll": "Zobraziť všetko ({{total}})",
+    "showLess": "Zbaliť"
   },
   "weightTrend": {
     "title": "Vývoj hmotnosti",
