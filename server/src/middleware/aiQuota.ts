@@ -55,8 +55,22 @@ export function requireAiQuota(
       );
       if (globalError) throw globalError;
 
+      // Fail-closed: prázdna odpoveď z RPC (bez error) by pri `?.exceeded`
+      // ticho vypla cap. Chýbajúci riadok = kvótový systém nefunguje.
       const globalResult = pickRow(globalData);
-      if (globalResult?.exceeded) {
+      if (!globalResult) {
+        logger.error('Globálny AI cap: RPC nevrátilo riadok — AI blokované (fail-closed)', {
+          path: req.originalUrl,
+        });
+        res.status(503).json({
+          error: {
+            message: 'AI služba je dočasne nedostupná. Skús to neskôr.',
+            code: 'AI_QUOTA_UNAVAILABLE',
+          },
+        });
+        return;
+      }
+      if (globalResult.exceeded) {
         logger.error('GLOBÁLNY denný AI cap prekročený — všetky AI endpointy vypnuté do polnoci', {
           count: globalResult.current_count,
           limit: globalResult.limit_value,
@@ -97,7 +111,20 @@ export function requireAiQuota(
       if (userError) throw userError;
 
       const userResult = pickRow(userData);
-      if (userResult?.exceeded) {
+      if (!userResult) {
+        logger.error('Per-user AI kvóta: RPC nevrátilo riadok — AI blokované (fail-closed)', {
+          appUserId: req.appUserId,
+          path: req.originalUrl,
+        });
+        res.status(503).json({
+          error: {
+            message: 'AI služba je dočasne nedostupná. Skús to neskôr.',
+            code: 'AI_QUOTA_UNAVAILABLE',
+          },
+        });
+        return;
+      }
+      if (userResult.exceeded) {
         logger.warn('Denný AI limit prekročený', {
           appUserId: req.appUserId,
           count: userResult.current_count,

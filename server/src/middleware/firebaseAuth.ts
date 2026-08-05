@@ -31,7 +31,9 @@ export function firebaseAuth(opts: FirebaseAuthOptions = {}) {
       const decoded = await getAuth().verifyIdToken(idToken);
       const provider = (decoded.firebase as { sign_in_provider?: string } | undefined)
         ?.sign_in_provider;
-      if (!opts.allowUnverified && provider === 'password' && decoded.email_verified === false) {
+      // Fail-closed: chýbajúci claim (undefined) sa počíta ako NEoverený.
+      // `=== false` by pri chýbajúcom claime request pustil ďalej.
+      if (!opts.allowUnverified && provider === 'password' && decoded.email_verified !== true) {
         throw httpError(403, 'E-mail nie je overený.', 'EMAIL_NOT_VERIFIED');
       }
       req.user = {
