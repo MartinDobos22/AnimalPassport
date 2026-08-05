@@ -116,6 +116,8 @@ export interface AdminUser {
   email: string | null;
   isAdmin: boolean;
   createdAt: string | null;
+  blockedAt: string | null;
+  blockedReason: string | null;
 }
 
 export async function listUsers(): Promise<AdminUser[]> {
@@ -127,6 +129,18 @@ export async function setUserAdmin(id: string, isAdmin: boolean): Promise<AdminU
   const data = await request<{ user: AdminUser }>(`/users/${encodeURIComponent(id)}/admin`, {
     method: 'POST',
     body: JSON.stringify({ isAdmin }),
+  });
+  return data.user;
+}
+
+export async function setUserBlocked(
+  id: string,
+  blocked: boolean,
+  reason?: string
+): Promise<AdminUser> {
+  const data = await request<{ user: AdminUser }>(`/users/${encodeURIComponent(id)}/blocked`, {
+    method: 'POST',
+    body: JSON.stringify({ blocked, reason }),
   });
   return data.user;
 }

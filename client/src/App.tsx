@@ -16,6 +16,7 @@ import RegisterPage from './pages/RegisterPage';
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const PrivacyPolicyRoute = lazy(() => import('./pages/PrivacyPolicyRoute'));
+const TermsRoute = lazy(() => import('./pages/TermsRoute'));
 const InfoPublicPage = lazy(() => import('./pages/public/InfoPublicPage'));
 const ContactPublicPage = lazy(() => import('./pages/public/ContactPublicPage'));
 const PoradnaIndexPage = lazy(() => import('./pages/public/PoradnaIndexPage'));
@@ -66,6 +67,10 @@ function AppRoutes({ darkMode, onToggleTheme, language }: ThemeProps) {
       <Route
         path="/ochrana-sukromia"
         element={<PrivacyPolicyRoute darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+      />
+      <Route
+        path="/podmienky"
+        element={<TermsRoute darkMode={darkMode} onToggleTheme={onToggleTheme} />}
       />
       <Route
         path="/analyza-krmiva-pre-psa"

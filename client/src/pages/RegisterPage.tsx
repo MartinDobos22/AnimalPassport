@@ -180,6 +180,10 @@ export default function RegisterPage({ darkMode, onToggleTheme }: Props) {
                 {t('register.consentLabel')}{' '}
                 <Link component={RouterLink} to="/ochrana-sukromia" target="_blank">
                   {t('register.consentLink')}
+                </Link>{' '}
+                {t('register.consentAnd')}{' '}
+                <Link component={RouterLink} to="/podmienky" target="_blank">
+                  {t('register.consentTermsLink')}
                 </Link>
                 .
               </Typography>
