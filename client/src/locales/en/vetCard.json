@@ -53,7 +53,9 @@
   "safetyAlert": {
     "title": "Important alert for the veterinarian",
     "allergies": "Allergies",
-    "intolerances": "Intolerances"
+    "intolerances": "Intolerances",
+    "showAll": "Show all ({{total}})",
+    "showLess": "Collapse"
   },
   "weightTrend": {
     "title": "Weight trend",
