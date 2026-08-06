@@ -5,6 +5,9 @@ import { useState, useCallback } from 'react';
 export const USER_SPECIFIC_LOCAL_STORAGE_KEYS = [
   'granule-check-food-safety-recent',
   'granule-check-active-pet-id',
+  // Pečiatka poslednej aktivity (useInactivityLogout). Bez vyčistenia pri odhlásení
+  // by ju ďalšie prihlásenie našlo prošlú a hneď reláciu ukončilo.
+  'granule-check-last-activity',
 ] as const;
 
 // Previously persisted clinic-by-dog suggestions; kept here so logout removes legacy data.
