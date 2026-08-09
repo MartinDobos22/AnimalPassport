@@ -51,7 +51,7 @@ export default function PoradnaArticlePage({ darkMode, onToggleTheme, slug: slug
 
   useArticleTracking(article?.slug);
 
-  if (!article) return <Navigate to="/poradna" replace />;
+  if (!article) return <Navigate to={PORADNA_PATH} replace />;
 
   return (
     <BlogLayout darkMode={darkMode} onToggleTheme={onToggleTheme}>
