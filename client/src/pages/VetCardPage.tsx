@@ -528,7 +528,6 @@ export default function VetCardPage() {
       (type) => ({ type, record: latestVaccineByType.get(type)! })
     );
     const rabies = latestVaccineByType.get('RABIES');
-    const combined = latestVaccineByType.get('COMBINED');
 
     const lastDeworming = [...dogDeworm].sort((a, b) => b.dateGiven.localeCompare(a.dateGiven))[0];
     const lastEcto = [...dogEctos].sort((a, b) => b.dateGiven.localeCompare(a.dateGiven))[0];
@@ -540,6 +539,7 @@ export default function VetCardPage() {
     const significantVisits = dogVisits
       .filter((x) => x.diagnosis || x.findings || x.recommendations || x.aiExtractedText)
       .sort((a, b) => b.date.localeCompare(a.date));
+    const lastVisitDate = [...dogVisits].sort((a, b) => b.date.localeCompare(a.date))[0]?.date;
 
     const timeline = buildClinicalTimeline(
       {
@@ -558,7 +558,6 @@ export default function VetCardPage() {
 
     return {
       rabies,
-      combined,
       vaccineList,
       lastDeworming,
       lastEcto,
@@ -566,6 +565,7 @@ export default function VetCardPage() {
       latestDiet,
       activeMeds,
       significantVisits,
+      lastVisitDate,
       timeline,
       weightTrend,
     };
@@ -1228,7 +1228,6 @@ export default function VetCardPage() {
   const tVetCard = (key: string, opts?: Record<string, unknown>): string =>
     String(t(`vetPage.${key}` as never, opts as never));
   const rabiesStatus = vetStatusFor(data.rabies?.validUntil, 30, tVetCard, lang);
-  const combinedStatus = vetStatusFor(data.combined?.validUntil, 30, tVetCard, lang);
   const dewormingStatus = vetStatusFor(data.lastDeworming?.nextDueDate, 7, tVetCard, lang);
   const ectoStatus = vetStatusFor(data.lastEcto?.nextDueDate, 7, tVetCard, lang);
 
@@ -1338,14 +1337,17 @@ export default function VetCardPage() {
           onSelectDog={setSelectedDogId}
         />
 
-        <HealthProfileChips dog={dog} />
-
         <VetCardStatusOverview
-          rabies={rabiesStatus}
-          combined={combinedStatus}
-          deworming={dewormingStatus}
-          ecto={ectoStatus}
+          rabies={{ ...rabiesStatus, dateApplied: data.rabies?.dateApplied }}
+          activeMedications={data.activeMeds.map((m) => m.name)}
+          chronicConditions={dedupList(
+            dog.chronicConditions?.map((c) => c.title) ?? dog.healthConditions
+          )}
+          weightKg={data.weightTrend?.latest ?? dog.weightKg}
+          lastVisitDate={data.lastVisitDate}
         />
+
+        <HealthProfileChips dog={dog} />
 
         {data.weightTrend && <WeightTrendCard trend={data.weightTrend} />}
 

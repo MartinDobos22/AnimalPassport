@@ -4,49 +4,50 @@ import {
   WarningAmber as WarningIcon,
   ErrorOutline as ExpiredIcon,
   HelpOutline as UnknownIcon,
+  InfoOutlined as InfoIcon,
 } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
 import type { ReactElement } from 'react';
 import type { ValidityStatus } from '../../types/petHealth';
+
+export type CellTone = 'success' | 'warning' | 'error' | 'info' | 'neutral';
 
 interface Props {
   icon: ReactElement;
   label: string;
-  status: ValidityStatus;
+  tone: CellTone;
+  value: string;
   detail?: string;
 }
 
-const STATUS_META: Record<
-  ValidityStatus,
-  { toneKey: 'success' | 'warning' | 'error' | 'neutral'; Icon: typeof CheckIcon }
-> = {
-  VALID: { toneKey: 'success', Icon: CheckIcon },
-  EXPIRING_SOON: { toneKey: 'warning', Icon: WarningIcon },
-  EXPIRED: { toneKey: 'error', Icon: ExpiredIcon },
-  UNKNOWN: { toneKey: 'neutral', Icon: UnknownIcon },
+const TONE_ICON: Record<CellTone, typeof CheckIcon> = {
+  success: CheckIcon,
+  warning: WarningIcon,
+  error: ExpiredIcon,
+  info: InfoIcon,
+  neutral: UnknownIcon,
 };
 
-const STATUS_LABEL_KEY: Record<ValidityStatus, string> = {
-  VALID: 'statusOverview.statusValid',
-  EXPIRING_SOON: 'statusOverview.statusExpiringSoon',
-  EXPIRED: 'statusOverview.statusExpired',
-  UNKNOWN: 'statusOverview.statusUnknown',
+export const VALIDITY_TONE: Record<ValidityStatus, CellTone> = {
+  VALID: 'success',
+  EXPIRING_SOON: 'warning',
+  EXPIRED: 'error',
+  UNKNOWN: 'neutral',
 };
 
-export default function VetCardStatusCell({ icon, label, status, detail }: Props) {
+export default function VetCardStatusCell({ icon, label, tone, value, detail }: Props) {
   const theme = useTheme();
-  const { t } = useTranslation('vetCard');
-  const meta = STATUS_META[status];
-  const statusLabel = t(STATUS_LABEL_KEY[status] as never);
+  const ToneIcon = TONE_ICON[tone];
 
   const toneColor =
-    meta.toneKey === 'success'
+    tone === 'success'
       ? theme.palette.success.main
-      : meta.toneKey === 'warning'
+      : tone === 'warning'
         ? theme.palette.warning.main
-        : meta.toneKey === 'error'
+        : tone === 'error'
           ? theme.palette.error.main
-          : theme.palette.text.disabled;
+          : tone === 'info'
+            ? theme.palette.info.main
+            : theme.palette.text.disabled;
 
   return (
     <Box
@@ -84,16 +85,16 @@ export default function VetCardStatusCell({ icon, label, status, detail }: Props
             {label}
           </Typography>
           <Stack direction="row" alignItems="center" gap={0.5}>
-            <meta.Icon sx={{ fontSize: 14, color: toneColor, flexShrink: 0 }} />
+            <ToneIcon sx={{ fontSize: 14, color: toneColor, flexShrink: 0 }} />
             <Typography
               variant="body2"
               sx={{ fontWeight: 700, color: toneColor, fontSize: '0.82rem', lineHeight: 1.25 }}
               noWrap
             >
-              {statusLabel}
+              {value}
             </Typography>
           </Stack>
-          {detail && detail !== statusLabel && (
+          {detail && detail !== value && (
             <Typography
               variant="caption"
               sx={{
