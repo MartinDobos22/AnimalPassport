@@ -118,6 +118,9 @@ export interface AdminUser {
   createdAt: string | null;
   blockedAt: string | null;
   blockedReason: string | null;
+  emailVerified: boolean;
+  emailVerifiedAt: string | null;
+  authProvider: string | null;
 }
 
 export async function listUsers(): Promise<AdminUser[]> {

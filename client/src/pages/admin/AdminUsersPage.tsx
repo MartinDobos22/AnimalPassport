@@ -33,6 +33,25 @@ import PageContainer from '../../components/ui/PageContainer';
 import PageHeader from '../../components/ui/PageHeader';
 import { listUsers, setUserAdmin, setUserBlocked, type AdminUser } from '../../services/adminApi';
 
+// Google účty overenie e-mailom neprechádzajú — adresu ručí Google, takže
+// „neoverený“ by pri nich bolo zavádzajúce.
+function renderVerification(user: AdminUser) {
+  if (user.authProvider === 'google.com') {
+    return <Chip size="small" variant="outlined" label="Google" />;
+  }
+  if (!user.emailVerified) {
+    return <Chip size="small" color="warning" label="Neoverený" />;
+  }
+  const when = user.emailVerifiedAt
+    ? new Date(user.emailVerifiedAt).toLocaleDateString('sk-SK')
+    : '';
+  return (
+    <Tooltip title={when && `Overené ${when}`}>
+      <Chip size="small" color="success" variant="outlined" label="E-mail overený" />
+    </Tooltip>
+  );
+}
+
 export default function AdminUsersPage() {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -135,6 +154,7 @@ export default function AdminUsersPage() {
               <TableRow>
                 <TableCell>E-mail</TableCell>
                 <TableCell>Registrácia</TableCell>
+                <TableCell>Overenie</TableCell>
                 <TableCell>Stav</TableCell>
                 <TableCell align="right">Admin</TableCell>
                 <TableCell align="right">Akcia</TableCell>
@@ -147,6 +167,7 @@ export default function AdminUsersPage() {
                   <TableCell>
                     {user.createdAt ? new Date(user.createdAt).toLocaleDateString('sk-SK') : '—'}
                   </TableCell>
+                  <TableCell>{renderVerification(user)}</TableCell>
                   <TableCell>
                     {user.blockedAt ? (
                       <Tooltip title={user.blockedReason ?? ''}>

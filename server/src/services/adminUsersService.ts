@@ -6,7 +6,8 @@ import { invalidateUserCache } from '../middleware/ensureUser';
 // (users.is_admin, migrácia 0036) a blokovanie účtu (users.blocked_at,
 // migrácia 0039). Len server-side cez service_role.
 
-const SELECT_COLUMNS = 'id, email, is_admin, created_at, blocked_at, blocked_reason';
+const SELECT_COLUMNS =
+  'id, email, is_admin, created_at, blocked_at, blocked_reason, email_verified, email_verified_at, auth_provider';
 
 const MAX_REASON_LEN = 500;
 
@@ -17,6 +18,9 @@ export interface AdminUser {
   createdAt: string | null;
   blockedAt: string | null;
   blockedReason: string | null;
+  emailVerified: boolean;
+  emailVerifiedAt: string | null;
+  authProvider: string | null;
 }
 
 type Row = Record<string, unknown>;
@@ -29,6 +33,9 @@ function rowToUser(row: Row): AdminUser {
     createdAt: typeof row.created_at === 'string' ? row.created_at : null,
     blockedAt: typeof row.blocked_at === 'string' ? row.blocked_at : null,
     blockedReason: typeof row.blocked_reason === 'string' ? row.blocked_reason : null,
+    emailVerified: row.email_verified === true,
+    emailVerifiedAt: typeof row.email_verified_at === 'string' ? row.email_verified_at : null,
+    authProvider: typeof row.auth_provider === 'string' ? row.auth_provider : null,
   };
 }
 

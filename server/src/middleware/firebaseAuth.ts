@@ -40,6 +40,7 @@ export function firebaseAuth(opts: FirebaseAuthOptions = {}) {
         uid: decoded.uid,
         email: decoded.email,
         emailVerified: decoded.email_verified === true,
+        provider,
       };
       next();
     } catch (err) {

@@ -48,6 +48,27 @@ function assertNotBlocked(blockedAt: string | null, allowBlocked: boolean): void
   }
 }
 
+// Vracia len tie polia, ktoré sa reálne líšia od uloženého stavu — aby sme
+// nerobili UPDATE pri každom cache misse. Hodnoty pochádzajú z overeného ID
+// tokenu (Google podpis), nikdy z tela requestu, takže ich klient neovplyvní.
+function verificationDrift(
+  user: { emailVerified?: boolean; provider?: string },
+  row: { email_verified?: unknown; auth_provider?: unknown }
+): Record<string, unknown> {
+  const patch: Record<string, unknown> = {};
+  const verified = user.emailVerified === true;
+
+  if (row.email_verified !== verified) {
+    patch.email_verified = verified;
+    // Pečiatku nastavíme pri prvom prechode na overený stav a už ju neprepisujeme.
+    if (verified) patch.email_verified_at = new Date().toISOString();
+  }
+  if (user.provider && row.auth_provider !== user.provider) {
+    patch.auth_provider = user.provider;
+  }
+  return patch;
+}
+
 async function resolveUser(
   req: Request,
   next: NextFunction,
@@ -74,7 +95,7 @@ async function resolveUser(
       async () => {
         const { data, error } = await supabase
           .from('users')
-          .select('id, locale, blocked_at')
+          .select('id, locale, blocked_at, email_verified, auth_provider')
           .eq('firebase_uid', req.user!.uid)
           .maybeSingle();
         if (error) throw error;
@@ -93,14 +114,19 @@ async function resolveUser(
       });
       assertNotBlocked(blockedAt, allowBlocked);
       req.appUserId = existing.id;
-      if (existing.locale !== locale) {
+
+      const drift: Record<string, unknown> = {};
+      if (existing.locale !== locale) drift.locale = locale;
+      Object.assign(drift, verificationDrift(req.user, existing));
+
+      if (Object.keys(drift).length > 0) {
         void supabase
           .from('users')
-          .update({ locale })
+          .update(drift)
           .eq('id', existing.id)
           .then(({ error }) => {
             if (error) {
-              // Best-effort: locale update nemá blokovať request.
+              // Best-effort: sync metadát nemá blokovať request.
             }
           });
       }
@@ -115,7 +141,14 @@ async function resolveUser(
         const { data, error } = await supabase
           .from('users')
           .upsert(
-            { firebase_uid: req.user!.uid, email: req.user!.email ?? null, locale },
+            {
+              firebase_uid: req.user!.uid,
+              email: req.user!.email ?? null,
+              locale,
+              email_verified: req.user!.emailVerified === true,
+              email_verified_at: req.user!.emailVerified === true ? new Date().toISOString() : null,
+              auth_provider: req.user!.provider ?? null,
+            },
             { onConflict: 'firebase_uid' }
           )
           .select('id, blocked_at')
