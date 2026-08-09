@@ -24,6 +24,7 @@ import LandingFaq from './LandingFaq';
 import LandingCta from './LandingCta';
 import ArticleCard from './ArticleCard';
 import { articleReadingMinutes } from '../../utils/readingTime';
+import { PORADNA_PATH } from '../../utils/articleHref';
 import { trackArticleEvent } from '../../services/analyticsApi';
 import {
   ARTICLE_DISCLAIMER,
@@ -73,7 +74,7 @@ export default function ArticleView({ article, preview = false }: Props) {
             </Link>
             <Link
               component={RouterLink}
-              to="/poradna/"
+              to={PORADNA_PATH}
               underline="hover"
               color="inherit"
               variant="body2"
@@ -88,7 +89,7 @@ export default function ArticleView({ article, preview = false }: Props) {
           <Box sx={{ mb: theme.spacing(3) }}>
             <Link
               component={RouterLink}
-              to="/poradna/"
+              to={PORADNA_PATH}
               underline="hover"
               variant="body2"
               sx={{ display: 'inline-flex', alignItems: 'center', gap: theme.spacing(0.5) }}
@@ -314,7 +315,7 @@ export default function ArticleView({ article, preview = false }: Props) {
         <Box sx={{ mt: theme.spacing(5) }}>
           <Link
             component={RouterLink}
-            to="/poradna/"
+            to={PORADNA_PATH}
             underline="hover"
             variant="body2"
             sx={{ display: 'inline-flex', alignItems: 'center', gap: theme.spacing(0.5) }}

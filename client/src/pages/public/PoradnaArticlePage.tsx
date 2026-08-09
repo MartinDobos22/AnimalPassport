@@ -16,11 +16,9 @@ interface Props {
 }
 
 export function articleSeo(article: Article) {
-  // seo.path ostáva bez lomky — prerender/canonical ju doplní (withTrailingSlash).
-  // JSON-LD ale musí niesť rovno 200-URL s lomkou, aby štruktúrované dáta sedeli
-  // s canonicalom a Google neobjavil bez-lomkovú (redirectujúcu) verziu.
-  const path = `/poradna/${article.slug}`;
-  const canonicalPath = articleHref(article.slug);
+  // 200-URL je tvar bez koncovej lomky (dist/poradna/<slug>.html) — canonical,
+  // JSON-LD aj breadcrumby musia niesť presne ju, aby Google nekrawloval redirect.
+  const path = articleHref(article.slug);
   return {
     title: `${article.title} | Pawly`,
     description: article.description,
@@ -31,14 +29,14 @@ export function articleSeo(article: Article) {
     jsonLd: articleJsonLd({
       title: article.title,
       description: article.description,
-      path: canonicalPath,
+      path,
       updated: article.updated,
       image: article.coverImage,
       faqs: article.faqs,
       breadcrumbs: [
         { name: 'Pawly', path: '/' },
         { name: 'Poradňa', path: PORADNA_PATH },
-        { name: article.title, path: canonicalPath },
+        { name: article.title, path },
       ],
     }),
   };
