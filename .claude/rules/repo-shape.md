@@ -53,6 +53,7 @@ AnimalPassport/
 | `VetCardPage.tsx` | `/karta-pre-veterinara` | Print-friendly karta pre veterinára |
 | `EpisodeDiaryPage.tsx` | `/dennik` | Denník zdravotných epizód |
 | `AboutPage.tsx` | `/o-aplikacii` | O aplikácii |
+| `TermsRoute.tsx` → `TermsPage.tsx` | `/podmienky` | Podmienky používania (verejné, SK+EN cez `TermsContent.tsx`). Obsahuje klauzulu o obmedzení/zablokovaní/zrušení účtu — pri zmene mechanizmu blokovania updatni **aj** tento text. |
 
 ## Aktuálne API endpointy (`server/src/routes/`)
 
@@ -64,6 +65,7 @@ AnimalPassport/
 | `interpretPassport.ts` | `POST /api/interpret-passport` | `aiHeavyLimiter` | AI parsing zdravotného pasu (vakcinácie, …) |
 | `articles.ts` | `GET /api/articles`, `GET /api/articles/:slug` | `globalLimiter`, **bez auth** | Verejné články poradne (read-only z DB). Mountnuté PRED `firebaseAuth`. |
 | `admin.ts` | `GET /api/admin/status`, `GET/POST/PUT/DELETE /api/admin/articles[/:slug]`, `POST /api/admin/articles/upload-image`, `POST /api/admin/articles/publish` | `firebaseAuth` + `ensureUser` (+ `requireAdmin` na `/articles`) | Admin správa článkov (write, upload cover obrázka, publish = Netlify build hook). Gate cez env `ADMIN_EMAILS`. `status` vráti `{ isAdmin }`. |
+| `admin.ts` (users) | `GET /api/admin/users`, `POST /api/admin/users/:id/admin`, `POST /api/admin/users/:id/blocked` | `firebaseAuth` + `ensureUser` + `requireAdmin` | Správa účtov. `blocked` nastaví `users.blocked_at` + `blocked_reason` (migrácia `0039`); dôvod je pri blokovaní povinný. Zoznam vracia aj `emailVerified` / `emailVerifiedAt` / `authProvider` (migrácia `0040`). |
 | `index.ts` | `GET /api/health` | (žiadny) | Health check |
 
 > **Vzor:** `/api/episodes/similar-summary` je AI volanie pod `episodesRouter`. Celý router je za `aiHeavyLimiter`, ale `requireAiQuota()` je aplikované **per-route** len na `/similar-summary` (`episodes.ts`), aby bežné CRUD čítania/zápisy epizód nekonzumovali denný AI cap. Tento vzor (router-wide limiter + per-route quota) replikuj pri pridávaní AI endpointu pod zmiešaný router.

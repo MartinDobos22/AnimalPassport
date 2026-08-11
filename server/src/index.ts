@@ -23,7 +23,7 @@ import adminAiRouter from './routes/adminAi';
 import { requireAdmin } from './middleware/requireAdmin';
 import { errorHandler } from './middleware/errorHandler';
 import { firebaseAuth } from './middleware/firebaseAuth';
-import { ensureUser } from './middleware/ensureUser';
+import { ensureUser, ensureUserAllowBlocked } from './middleware/ensureUser';
 import { requireAiQuota } from './middleware/aiQuota';
 import { assertOpenAIConfigured } from './config/openai';
 import { getSupabase } from './config/supabase';
@@ -236,7 +236,9 @@ app.use('/api/admin/ai', aiHeavyLimiter, ensureUser, requireAiQuota(), requireAd
 app.use('/api/admin', ensureUser, adminRouter);
 app.use('/api/pets', ensureUser, petsRouter);
 app.use('/api/health', ensureUser, healthRouter);
-app.use('/api/account', ensureUser, accountRouter);
+// Zámerne ensureUserAllowBlocked: export dát, audit log a výmaz účtu sú
+// GDPR práva, o ktoré používateľ nesmie prísť ani po zablokovaní účtu.
+app.use('/api/account', ensureUserAllowBlocked, accountRouter);
 app.use('/api/notifications', ensureUser, notificationsRouter);
 app.use('/api/my-review', ensureUser, myReviewRouter);
 app.use('/api/analyze', aiHeavyLimiter, ensureUser, requireAiQuota(), analyzeRouter);

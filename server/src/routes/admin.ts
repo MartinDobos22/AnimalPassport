@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { requireAdmin, resolveIsAdmin } from '../middleware/requireAdmin';
-import { listUsers, setUserAdmin } from '../services/adminUsersService';
+import { listUsers, setUserAdmin, setUserBlocked } from '../services/adminUsersService';
 import { httpError } from '../utils/httpError';
 import {
   changeArticleStatus,
@@ -331,6 +331,22 @@ users.post('/:id/admin', async (req: Request, res: Response, next: NextFunction)
       throw httpError(400, 'Nemôžeš odobrať admin práva sám sebe.', 'CANNOT_DEMOTE_SELF');
     }
     res.json({ user: await setUserAdmin(id, isAdmin) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+users.post('/:id/blocked', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = String(req.params.id);
+    const body = (req.body ?? {}) as { blocked?: unknown; reason?: unknown };
+    const blocked = body.blocked === true;
+    // Zabráni tomu, aby si admin zablokoval sám seba a stratil prístup.
+    if (blocked && id === req.appUserId) {
+      throw httpError(400, 'Nemôžeš zablokovať sám seba.', 'CANNOT_BLOCK_SELF');
+    }
+    const reason = typeof body.reason === 'string' ? body.reason : undefined;
+    res.json({ user: await setUserBlocked(id, blocked, reason) });
   } catch (err) {
     next(err);
   }

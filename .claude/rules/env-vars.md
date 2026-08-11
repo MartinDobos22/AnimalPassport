@@ -53,6 +53,7 @@ Vite env premenné MUSIA mať prefix `VITE_` aby boli dostupné v kóde.
 |---|---|---|---|
 | `VITE_API_URL` | nie (dev) | `''` (relatívne, cez Vite proxy na `:3001`) | Plná base URL pre API v produkcii (napr. `https://api.example.com`). Konzumuje sa v `client/src/services/api.ts`. |
 | `VITE_EXTRACTION_MODE` | nie | prázdne (`ocr`) | Režim AI importu zdravotného pasu. `vision` = obrázok dokumentu ide priamo do modelu (`POST /api/interpret-passport` s `attachment`), jedno volanie na dokument, bez samostatného OCR kroku — presnejšie na husté tabuľky a miešaný tlačený+ručný text, menej AI volaní. Čokoľvek iné (default) = klasická OCR → text → interpret cesta. Konzumuje sa v `components/healthPassport/AddRecord/useAiImport.ts`. Serverový model pre vision je `MODEL_PASSPORT_VISION`. |
+| `VITE_INACTIVITY_TIMEOUT_MINUTES` | nie | `30` | Po koľkých minútach bez interakcie sa prihlásený používateľ automaticky odhlási. Minútu pred vypršaním sa zobrazí dialóg s odpočtom a možnosťou zostať prihlásený. `0` = funkcia vypnutá; chýbajúca alebo neplatná hodnota = default. Konzumuje sa v `components/InactivityLogout.tsx`, logiku drží `hooks/useInactivityLogout.ts`. Odpočet sa meria z wall-clock pečiatky v `localStorage` (`granule-check-last-activity`), takže prežije uspatie zariadenia a je zdieľaný medzi kartami. |
 | `VITE_FIREBASE_API_KEY` | áno (auth) | — | Firebase Web App apiKey. |
 | `VITE_FIREBASE_AUTH_DOMAIN` | áno (auth) | — | Firebase authDomain (`<projekt>.firebaseapp.com`). |
 | `VITE_FIREBASE_PROJECT_ID` | áno (auth) | — | Firebase projekt ID. |

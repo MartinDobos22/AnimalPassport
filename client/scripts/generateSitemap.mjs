@@ -27,7 +27,8 @@ const STATIC_ROUTES = [
   { path: '/kontakt', changefreq: 'yearly', priority: '0.3' },
   { path: '/login', changefreq: 'monthly', priority: '0.3' },
   { path: '/register', changefreq: 'monthly', priority: '0.5' },
-  { path: '/ochrana-sukromia', changefreq: 'yearly', priority: '0.3' },
+  { path: '/ochrana-sukromia/', changefreq: 'yearly', priority: '0.3' },
+  { path: '/podmienky/', changefreq: 'yearly', priority: '0.3' },
 ];
 
 function readArticles() {

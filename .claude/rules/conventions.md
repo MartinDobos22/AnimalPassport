@@ -24,6 +24,16 @@ Status kódy:
 
 Klient **musí** kontrolovať `response.ok` a parsovať `{ error: { message } }`. `services/api.ts` to robí centrálne — používaj ho.
 
+## Auth gate a blokovanie účtu
+
+Poradie middleware pre authed routy je `firebaseAuth()` → `ensureUser` → (limiter/kvóta) → router.
+
+- **Fail-closed je pravidlo.** Kontroly oprávnení porovnávaj proti očakávanej *povolenej* hodnote (`!== true`), nie proti zakázanej (`=== false`) — chýbajúci claim alebo prázdna odpoveď z DB nesmie request pustiť. Rovnako pri kvótach: chýbajúci riadok z RPC = 503, nie priechod.
+- **`users.email_verified` / `email_verified_at` / `auth_provider`** (migrácia `0040`) sú **zrkadlo**, nie zdroj pravdy. Autorizačné rozhodnutia rob vždy proti claimu `email_verified` v ID tokene (`firebaseAuth`), nikdy proti DB stĺpcu — ten môže byť o jeden request pozadu. Stĺpce zapisuje `ensureUser` z overeného tokenu (fire-and-forget, len pri reálnej zmene) a slúžia na admin prehľad a štatistiku.
+- **`users.blocked_at`** (migrácia `0039`) kontroluje `ensureUser` a vracia 403 `ACCOUNT_BLOCKED`. Cache v `ensureUser` má 60 s TTL a `invalidateUserCache(appUserId)` sa volá pri zmene blokovania, aby zásah platil okamžite.
+- **`ensureUserAllowBlocked`** je zámerná výnimka len pre `/api/account` (export, audit log, výmaz účtu) — GDPR práva podľa čl. 15, 17 a 20 musia ostať dostupné aj zablokovanému účtu. Nepoužívaj ju nikde inde.
+- Dôvod blokovania (`blocked_reason`) je **povinný** — Podmienky používania (`/podmienky`) sľubujú používateľovi oznámenie s dôvodom a možnosť odvolania.
+
 ## OpenAI a Google Vision
 
 - **Volania majú timeout.** Default OpenAI SDK nemá rozumný timeout — nastav explicitne (napr. 30 s pre analýzu, 10 s pre normalizáciu).

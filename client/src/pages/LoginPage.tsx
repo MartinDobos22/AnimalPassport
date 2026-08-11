@@ -7,6 +7,7 @@ import AuthLayout from '../components/auth/AuthLayout';
 import GoogleIcon from '../components/auth/GoogleIcon';
 import PasswordField from '../components/auth/PasswordField';
 import { isInAppBrowser } from '../utils/isInAppBrowser';
+import { consumeInactivityLogout } from '../utils/inactivityNotice';
 
 interface Props {
   darkMode: boolean;
@@ -34,6 +35,10 @@ export default function LoginPage({ darkMode, onToggleTheme }: Props) {
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const inAppBrowser = isInAppBrowser();
+
+  useEffect(() => {
+    if (consumeInactivityLogout()) setInfo(t('inactivity.loggedOut'));
+  }, [t]);
 
   const handleEmailLogin = async (event: React.FormEvent) => {
     event.preventDefault();

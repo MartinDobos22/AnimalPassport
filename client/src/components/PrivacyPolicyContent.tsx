@@ -50,6 +50,7 @@ const SK_SECTIONS: Section[] = [
     title: 'Doba uchovávania',
     body: [
       'Tvoje dáta uchovávame, kým nezmažeš účet. Po zmazaní účtu sa všetky záznamy okamžite a nezvratne odstránia z databázy. Záložné kópie sa cyklicky prepisujú do 30 dní.',
+      'Ak dôjde k zablokovaniu alebo zrušeniu účtu podľa Podmienok používania, môžeme si ponechať minimálny záznam o zásahu (e-mailová adresa, dôvod a dátum) na predchádzanie opakovanému zneužitiu služby, najviac 12 mesiacov. Právnym základom je oprávnený záujem podľa čl. 6 ods. 1 písm. f) GDPR; môžeš proti nemu namietať podľa čl. 21 GDPR.',
     ],
   },
   {
@@ -110,6 +111,7 @@ const EN_SECTIONS: Section[] = [
     title: 'Retention',
     body: [
       'We keep your data until you delete your account. After deletion all records are removed immediately and irreversibly from the live database. Backups cycle out within 30 days.',
+      'If an account is blocked or closed under the Terms of Use, we may keep a minimal record of the action (email address, reason and date) to prevent repeated abuse, for no longer than 12 months. The legal basis is legitimate interest under Art. 6(1)(f) GDPR; you may object under Art. 21 GDPR.',
     ],
   },
   {

@@ -8,6 +8,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './hooks/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
+import InactivityLogout from './components/InactivityLogout';
 import ScrollToTop from './components/ScrollToTop';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
@@ -16,6 +17,7 @@ import RegisterPage from './pages/RegisterPage';
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const PrivacyPolicyRoute = lazy(() => import('./pages/PrivacyPolicyRoute'));
+const TermsRoute = lazy(() => import('./pages/TermsRoute'));
 const InfoPublicPage = lazy(() => import('./pages/public/InfoPublicPage'));
 const ContactPublicPage = lazy(() => import('./pages/public/ContactPublicPage'));
 const PoradnaIndexPage = lazy(() => import('./pages/public/PoradnaIndexPage'));
@@ -45,78 +47,91 @@ function AppRoutes({ darkMode, onToggleTheme, language }: ThemeProps) {
   );
 
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage darkMode={darkMode} onToggleTheme={onToggleTheme} />} />
-      <Route
-        path="/login"
-        element={<LoginPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
-      />
-      <Route
-        path="/register"
-        element={<RegisterPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
-      />
-      <Route
-        path="/overenie-emailu"
-        element={<VerifyEmailPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
-      />
-      <Route
-        path="/reset-hesla"
-        element={<ResetPasswordPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
-      />
-      <Route
-        path="/ochrana-sukromia"
-        element={<PrivacyPolicyRoute darkMode={darkMode} onToggleTheme={onToggleTheme} />}
-      />
-      <Route
-        path="/analyza-krmiva-pre-psa"
-        element={<Navigate to="/poradna/analyza-krmiva-pre-psa" replace />}
-      />
-      <Route
-        path="/digitalny-zdravotny-pas-pre-psa"
-        element={<Navigate to="/poradna/digitalny-zdravotny-pas-pre-psa" replace />}
-      />
-      <Route path="/ockovanie-psa" element={<Navigate to="/poradna/ockovanie-psa" replace />} />
-      <Route path="/odcervenie-psa" element={<Navigate to="/poradna/odcervenie-psa" replace />} />
-      <Route
-        path="/alergia-na-krmivo-u-psa"
-        element={<Navigate to="/poradna/alergia-na-krmivo-u-psa" replace />}
-      />
-      <Route
-        path="/co-nesmie-pes-jest"
-        element={<Navigate to="/poradna/co-nesmie-pes-jest" replace />}
-      />
-      {!user && (
+    <>
+      {user && <InactivityLogout />}
+      <Routes>
         <Route
-          path="/info"
-          element={<InfoPublicPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+          path="/"
+          element={<LandingPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
         />
-      )}
-      {!user && (
         <Route
-          path="/kontakt"
-          element={<ContactPublicPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+          path="/login"
+          element={<LoginPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
         />
-      )}
-      <Route
-        path="/poradna"
-        element={<PoradnaIndexPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
-      />
-      <Route
-        path="/poradna/:slug"
-        element={<PoradnaArticlePage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
-      />
-      <Route path="/o-aplikacii" element={<Navigate to="/info?tab=about" replace />} />
-      <Route path="/caste-otazky" element={<Navigate to="/info?tab=faq" replace />} />
-      <Route
-        path="/admin/clanky/:slug/nahlad"
-        element={
-          <ProtectedRoute>
-            <AdminArticlePreviewPage darkMode={darkMode} onToggleTheme={onToggleTheme} />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="/*" element={protectedApp} />
-    </Routes>
+        <Route
+          path="/register"
+          element={<RegisterPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+        />
+        <Route
+          path="/overenie-emailu"
+          element={<VerifyEmailPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+        />
+        <Route
+          path="/reset-hesla"
+          element={<ResetPasswordPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+        />
+        <Route
+          path="/ochrana-sukromia"
+          element={<PrivacyPolicyRoute darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+        />
+        <Route
+          path="/podmienky"
+          element={<TermsRoute darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+        />
+        <Route
+          path="/analyza-krmiva-pre-psa"
+          element={<Navigate to="/poradna/analyza-krmiva-pre-psa/" replace />}
+        />
+        <Route
+          path="/digitalny-zdravotny-pas-pre-psa"
+          element={<Navigate to="/poradna/digitalny-zdravotny-pas-pre-psa/" replace />}
+        />
+        <Route path="/ockovanie-psa" element={<Navigate to="/poradna/ockovanie-psa/" replace />} />
+        <Route
+          path="/odcervenie-psa"
+          element={<Navigate to="/poradna/odcervenie-psa/" replace />}
+        />
+        <Route
+          path="/alergia-na-krmivo-u-psa"
+          element={<Navigate to="/poradna/alergia-na-krmivo-u-psa/" replace />}
+        />
+        <Route
+          path="/co-nesmie-pes-jest"
+          element={<Navigate to="/poradna/co-nesmie-pes-jest/" replace />}
+        />
+        {!user && (
+          <Route
+            path="/info"
+            element={<InfoPublicPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+          />
+        )}
+        {!user && (
+          <Route
+            path="/kontakt"
+            element={<ContactPublicPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+          />
+        )}
+        <Route
+          path="/poradna"
+          element={<PoradnaIndexPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+        />
+        <Route
+          path="/poradna/:slug"
+          element={<PoradnaArticlePage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+        />
+        <Route path="/o-aplikacii" element={<Navigate to="/info?tab=about" replace />} />
+        <Route path="/caste-otazky" element={<Navigate to="/info?tab=faq" replace />} />
+        <Route
+          path="/admin/clanky/:slug/nahlad"
+          element={
+            <ProtectedRoute>
+              <AdminArticlePreviewPage darkMode={darkMode} onToggleTheme={onToggleTheme} />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/*" element={protectedApp} />
+      </Routes>
+    </>
   );
 }
 
