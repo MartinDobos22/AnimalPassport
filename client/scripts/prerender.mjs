@@ -18,12 +18,21 @@ function escapeAttr(value) {
     .replace(/"/g, '&quot;');
 }
 
-// Netlify servíruje adresárový index (dist/<path>/index.html) na URL s koncovou
-// lomkou a bez nej 301-uje. Canonical/og:url preto musia sedieť s 200-URL, inak
-// Google fetchuje redirect. Root ('/') ostáva bez zmeny.
-function withTrailingSlash(path) {
-  if (path === '/' || path.endsWith('/')) return path;
-  return `${path}/`;
+// Stránky sa zapisujú ako `dist/<path>.html` (nie adresárový index), takže
+// Netlify ich servíruje na URL BEZ koncovej lomky a z verzie s lomkou 301-uje.
+// Canonical/og:url preto musia sedieť s tvarom bez lomky, inak Google fetchuje
+// redirect. Root ('/') ostáva bez zmeny.
+function canonicalPath(path) {
+  if (path === '/') return path;
+  return path.replace(/\/+$/, '');
+}
+
+// '/' → dist/index.html, '/poradna' → dist/poradna.html,
+// '/poradna/<slug>' → dist/poradna/<slug>.html
+function outputFileFor(path) {
+  const clean = canonicalPath(path);
+  if (clean === '/') return resolve(distDir, 'index.html');
+  return resolve(distDir, `${clean.replace(/^\//, '')}.html`);
 }
 
 function replaceTag(html, regex, replacement) {
@@ -34,7 +43,7 @@ function replaceTag(html, regex, replacement) {
 }
 
 function buildHtml(template, seo, bodyHtml) {
-  const canonical = `${SITE_URL}${withTrailingSlash(seo.path)}`;
+  const canonical = `${SITE_URL}${canonicalPath(seo.path)}`;
   let html = template;
 
   html = replaceTag(html, /<title>[\s\S]*?<\/title>/, `<title>${escapeAttr(seo.title)}</title>`);
@@ -123,10 +132,10 @@ async function main() {
     const bodyHtml = renderPage(seo.path, route.element);
     const pageHtml = buildHtml(template, seo, bodyHtml);
 
-    const outDir = resolve(distDir, seo.path.replace(/^\//, ''));
-    mkdirSync(outDir, { recursive: true });
-    writeFileSync(resolve(outDir, 'index.html'), pageHtml, 'utf-8');
-    console.log(`[prerender] ✓ ${seo.path} → dist${seo.path}/index.html`);
+    const outFile = outputFileFor(seo.path);
+    mkdirSync(dirname(outFile), { recursive: true });
+    writeFileSync(outFile, pageHtml, 'utf-8');
+    console.log(`[prerender] ✓ ${canonicalPath(seo.path)} → ${outFile.slice(distDir.length - 4)}`);
   }
 
   rmSync(ssrOutDir, { recursive: true, force: true });

@@ -3,13 +3,13 @@ import { useEffect } from 'react';
 export const SITE_URL = 'https://pawly.sk';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/branding/pawly-banner.png`;
 
-// Prerendrované stránky servíruje Netlify na URL s koncovou lomkou (adresárový
-// index) a bez nej 301-uje. Canonical musí sedieť s 200-URL, inak po hydratácii
-// klient prepíše prerendrovaný canonical na redirectujúcu verziu. Root ('/') a
-// cesty so súborovou príponou (napr. .html) ostávajú nezmenené.
-function withTrailingSlash(path: string): string {
-  if (path === '/' || path.endsWith('/') || /\.[a-z0-9]+$/i.test(path)) return path;
-  return `${path}/`;
+// Prerendrované stránky servíruje Netlify zo súboru `dist/<path>.html`, takže
+// 200-URL je bez koncovej lomky a z verzie s lomkou sa 301-uje. Canonical musí
+// sedieť s 200-URL, inak po hydratácii klient prepíše prerendrovaný canonical na
+// redirectujúcu verziu. Root ('/') ostáva nezmenený.
+function canonicalPath(path: string): string {
+  if (path === '/') return path;
+  return path.replace(/\/+$/, '');
 }
 
 interface Props {
@@ -89,7 +89,7 @@ export default function Seo({
       upsertMeta('name', 'twitter:image:alt', ogImageAlt);
     }
 
-    const canonical = `${SITE_URL}${withTrailingSlash(path ?? window.location.pathname)}`;
+    const canonical = `${SITE_URL}${canonicalPath(path ?? window.location.pathname)}`;
     upsertLink('canonical', canonical);
     upsertMeta('property', 'og:url', canonical);
 

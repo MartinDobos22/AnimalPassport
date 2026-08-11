@@ -48,6 +48,7 @@ import LandingFooter from '../components/landing/LandingFooter';
 import PawlyLogo from '../components/PawlyLogo';
 import Seo from '../components/Seo';
 import { track } from '../utils/analytics';
+import { PORADNA_PATH } from '../utils/articleHref';
 
 interface Props {
   darkMode: boolean;
@@ -222,7 +223,7 @@ export default function LandingPage({ darkMode, onToggleTheme }: Props) {
               <MenuItem
                 onClick={() => {
                   closeMenu();
-                  navigate('/poradna');
+                  navigate(PORADNA_PATH);
                 }}
               >
                 <ListItemIcon>

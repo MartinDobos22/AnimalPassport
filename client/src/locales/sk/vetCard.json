@@ -1,6 +1,6 @@
 {
   "hints": {
-    "preventiveStatus": "Rýchly prehľad preventívnej starostlivosti pre veterinára — zelená znamená platné, oranžová že čoskoro vyprší, červená po termíne.",
+    "vetTriage": "Zhrnutie toho, čo veterinár potrebuje vedieť skôr, než sa dotkne psa — platnosť besnoty, lieky ktoré pes práve berie, chronické diagnózy a aktuálna váha na dávkovanie. Kompletná prevencia je nižšie v sekcii Preventívna starostlivosť.",
     "print": "Vytlač kartu na A4 — všetko podstatné pre veterinára na jednom papieri. Funguje aj cez „Save as PDF“ v dialógu tlače.",
     "export": "Stiahni si kartu ako PDF — môžeš ju poslať mailom alebo nahrať do veterinárneho systému.",
     "card": "Karta zhŕňa identitu, alergie, diagnózy, vakcinácie, lieky a posledné epizódy. Aktualizuje sa automaticky podľa údajov v zdravotnom pase."
@@ -103,15 +103,33 @@
     "validUntil": "Platné do {{date}}"
   },
   "statusOverview": {
-    "preventiveStatus": "Aktuálny preventívny stav",
+    "title": "Kľúčové pre vyšetrenie",
     "rabies": "Besnota",
-    "combined": "Kombinovaná",
-    "deworming": "Odčervenie",
-    "antiparasitic": "Antiparazitikum",
+    "activeMeds": "Aktívne lieky",
+    "chronic": "Chronické stavy",
+    "weight": "Váha",
     "statusValid": "Platné",
     "statusExpiringSoon": "Vyprší čoskoro",
     "statusExpired": "Po termíne",
-    "statusUnknown": "Nezadané"
+    "statusUnknown": "Nezadané",
+    "appliedShort": "podané {{date}}",
+    "activeMedsCount_one": "{{count}} liek",
+    "activeMedsCount_few": "{{count}} lieky",
+    "activeMedsCount_many": "{{count}} liekov",
+    "activeMedsCount_other": "{{count}} liekov",
+    "activeMedsNone": "Žiadne",
+    "chronicCount_one": "{{count}} diagnóza",
+    "chronicCount_few": "{{count}} diagnózy",
+    "chronicCount_many": "{{count}} diagnóz",
+    "chronicCount_other": "{{count}} diagnóz",
+    "chronicNone": "Žiadne",
+    "weightValue": "{{weight}} kg",
+    "weightUnknown": "Nezadaná",
+    "lastVisit": "Posledná návšteva {{date}}",
+    "andMore_one": "+{{count}} ďalší",
+    "andMore_few": "+{{count}} ďalšie",
+    "andMore_many": "+{{count}} ďalších",
+    "andMore_other": "+{{count}} ďalších"
   },
   "preventiveCare": {
     "title": "Preventívna starostlivosť",

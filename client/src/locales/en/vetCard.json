@@ -1,6 +1,6 @@
 {
   "hints": {
-    "preventiveStatus": "A quick overview of preventive care for the vet — green means valid, orange means expiring soon, red means overdue.",
+    "vetTriage": "A summary of what the vet needs before touching the dog — rabies validity, medications the dog is currently on, chronic diagnoses and current weight for dosing. Full preventive care is in the section below.",
     "print": "Print the card on A4 — everything the vet needs on one sheet. Works with “Save as PDF” in the print dialog too.",
     "export": "Download the card as a PDF — you can email it or upload it to a vet clinic system.",
     "card": "The card sums up identity, allergies, diagnoses, vaccinations, medications and recent episodes. It updates automatically from the health passport."
@@ -103,15 +103,27 @@
     "validUntil": "Valid until {{date}}"
   },
   "statusOverview": {
-    "preventiveStatus": "Current preventive status",
+    "title": "Key facts for the exam",
     "rabies": "Rabies",
-    "combined": "Combined",
-    "deworming": "Deworming",
-    "antiparasitic": "Antiparasitic",
+    "activeMeds": "Active meds",
+    "chronic": "Chronic conditions",
+    "weight": "Weight",
     "statusValid": "Valid",
     "statusExpiringSoon": "Expiring soon",
     "statusExpired": "Overdue",
-    "statusUnknown": "Not set"
+    "statusUnknown": "Not set",
+    "appliedShort": "given {{date}}",
+    "activeMedsCount_one": "{{count}} medication",
+    "activeMedsCount_other": "{{count}} medications",
+    "activeMedsNone": "None",
+    "chronicCount_one": "{{count}} diagnosis",
+    "chronicCount_other": "{{count}} diagnoses",
+    "chronicNone": "None",
+    "weightValue": "{{weight}} kg",
+    "weightUnknown": "Not set",
+    "lastVisit": "Last visit {{date}}",
+    "andMore_one": "+{{count}} more",
+    "andMore_other": "+{{count}} more"
   },
   "preventiveCare": {
     "title": "Preventive care",

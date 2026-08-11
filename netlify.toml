@@ -16,37 +16,37 @@
 # Musia byť PRED SPA fallbackom, inak ich /* prebije.
 [[redirects]]
   from = "/analyza-krmiva-pre-psa"
-  to = "/poradna/analyza-krmiva-pre-psa/"
+  to = "/poradna/analyza-krmiva-pre-psa"
   status = 301
   force = true
 
 [[redirects]]
   from = "/digitalny-zdravotny-pas-pre-psa"
-  to = "/poradna/digitalny-zdravotny-pas-pre-psa/"
+  to = "/poradna/digitalny-zdravotny-pas-pre-psa"
   status = 301
   force = true
 
 [[redirects]]
   from = "/ockovanie-psa"
-  to = "/poradna/ockovanie-psa/"
+  to = "/poradna/ockovanie-psa"
   status = 301
   force = true
 
 [[redirects]]
   from = "/odcervenie-psa"
-  to = "/poradna/odcervenie-psa/"
+  to = "/poradna/odcervenie-psa"
   status = 301
   force = true
 
 [[redirects]]
   from = "/alergia-na-krmivo-u-psa"
-  to = "/poradna/alergia-na-krmivo-u-psa/"
+  to = "/poradna/alergia-na-krmivo-u-psa"
   status = 301
   force = true
 
 [[redirects]]
   from = "/co-nesmie-pes-jest"
-  to = "/poradna/co-nesmie-pes-jest/"
+  to = "/poradna/co-nesmie-pes-jest"
   status = 301
   force = true
 
