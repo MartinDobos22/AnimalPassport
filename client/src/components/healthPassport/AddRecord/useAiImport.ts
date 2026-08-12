@@ -13,7 +13,7 @@ import type {
   PassportHealthFlags,
 } from '../../../services/api';
 import { uploadHealthAttachment } from '../../../services/healthApi';
-import { downscaleImage } from '../../../utils/imageDownscale';
+import { prepareAttachment } from '../../../utils/prepareAttachment';
 import { VetVisitHelper, type VisitBundle } from '../../../utils/vetVisitHelper';
 import type { PetProfilePatch } from '../../../utils/petProfileMerge';
 import type { AiDetectedDraftRecord, AiDetectedRecordType, AiDraftSkipReason } from '../hpTypes';
@@ -162,47 +162,6 @@ function reducer(state: AiFormState, action: AiAction): AiFormState {
       return exhaustive;
     }
   }
-}
-
-const readFileAsBase64 = (file: File) =>
-  new Promise<{ previewUrl: string; base64: string }>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const raw = typeof reader.result === 'string' ? reader.result : '';
-      const base64 = raw.split(',')[1] ?? '';
-      if (!base64) {
-        reject(new Error('FILE_LOAD_FAILED'));
-        return;
-      }
-      resolve({ previewUrl: raw, base64 });
-    };
-    reader.onerror = () => reject(new Error('FILE_LOAD_FAILED'));
-    reader.readAsDataURL(file);
-  });
-
-const OCR_MAX_WIDTH = 2000;
-
-interface PreparedAttachment {
-  previewUrl: string;
-  base64: string;
-  mimeType: string;
-}
-
-async function prepareAttachment(file: File): Promise<PreparedAttachment> {
-  if (file.type.startsWith('image/')) {
-    const { dataUrl, mimeType } = await downscaleImage(file, {
-      maxWidth: OCR_MAX_WIDTH,
-      mimeType: 'image/jpeg',
-      quality: 0.9,
-      enhanceForOcr: true,
-    });
-    const base64 = dataUrl.split(',')[1] ?? '';
-    if (!base64) throw new Error('FILE_LOAD_FAILED');
-    return { previewUrl: dataUrl, base64, mimeType };
-  }
-
-  const { previewUrl, base64 } = await readFileAsBase64(file);
-  return { previewUrl, base64, mimeType: file.type };
 }
 
 function mergeIdentifiers(list: PassportInterpretation[]): PassportPetIdentifiers | undefined {
@@ -379,6 +338,9 @@ export function useAiImport(petId: string) {
 
     try {
       const interpretations: PassportInterpretation[] = [];
+      // Chyba poslednej neúspešnej strany — keď zlyhajú všetky, ukáže sa
+      // používateľovi reálny dôvod zo servera namiesto generickej hlášky.
+      let lastPageError = '';
 
       if (EXTRACTION_MODE_VISION) {
         // Vision režim: obrázok priamo do modelu, bez samostatného OCR kroku.
@@ -392,8 +354,9 @@ export function useAiImport(petId: string) {
             interpretations.push(
               await interpretPassportImage(state.attachments[i].pending, state.aiProcessingConsent)
             );
-          } catch {
+          } catch (err) {
             // Stranu, ktorú sa nepodarilo interpretovať, preskočíme.
+            if (err instanceof Error && err.message) lastPageError = err.message;
           }
         }
       } else {
@@ -429,8 +392,9 @@ export function useAiImport(petId: string) {
           });
           try {
             interpretations.push(await interpretPassportText(texts[i], state.aiProcessingConsent));
-          } catch {
+          } catch (err) {
             // Stranu, ktorú sa nepodarilo interpretovať, preskočíme.
+            if (err instanceof Error && err.message) lastPageError = err.message;
           }
         }
       }
@@ -438,7 +402,7 @@ export function useAiImport(petId: string) {
       if (interpretations.length === 0) {
         dispatch({
           type: 'SET_ANALYZE_ERROR',
-          message: t('addRecord.aiImport.analyzeFailed'),
+          message: lastPageError || t('addRecord.aiImport.analyzeFailed'),
         });
         return;
       }

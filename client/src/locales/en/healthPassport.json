@@ -300,7 +300,9 @@
       "treatment": "Chronic or recurring treatment of a condition (allergy, heart, joints…) with a next-due reminder.",
       "medication": "One-off or short-term medication with dosing – no next-due reminder.",
       "diet": "Food and how the animal tolerates it."
-    }
+    },
+    "modeScan": "Scan medicine",
+    "subtitleScan": "Photograph the packaging — the AI reads the name, batch and expiry from it."
   },
   "attachmentUpload": {
     "docLabel": "Document description (optional)",
@@ -592,8 +594,23 @@
     "recordAnalyses": "Food analyses",
     "saveCreate": "Add",
     "saveUpdate": "Save",
-    "allergySuggestions": ["Chicken", "Beef", "Lamb", "Fish", "Eggs", "Wheat", "Corn", "Soy"],
-    "intoleranceSuggestions": ["Gluten", "Lactose", "Corn", "Soy", "Grains"],
+    "allergySuggestions": [
+      "Chicken",
+      "Beef",
+      "Lamb",
+      "Fish",
+      "Eggs",
+      "Wheat",
+      "Corn",
+      "Soy"
+    ],
+    "intoleranceSuggestions": [
+      "Gluten",
+      "Lactose",
+      "Corn",
+      "Soy",
+      "Grains"
+    ],
     "healthSuggestions": [
       "Diabetes",
       "Kidney problems",
@@ -942,5 +959,71 @@
   "nextDue": {
     "dateLabel": "Next dose date",
     "helper": "Changing the interval shifts the date; entering a date recalculates the interval."
+  },
+  "productScan": {
+    "stepPhoto": "Package photo",
+    "stepReview": "Check and save",
+    "photoDescription": "Take a photo of the packaging — box, blister, pipette or vial. The AI reads the product name, active substances, batch number and package expiry from it.",
+    "accuracyNotice": "The AI may misread text on the packaging. Check the data before saving.",
+    "privacyNotice": "The photo is sent to OpenAI for processing. Do not send photos containing personal data.",
+    "consent": "I consent to AI/OCR processing of this packaging photo.",
+    "takePhoto": "Take photo",
+    "fromGallery": "From gallery",
+    "removePhoto": "Remove photo",
+    "photoHint": "JPEG, PNG or WebP, max {{maxMb}} MB. Shoot the packaging close up, without glare.",
+    "unsupportedPhoto": "Only JPEG, PNG and WebP photos are supported.",
+    "photoTooLarge": "The photo is too large (max {{maxMb}} MB).",
+    "photoFailed": "The photo could not be loaded. Please try again.",
+    "scanning": "Recognising the product…",
+    "recognize": "Recognise product",
+    "scanFailed": "Product recognition failed. Please try again.",
+    "recognizedTitle": "What the AI read from the packaging",
+    "reviewHint": "Check the data and fix anything the AI misread, then save the record.",
+    "recordType": "Record type",
+    "recordTypes": {
+      "DEWORMING": "Deworming",
+      "ECTOPARASITE": "Parasite control (ticks, fleas)",
+      "VACCINATION": "Vaccination",
+      "MEDICATION": "Medication"
+    },
+    "productName": "Product name",
+    "dateGiven": "Date given",
+    "nextDueDate": "Protects until / next dose",
+    "nextDueHint": "This is not the package expiry — it is when the next dose is due.",
+    "presetDays": "+{{days}} days",
+    "intervalRationale": "AI estimate: {{value}}",
+    "dose": "Dose",
+    "frequency": "Frequency",
+    "endDate": "End of treatment",
+    "batchNumber": "Batch number",
+    "note": "Note",
+    "attachmentFallback": "Product packaging photo",
+    "confidence": {
+      "high": "High confidence",
+      "medium": "Medium confidence",
+      "low": "Low confidence"
+    },
+    "visitReason": {
+      "DEWORMING": "Deworming",
+      "ECTOPARASITE": "Parasite protection",
+      "VACCINATION": "Vaccination",
+      "MEDICATION": "Medication given"
+    },
+    "noteActive": "Active substances: {{value}}",
+    "noteStrength": "Strength: {{value}}",
+    "noteBatch": "Batch: {{value}}",
+    "noteExpiry": "Package expiry: {{value}}",
+    "noteDosage": "Dosage from packaging: {{value}}",
+    "noteManufacturer": "Manufacturer: {{value}}",
+    "alerts": {
+      "PACKAGE_EXPIRED": "The package expired {{expiry}}, which is before the date given. Do not administer it.",
+      "PACKAGE_EXPIRING_SOON": "The package expires {{expiry}}, shortly after the date given.",
+      "WEIGHT_BELOW_RANGE": "This package is for animals from {{min}} kg, the selected pet weighs {{weight}} kg. Check the dosage with your vet.",
+      "WEIGHT_ABOVE_RANGE": "This package covers animals up to {{max}} kg, the selected pet weighs {{weight}} kg. A higher dose may be needed.",
+      "WEIGHT_UNKNOWN": "The package is for animals {{min}}–{{max}} kg. The pet profile has no weight, so we cannot check it.",
+      "SPECIES_MISMATCH": "The product is intended for a different species than the selected pet's profile.",
+      "LOW_CONFIDENCE": "The AI is not confident about the data from the photo. Check it especially carefully.",
+      "TYPE_UNKNOWN": "The product type could not be determined — pick it manually."
+    }
   }
 }

@@ -17,6 +17,7 @@ import {
   Bolt as BoltIcon,
   Close as CloseIcon,
   Edit as EditIcon,
+  PhotoCamera as PhotoCameraIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 
@@ -29,8 +30,11 @@ import AiImportProvider from './AiImport';
 import AiImportBody from './AiImportBody';
 import AiImportFooter from './AiImportFooter';
 import QuickEntryProvider, { QuickEntryBody, QuickEntryFooter } from './QuickEntry';
+import MedicationScanProvider from './MedicationScan';
+import MedicationScanBody from './MedicationScanBody';
+import MedicationScanFooter from './MedicationScanFooter';
 
-type Mode = 'QUICK' | 'MANUAL' | 'AI';
+type Mode = 'QUICK' | 'MANUAL' | 'SCAN' | 'AI';
 
 interface AddRecordProps {
   open: boolean;
@@ -49,6 +53,7 @@ function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (next: Mode) => 
   const tabs: { value: Mode; label: string; icon: ModeIcon }[] = [
     { value: 'QUICK', label: t('addRecord.modeQuick'), icon: BoltIcon },
     { value: 'MANUAL', label: t('addRecord.modeManual'), icon: EditIcon },
+    { value: 'SCAN', label: t('addRecord.modeScan'), icon: PhotoCameraIcon },
     { value: 'AI', label: t('addRecord.modeAi'), icon: AiIcon },
   ];
 
@@ -131,6 +136,7 @@ export default function AddRecord({
   const subtitleFor = (m: Mode): string => {
     if (m === 'QUICK') return t('addRecord.subtitleQuick');
     if (m === 'MANUAL') return t('addRecord.subtitleManual');
+    if (m === 'SCAN') return t('addRecord.subtitleScan');
     return t('addRecord.subtitleAi');
   };
 
@@ -204,6 +210,18 @@ export default function AddRecord({
             <ManualEntryFooter />
           </DialogActions>
         </ManualEntryProvider>
+      )}
+      {mode === 'SCAN' && (
+        <MedicationScanProvider petId={petId} onSave={handleSave} onCancel={handleClose}>
+          {dialogTitle}
+          <DialogContent dividers sx={{ px: { xs: 2, sm: 3 } }}>
+            <ModeToggle mode={mode} onChange={setMode} />
+            <MedicationScanBody />
+          </DialogContent>
+          <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
+            <MedicationScanFooter />
+          </DialogActions>
+        </MedicationScanProvider>
       )}
       {mode === 'AI' && (
         <AiImportProvider petId={petId} onSave={handleSave} onCancel={handleClose}>

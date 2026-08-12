@@ -12,6 +12,7 @@ import type {
   HealthEpisodeRecord,
   SimilarEpisodeSummary,
 } from '../types/healthEpisode';
+import type { MedicationScanResult } from '../types/medicationScan';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -276,6 +277,40 @@ export async function interpretPassportImage(
   const payload = (await res.json()) as PassportInterpretation;
   logger.info('Vision interpretácia dokumentu prijatá', {
     recordsCount: payload.records?.length ?? 0,
+  });
+  return payload;
+}
+
+export async function scanMedicationPackage(
+  attachment: {
+    fileName: string;
+    mimeType: string;
+    base64Data: string;
+  },
+  aiProcessingConsent = false
+): Promise<MedicationScanResult> {
+  logger.info('Odosielam fotku obalu prípravku na rozpoznanie', {
+    mimeType: attachment.mimeType,
+    base64Length: attachment.base64Data.length,
+  });
+
+  const res = await fetch(`${BASE_URL}/api/scan-medication`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await getAuthHeader()) },
+    body: JSON.stringify({ attachment, aiProcessingConsent }),
+  });
+
+  if (!res.ok) {
+    await handleUnauthorized(res.status, res);
+    logger.error('Rozpoznanie obalu prípravku zlyhalo', { status: res.status });
+    const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+    throw new Error(body?.error?.message ?? `Chyba servera (${res.status})`);
+  }
+
+  const payload = (await res.json()) as MedicationScanResult;
+  logger.info('Obal prípravku rozpoznaný', {
+    recordType: payload.recordType,
+    confidence: payload.confidence,
   });
   return payload;
 }
