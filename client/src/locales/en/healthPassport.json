@@ -186,8 +186,6 @@
   },
   "addRecord": {
     "title": "New record",
-    "tabManual": "Manual entry",
-    "tabAiImport": "AI import",
     "stepUpload": "Upload pages",
     "stepReview": "Review records",
     "stepConfirm": "Confirm & save",
@@ -225,7 +223,6 @@
     },
     "aiImport": {
       "uploadDescription": "Upload one or more pages of a document (health passport, lab results, vet report…). AI will extract records at once and give you a list to approve in the next step.",
-      "accuracyNotice": "AI reads the data from your photo/document and can get it wrong — especially dates and numbers. In the next step, check every value it read and correct it if needed before saving.",
       "required": "Fill in {{count}} required field",
       "required_other": "Fill in {{count}} required fields",
       "analyzing": "Analysing…",
@@ -251,15 +248,9 @@
       "suitabilityNoAllergens": "No conflict with allergies or diagnoses",
       "suitabilityCheckAllergens": "Check ingredients against allergens",
       "importRecordCount": "AI records imported: {{count}}",
-      "privacyNotice": "AI import processes health data from the document. Before sending it to OCR/AI providers, we minimise the payload and audit only metadata (user, operation, provider, size, time), not document content.",
-      "aiProcessingConsent": "I consent to AI/OCR processing of health data from this document for importing records."
+      "optionsToggle": "More options",
+      "tryAsMedicine": "Try as medicine packaging"
     },
-    "modeQuick": "Quick",
-    "modeManual": "Manual visit",
-    "modeAi": "From document (AI)",
-    "subtitleQuick": "Quickly log a single record type (without full visit details).",
-    "subtitleManual": "A full visit — including examinations (blood, X-ray, ultrasound…), diagnosis and linked records.",
-    "subtitleAi": "AI extracts vaccinations and records from uploaded documents.",
     "addTitle": "Add record",
     "kindVaccination": "Vaccination",
     "kindDeworming": "Deworming",
@@ -301,8 +292,26 @@
       "medication": "One-off or short-term medication with dosing – no next-due reminder.",
       "diet": "Food and how the animal tolerates it."
     },
-    "modeScan": "Scan medicine",
-    "subtitleScan": "Photograph the packaging — the AI reads the name, batch and expiry from it."
+    "chooserSubtitle": "What do you want to add?",
+    "backToModes": "Back to options",
+    "modes": {
+      "SCAN": {
+        "title": "Scan medicine",
+        "description": "Photograph the packaging, record is done"
+      },
+      "AI": {
+        "title": "Upload document",
+        "description": "Passport, vet report, lab results"
+      },
+      "QUICK": {
+        "title": "Quick entry",
+        "description": "One record in a few seconds"
+      },
+      "MANUAL": {
+        "title": "Detailed visit",
+        "description": "Visit with medication, findings and cost"
+      }
+    }
   },
   "attachmentUpload": {
     "docLabel": "Document description (optional)",
@@ -594,23 +603,8 @@
     "recordAnalyses": "Food analyses",
     "saveCreate": "Add",
     "saveUpdate": "Save",
-    "allergySuggestions": [
-      "Chicken",
-      "Beef",
-      "Lamb",
-      "Fish",
-      "Eggs",
-      "Wheat",
-      "Corn",
-      "Soy"
-    ],
-    "intoleranceSuggestions": [
-      "Gluten",
-      "Lactose",
-      "Corn",
-      "Soy",
-      "Grains"
-    ],
+    "allergySuggestions": ["Chicken", "Beef", "Lamb", "Fish", "Eggs", "Wheat", "Corn", "Soy"],
+    "intoleranceSuggestions": ["Gluten", "Lactose", "Corn", "Soy", "Grains"],
     "healthSuggestions": [
       "Diabetes",
       "Kidney problems",
@@ -961,16 +955,10 @@
     "helper": "Changing the interval shifts the date; entering a date recalculates the interval."
   },
   "productScan": {
-    "stepPhoto": "Package photo",
-    "stepReview": "Check and save",
     "photoDescription": "Take a photo of the packaging — box, blister, pipette or vial. The AI reads the product name, active substances, batch number and package expiry from it.",
-    "accuracyNotice": "The AI may misread text on the packaging. Check the data before saving.",
-    "privacyNotice": "The photo is sent to OpenAI for processing. Do not send photos containing personal data.",
-    "consent": "I consent to AI/OCR processing of this packaging photo.",
     "takePhoto": "Take photo",
     "fromGallery": "From gallery",
     "removePhoto": "Remove photo",
-    "photoHint": "JPEG, PNG or WebP, max {{maxMb}} MB. Shoot the packaging close up, without glare.",
     "unsupportedPhoto": "Only JPEG, PNG and WebP photos are supported.",
     "photoTooLarge": "The photo is too large (max {{maxMb}} MB).",
     "photoFailed": "The photo could not be loaded. Please try again.",
@@ -1024,6 +1012,11 @@
       "SPECIES_MISMATCH": "The product is intended for a different species than the selected pet's profile.",
       "LOW_CONFIDENCE": "The AI is not confident about the data from the photo. Check it especially carefully.",
       "TYPE_UNKNOWN": "The product type could not be determined — pick it manually."
-    }
+    },
+    "photoAlt": "Photo of the product packaging",
+    "retakePhoto": "Retake photo",
+    "retake": "Different photo",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details"
   }
 }

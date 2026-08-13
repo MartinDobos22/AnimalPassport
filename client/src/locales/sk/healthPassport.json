@@ -190,8 +190,6 @@
   },
   "addRecord": {
     "title": "Nový záznam",
-    "tabManual": "Ručný záznam",
-    "tabAiImport": "AI import",
     "stepUpload": "Nahrať strany",
     "stepReview": "Skontrolovať záznamy",
     "stepConfirm": "Potvrdiť a uložiť",
@@ -230,7 +228,6 @@
     },
     "aiImport": {
       "uploadDescription": "Nahraj jednu alebo viac strán dokumentu (zdravotný pas, laboratórny výsledok, správa od veterinára…). AI z nich extrahuje záznamy naraz a v ďalšom kroku ti dá zoznam na schválenie.",
-      "accuracyNotice": "AI číta údaje z fotky/dokumentu a môže sa pomýliť — najmä pri dátumoch a číslach. V ďalšom kroku si všetky prečítané údaje skontroluj a podľa potreby oprav pred uložením.",
       "required": "Doplň {{count}} povinné pole",
       "required_other": "Doplň {{count}} povinných polí",
       "analyzing": "Analyzujem…",
@@ -256,15 +253,9 @@
       "suitabilityNoAllergens": "Bez konfliktu s alergiami a diagnózami",
       "suitabilityCheckAllergens": "Skontrolovať zloženie voči alergénom",
       "importRecordCount": "AI import záznamov: {{count}}",
-      "privacyNotice": "AI import spracúva zdravotné údaje z dokumentu. Pred odoslaním do OCR/AI služieb minimalizujeme payload a auditujeme len metadáta (používateľ, operácia, provider, veľkosť, čas), nie obsah dokumentu.",
-      "aiProcessingConsent": "Súhlasím s AI/OCR spracovaním zdravotných údajov z dokumentu pre účely importu záznamov."
+      "optionsToggle": "Doplňujúce možnosti",
+      "tryAsMedicine": "Skúsiť ako obal lieku"
     },
-    "modeQuick": "Rýchly",
-    "modeManual": "Manuálna návšteva",
-    "modeAi": "Z dokumentu (AI)",
-    "subtitleQuick": "Rýchle zalogovanie jedného typu záznamu (bez detailov o návšteve).",
-    "subtitleManual": "Kompletná návšteva — vrátane vyšetrení (krv, RTG, USG…), diagnózy a súvisiacich záznamov.",
-    "subtitleAi": "AI extrahuje vakcinácie a záznamy z nahraných dokumentov.",
     "addTitle": "Pridať záznam",
     "kindVaccination": "Očkovanie",
     "kindDeworming": "Odčervenie",
@@ -307,8 +298,26 @@
       "medication": "Jednorazový alebo krátkodobý liek s dávkovaním – bez pripomienky ďalšieho termínu.",
       "diet": "Krmivo a jeho znášanlivosť u zvieraťa."
     },
-    "modeScan": "Odfotiť liek",
-    "subtitleScan": "Odfoť obal prípravku — AI z neho prečíta názov, šaržu aj expiráciu."
+    "chooserSubtitle": "Čo chceš pridať?",
+    "backToModes": "Späť na výber",
+    "modes": {
+      "SCAN": {
+        "title": "Odfotiť liek",
+        "description": "Obal prípravku a záznam je hotový"
+      },
+      "AI": {
+        "title": "Nahrať dokument",
+        "description": "Pas, správa od veterinára, výsledky"
+      },
+      "QUICK": {
+        "title": "Rýchly zápis",
+        "description": "Jeden záznam za pár sekúnd"
+      },
+      "MANUAL": {
+        "title": "Podrobná návšteva",
+        "description": "Návšteva s liekmi, nálezom a cenou"
+      }
+    }
   },
   "attachmentUpload": {
     "docLabel": "Popis dokumentu (voliteľné)",
@@ -611,13 +620,7 @@
       "Kukurica",
       "Sója"
     ],
-    "intoleranceSuggestions": [
-      "Lepok",
-      "Laktóza",
-      "Kukurica",
-      "Sója",
-      "Obilniny"
-    ],
+    "intoleranceSuggestions": ["Lepok", "Laktóza", "Kukurica", "Sója", "Obilniny"],
     "healthSuggestions": [
       "Diabetes",
       "Problémy s obličkami",
@@ -988,16 +991,10 @@
     "helper": "Zmena intervalu posunie dátum; zadaním dátumu sa prepočíta interval."
   },
   "productScan": {
-    "stepPhoto": "Fotka obalu",
-    "stepReview": "Kontrola a uloženie",
     "photoDescription": "Odfoť obal prípravku — škatuľku, blister, pipetu alebo liekovku. AI z neho prečíta názov, účinné látky, šaržu a expiráciu balenia.",
-    "accuracyNotice": "AI môže text z obalu prečítať nepresne. Pred uložením si údaje skontroluj.",
-    "privacyNotice": "Fotka sa odosiela na spracovanie do OpenAI. Neposielaj fotky, na ktorých sú osobné údaje.",
-    "consent": "Súhlasím so spracovaním fotky obalu cez AI/OCR.",
     "takePhoto": "Odfotiť",
     "fromGallery": "Z galérie",
     "removePhoto": "Odstrániť fotku",
-    "photoHint": "JPEG, PNG alebo WebP, max {{maxMb}} MB. Odfoť obal zblízka, bez odleskov.",
     "unsupportedPhoto": "Podporované sú len fotky vo formáte JPEG, PNG alebo WebP.",
     "photoTooLarge": "Fotka je príliš veľká (max {{maxMb}} MB).",
     "photoFailed": "Fotku sa nepodarilo načítať. Skús to znova.",
@@ -1051,6 +1048,11 @@
       "SPECIES_MISMATCH": "Prípravok je určený pre iný živočíšny druh, než má vybrané zviera v profile.",
       "LOW_CONFIDENCE": "AI si údajmi z fotky nie je istá. Skontroluj ich obzvlášť dôkladne.",
       "TYPE_UNKNOWN": "Typ prípravku sa nepodarilo určiť — vyber ho ručne."
-    }
+    },
+    "photoAlt": "Fotka obalu prípravku",
+    "retakePhoto": "Odfotiť znova",
+    "retake": "Iná fotka",
+    "showDetails": "Zobraziť podrobnosti",
+    "hideDetails": "Skryť podrobnosti"
   }
 }

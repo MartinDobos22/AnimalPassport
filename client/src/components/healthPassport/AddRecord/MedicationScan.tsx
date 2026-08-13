@@ -1,5 +1,7 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 
+import AiConsentDialog from '../../AiConsentDialog';
+import { useAiConsent } from '../../../hooks/useAiConsent';
 import type { PetProfile } from '../../../types';
 import type { ProductScanDraft, VisitBundle } from '../../../utils/vetVisitHelper';
 import type { ScanAlert } from '../../../utils/medicationScanChecks';
@@ -14,9 +16,9 @@ interface MedicationScanContextValue {
   canSave: boolean;
   setPhoto: (file: File) => Promise<void>;
   clearPhoto: () => void;
-  setConsent: (value: boolean) => void;
   setDraftField: (field: keyof ProductScanDraft, value: string) => void;
-  scan: () => Promise<void>;
+  /** Spustí rozpoznanie; pri prvom použití si najprv vypýta súhlas s AI. */
+  requestScan: () => void;
   backToPhoto: () => void;
   submit: () => void;
   cancel: () => void;
@@ -32,6 +34,7 @@ export function useMedicationScanContext(): MedicationScanContextValue {
 
 interface MedicationScanProviderProps {
   petId: string;
+  initialFile?: File | null;
   onSave: (bundle: VisitBundle) => void;
   onCancel: () => void;
   children: ReactNode;
@@ -39,6 +42,7 @@ interface MedicationScanProviderProps {
 
 export default function MedicationScanProvider({
   petId,
+  initialFile,
   onSave,
   onCancel,
   children,
@@ -51,17 +55,26 @@ export default function MedicationScanProvider({
     canSave,
     setPhoto,
     clearPhoto,
-    setConsent,
     setDraftField,
     scan,
     backToPhoto,
     buildBundle,
     reset,
-  } = useMedicationScanInternal(petId);
+  } = useMedicationScanInternal(petId, initialFile);
+  const { granted } = useAiConsent();
+  const [consentOpen, setConsentOpen] = useState(false);
 
   const submit = () => {
     onSave(buildBundle());
     reset();
+  };
+
+  const requestScan = () => {
+    if (!granted) {
+      setConsentOpen(true);
+      return;
+    }
+    void scan();
   };
 
   const value: MedicationScanContextValue = {
@@ -72,13 +85,23 @@ export default function MedicationScanProvider({
     canSave,
     setPhoto,
     clearPhoto,
-    setConsent,
     setDraftField,
-    scan,
+    requestScan,
     backToPhoto,
     submit,
     cancel: onCancel,
   };
 
-  return <MedicationScanContext.Provider value={value}>{children}</MedicationScanContext.Provider>;
+  return (
+    <MedicationScanContext.Provider value={value}>
+      {children}
+      <AiConsentDialog
+        open={consentOpen}
+        onClose={() => setConsentOpen(false)}
+        onGranted={() => {
+          void scan();
+        }}
+      />
+    </MedicationScanContext.Provider>
+  );
 }

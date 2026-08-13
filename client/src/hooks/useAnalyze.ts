@@ -166,7 +166,7 @@ export function useAnalyze() {
       });
 
       try {
-        const { extractedText } = await extractTextFromImage(attachment, false, controller.signal);
+        const { extractedText } = await extractTextFromImage(attachment, controller.signal);
         logger.info('Hook useAnalyze prijal výsledok OCR', {
           extractedTextLength: extractedText.length,
         });

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Box,
+  ButtonBase,
   Dialog,
   DialogActions,
   DialogContent,
@@ -13,9 +14,11 @@ import {
   useTheme,
 } from '@mui/material';
 import {
-  AutoAwesome as AiIcon,
+  ArrowBackIosNew as BackIcon,
   Bolt as BoltIcon,
+  ChevronRight as ChevronRightIcon,
   Close as CloseIcon,
+  Description as DocumentIcon,
   Edit as EditIcon,
   PhotoCamera as PhotoCameraIcon,
 } from '@mui/icons-material';
@@ -34,7 +37,8 @@ import MedicationScanProvider from './MedicationScan';
 import MedicationScanBody from './MedicationScanBody';
 import MedicationScanFooter from './MedicationScanFooter';
 
-type Mode = 'QUICK' | 'MANUAL' | 'SCAN' | 'AI';
+type Mode = 'CHOOSER' | 'SCAN' | 'AI' | 'QUICK' | 'MANUAL';
+type EntryMode = Exclude<Mode, 'CHOOSER'>;
 
 interface AddRecordProps {
   open: boolean;
@@ -47,76 +51,73 @@ interface AddRecordProps {
 
 type ModeIcon = typeof EditIcon;
 
-function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (next: Mode) => void }) {
+const MODE_ICONS: Record<EntryMode, ModeIcon> = {
+  SCAN: PhotoCameraIcon,
+  AI: DocumentIcon,
+  QUICK: BoltIcon,
+  MANUAL: EditIcon,
+};
+
+// Poradie je zámerné: najprv to, čo používateľ spraví najčastejšie a najrýchlejšie.
+const MODE_ORDER: EntryMode[] = ['SCAN', 'AI', 'QUICK', 'MANUAL'];
+
+interface ModeTileProps {
+  mode: EntryMode;
+  onSelect: (mode: EntryMode) => void;
+}
+
+function ModeTile({ mode, onSelect }: ModeTileProps) {
   const theme = useTheme();
   const { t } = useTranslation('healthPassport');
-  const tabs: { value: Mode; label: string; icon: ModeIcon }[] = [
-    { value: 'QUICK', label: t('addRecord.modeQuick'), icon: BoltIcon },
-    { value: 'MANUAL', label: t('addRecord.modeManual'), icon: EditIcon },
-    { value: 'SCAN', label: t('addRecord.modeScan'), icon: PhotoCameraIcon },
-    { value: 'AI', label: t('addRecord.modeAi'), icon: AiIcon },
-  ];
+  const Icon = MODE_ICONS[mode];
 
   return (
-    <Box sx={{ mb: 2.5, display: 'flex', justifyContent: 'center' }}>
+    <ButtonBase
+      onClick={() => onSelect(mode)}
+      sx={{
+        width: '100%',
+        justifyContent: 'flex-start',
+        textAlign: 'left',
+        gap: 2,
+        p: 2,
+        borderRadius: 2,
+        border: `1px solid ${theme.palette.divider}`,
+        transition: 'background-color 150ms ease, border-color 150ms ease',
+        '&:hover': {
+          borderColor: theme.palette.primary.main,
+          bgcolor: alpha(theme.palette.primary.main, 0.04),
+        },
+        '&:focus-visible': {
+          outline: `2px solid ${theme.palette.primary.main}`,
+          outlineOffset: 2,
+        },
+      }}
+    >
       <Box
-        role="tablist"
         sx={{
           display: 'flex',
-          width: '100%',
-          maxWidth: 440,
-          p: 0.5,
-          gap: 0.5,
-          borderRadius: 999,
-          bgcolor: alpha(theme.palette.text.primary, 0.04),
-          border: `1px solid ${theme.palette.divider}`,
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          width: 44,
+          height: 44,
+          borderRadius: '50%',
+          bgcolor: alpha(theme.palette.primary.main, 0.1),
+          color: 'primary.main',
         }}
       >
-        {tabs.map(({ value, label, icon: Icon }) => {
-          const active = mode === value;
-          return (
-            <Box
-              key={value}
-              role="tab"
-              aria-selected={active}
-              component="button"
-              type="button"
-              onClick={() => onChange(value)}
-              sx={{
-                flex: '1 1 0',
-                minWidth: 0,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                gap: 0.5,
-                px: { xs: 0.75, sm: 2 },
-                py: 0.75,
-                borderRadius: 999,
-                border: 'none',
-                cursor: 'pointer',
-                font: 'inherit',
-                fontSize: { xs: '0.72rem', sm: '0.85rem' },
-                fontWeight: 600,
-                lineHeight: 1.15,
-                color: active ? 'primary.contrastText' : 'text.secondary',
-                bgcolor: active ? 'primary.main' : 'transparent',
-                boxShadow: active ? `0 2px 6px ${alpha(theme.palette.primary.main, 0.18)}` : 'none',
-                transition: 'background-color 150ms ease, color 150ms ease',
-                '&:hover': active ? {} : { color: 'text.primary' },
-                '&:focus-visible': {
-                  outline: `2px solid ${theme.palette.primary.main}`,
-                  outlineOffset: 2,
-                },
-              }}
-            >
-              <Icon sx={{ fontSize: 16, display: { xs: 'none', sm: 'block' }, flexShrink: 0 }} />
-              {label}
-            </Box>
-          );
-        })}
+        <Icon />
       </Box>
-    </Box>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+          {t(`addRecord.modes.${mode}.title`)}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t(`addRecord.modes.${mode}.description`)}
+        </Typography>
+      </Box>
+      <ChevronRightIcon color="action" sx={{ flexShrink: 0 }} />
+    </ButtonBase>
   );
 }
 
@@ -131,18 +132,19 @@ export default function AddRecord({
   const { t } = useTranslation('healthPassport');
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const [mode, setMode] = useState<Mode>('QUICK');
-
-  const subtitleFor = (m: Mode): string => {
-    if (m === 'QUICK') return t('addRecord.subtitleQuick');
-    if (m === 'MANUAL') return t('addRecord.subtitleManual');
-    if (m === 'SCAN') return t('addRecord.subtitleScan');
-    return t('addRecord.subtitleAi');
-  };
+  const [mode, setMode] = useState<Mode>('CHOOSER');
+  // Fotka prenesená z nahrávania dokumentov, keď sa ukáže, že ide o obal lieku.
+  const [handoffFile, setHandoffFile] = useState<File | null>(null);
 
   const handleClose = () => {
-    setMode('QUICK');
+    setMode('CHOOSER');
+    setHandoffFile(null);
     onClose();
+  };
+
+  const backToChooser = () => {
+    setMode('CHOOSER');
+    setHandoffFile(null);
   };
 
   const handleSave = (bundle: VisitBundle) => {
@@ -155,15 +157,27 @@ export default function AddRecord({
     handleClose();
   };
 
+  const handleScanHandoff = (file: File) => {
+    setHandoffFile(file);
+    setMode('SCAN');
+  };
+
   const dialogTitle = (
     <DialogTitle sx={{ pb: 1 }}>
       <Stack direction="row" alignItems="center" gap={1}>
-        <Box sx={{ flex: 1 }}>
+        {mode !== 'CHOOSER' && (
+          <IconButton onClick={backToChooser} size="small" aria-label={t('addRecord.backToModes')}>
+            <BackIcon fontSize="small" />
+          </IconButton>
+        )}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {t('addRecord.addTitle')}
+            {mode === 'CHOOSER' ? t('addRecord.addTitle') : t(`addRecord.modes.${mode}.title`)}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {subtitleFor(mode)}
+            {mode === 'CHOOSER'
+              ? t('addRecord.chooserSubtitle')
+              : t(`addRecord.modes.${mode}.description`)}
           </Typography>
         </Box>
         <IconButton onClick={handleClose} size="small" aria-label={t('detail.close')}>
@@ -175,6 +189,53 @@ export default function AddRecord({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={fullScreen}>
+      {mode === 'CHOOSER' && (
+        <>
+          {dialogTitle}
+          <DialogContent dividers sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
+            <Stack spacing={1.25}>
+              {MODE_ORDER.map((entryMode) => (
+                <ModeTile key={entryMode} mode={entryMode} onSelect={setMode} />
+              ))}
+            </Stack>
+          </DialogContent>
+        </>
+      )}
+
+      {mode === 'SCAN' && (
+        <MedicationScanProvider
+          petId={petId}
+          initialFile={handoffFile}
+          onSave={handleSave}
+          onCancel={handleClose}
+        >
+          {dialogTitle}
+          <DialogContent dividers sx={{ px: { xs: 2, sm: 3 } }}>
+            <MedicationScanBody />
+          </DialogContent>
+          <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
+            <MedicationScanFooter />
+          </DialogActions>
+        </MedicationScanProvider>
+      )}
+
+      {mode === 'AI' && (
+        <AiImportProvider
+          petId={petId}
+          onSave={handleSave}
+          onCancel={handleClose}
+          onScanHandoff={handleScanHandoff}
+        >
+          {dialogTitle}
+          <DialogContent dividers sx={{ px: { xs: 2, sm: 3 } }}>
+            <AiImportBody />
+          </DialogContent>
+          <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
+            <AiImportFooter />
+          </DialogActions>
+        </AiImportProvider>
+      )}
+
       {mode === 'QUICK' && (
         <QuickEntryProvider
           petId={petId}
@@ -185,7 +246,6 @@ export default function AddRecord({
         >
           {dialogTitle}
           <DialogContent dividers sx={{ px: { xs: 2, sm: 3 } }}>
-            <ModeToggle mode={mode} onChange={setMode} />
             <QuickEntryBody />
           </DialogContent>
           <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
@@ -193,6 +253,7 @@ export default function AddRecord({
           </DialogActions>
         </QuickEntryProvider>
       )}
+
       {mode === 'MANUAL' && (
         <ManualEntryProvider
           petId={petId}
@@ -203,37 +264,12 @@ export default function AddRecord({
         >
           {dialogTitle}
           <DialogContent dividers sx={{ px: { xs: 2, sm: 3 } }}>
-            <ModeToggle mode={mode} onChange={setMode} />
             <ManualEntryBody />
           </DialogContent>
           <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
             <ManualEntryFooter />
           </DialogActions>
         </ManualEntryProvider>
-      )}
-      {mode === 'SCAN' && (
-        <MedicationScanProvider petId={petId} onSave={handleSave} onCancel={handleClose}>
-          {dialogTitle}
-          <DialogContent dividers sx={{ px: { xs: 2, sm: 3 } }}>
-            <ModeToggle mode={mode} onChange={setMode} />
-            <MedicationScanBody />
-          </DialogContent>
-          <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
-            <MedicationScanFooter />
-          </DialogActions>
-        </MedicationScanProvider>
-      )}
-      {mode === 'AI' && (
-        <AiImportProvider petId={petId} onSave={handleSave} onCancel={handleClose}>
-          {dialogTitle}
-          <DialogContent dividers sx={{ px: { xs: 2, sm: 3 } }}>
-            <ModeToggle mode={mode} onChange={setMode} />
-            <AiImportBody />
-          </DialogContent>
-          <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
-            <AiImportFooter />
-          </DialogActions>
-        </AiImportProvider>
       )}
     </Dialog>
   );

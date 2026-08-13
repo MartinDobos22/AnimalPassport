@@ -55,7 +55,6 @@ export const INITIAL_AI_STATE: AiFormState = {
   attachmentLabel: '',
   analyzeError: '',
   analyzeProgress: null,
-  aiProcessingConsent: false,
   selectedMainCategory: '',
   selectedSubcategory: '',
   aiDetectedRecords: [],
@@ -78,7 +77,6 @@ type AiAction =
   | { type: 'SET_ATTACHMENT_LABEL'; label: string }
   | { type: 'SET_ANALYZE_PROGRESS'; progress: AnalyzeProgress | null }
   | { type: 'SET_ANALYZE_ERROR'; message: string }
-  | { type: 'SET_AI_PROCESSING_CONSENT'; value: boolean }
   | { type: 'SET_MAIN_CATEGORY'; value: string }
   | { type: 'SET_SUBCATEGORY'; value: string }
   | { type: 'SET_AI_RECORDS'; records: AiDetectedDraftRecord[] }
@@ -118,8 +116,6 @@ function reducer(state: AiFormState, action: AiAction): AiFormState {
         detectedProfileAvailable: false,
         documentSummary: '',
       };
-    case 'SET_AI_PROCESSING_CONSENT':
-      return { ...state, aiProcessingConsent: action.value };
     case 'SET_ATTACHMENT_ERROR':
       return { ...state, attachmentError: action.message };
     case 'SET_ATTACHMENT_LABEL':
@@ -316,10 +312,6 @@ export function useAiImport(petId: string) {
       dispatch({ type: 'UPDATE_AI_RECORD', id, patch }),
     []
   );
-  const setAiProcessingConsent = useCallback(
-    (value: boolean) => dispatch({ type: 'SET_AI_PROCESSING_CONSENT', value }),
-    []
-  );
   const setImportAllHistory = useCallback(
     (value: boolean) => dispatch({ type: 'SET_IMPORT_ALL_HISTORY', value }),
     []
@@ -351,9 +343,7 @@ export function useAiImport(petId: string) {
             progress: { done: i, total: state.attachments.length, stage: 'interpret' },
           });
           try {
-            interpretations.push(
-              await interpretPassportImage(state.attachments[i].pending, state.aiProcessingConsent)
-            );
+            interpretations.push(await interpretPassportImage(state.attachments[i].pending));
           } catch (err) {
             // Stranu, ktorú sa nepodarilo interpretovať, preskočíme.
             if (err instanceof Error && err.message) lastPageError = err.message;
@@ -366,10 +356,7 @@ export function useAiImport(petId: string) {
             type: 'SET_ANALYZE_PROGRESS',
             progress: { done: i, total: state.attachments.length, stage: 'ocr' },
           });
-          const { extractedText } = await extractTextFromImage(
-            state.attachments[i].pending,
-            state.aiProcessingConsent
-          );
+          const { extractedText } = await extractTextFromImage(state.attachments[i].pending);
           if (extractedText.trim()) texts.push(extractedText.trim());
         }
 
@@ -391,7 +378,7 @@ export function useAiImport(petId: string) {
             progress: { done: i, total: texts.length, stage: 'interpret' },
           });
           try {
-            interpretations.push(await interpretPassportText(texts[i], state.aiProcessingConsent));
+            interpretations.push(await interpretPassportText(texts[i]));
           } catch (err) {
             // Stranu, ktorú sa nepodarilo interpretovať, preskočíme.
             if (err instanceof Error && err.message) lastPageError = err.message;
@@ -568,7 +555,6 @@ export function useAiImport(petId: string) {
     }
   }, [
     state.attachments,
-    state.aiProcessingConsent,
     state.importAllHistory,
     petId,
     existingVaccinations,
@@ -647,7 +633,6 @@ export function useAiImport(petId: string) {
     setMainCategory,
     setSubcategory,
     updateAiRecord,
-    setAiProcessingConsent,
     setImportAllHistory,
     setVisitDraftField,
     analyze,

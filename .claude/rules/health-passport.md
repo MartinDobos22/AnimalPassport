@@ -60,6 +60,9 @@ Všetky tieto endpointy vyžadujú `aiHeavyLimiter`. Pri pridávaní novej AI fu
 - **Denník epizód** filter cez `utils/episodeFilters.ts` — žiadne ad-hoc filtre v komponentoch.
 - **Zdravotný pas** "Add record" formulár drží stav v `useAddRecordForm` — komponenty len renderujú; ak pridávaš pole, urob to v hooku + v type.
 - **AI import** (`useAiImport`) je opt-in tok pre používateľa: explicitné CTA, žiadne automatické skenovanie pri prvom load.
+- **`AddRecord` začína výberom režimu** (`CHOOSER`), nie prepínačom záložiek — dlaždice `SCAN` / `AI` / `QUICK` / `MANUAL` s popisom, čo ktorý režim rieši. Nové režimy pridávaj do `MODE_ORDER` a `addRecord.modes.*`, nie ako ďalšiu záložku.
+- **Súhlas s AI sa nepýta pri každej analýze.** Je trvalý (`useAiConsent` + `AiConsentDialog`), vypýta si ho až prvá AI akcia a odvoláva sa v nastaveniach. V AI tokoch nesmie pribudnúť ďalší consent checkbox — na obrazovke je len `AiProcessingNote` (jeden riadok + „Ako to funguje?").
+- **Fotka obalu v toku pre dokumenty** neskončí slepou chybou: keď analýza zlyhá a je nahratá jedna fotka, `AiImportBody` ponúkne prepnutie do scanu lieku a fotku prenesie (`onScanHandoff` → `initialFile`).
 - **Scan obalu lieku** (režim „Odfotiť liek" v `AddRecord`, `useMedicationScan`) drží dva **rôzne** dátumy oddelene: `packageExpiry` (trvanlivosť balenia, „Exp." z obalu — do záznamu ide len ako poznámka) a `nextDueDate` (dokedy prípravok chráni / kedy je ďalšia dávka — riadi pripomienky). Nikdy ich nezlievaj do jedného poľa. AI z obalu iba **číta**; porovnanie s profilom zvieraťa (hmotnostný rozsah, druh, expirácia k dátumu podania) je deterministické v `utils/medicationScanChecks.ts`.
 
 ## Pri pridávaní novej zdravotnej domény (napr. nutričný plán)

@@ -37,7 +37,7 @@ router.post(
       try {
         const result = await summarizeSimilarEpisodes(current, past, {
           userId: req.appUserId ?? req.user?.uid,
-          aiProcessingConsent: body?.aiProcessingConsent === true,
+          aiProcessingConsent: req.aiConsentGranted === true,
           processesHealthData: false,
         });
         logger.info('similar-summary dokončené', {

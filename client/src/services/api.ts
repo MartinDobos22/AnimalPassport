@@ -143,7 +143,6 @@ export async function extractTextFromImage(
     mimeType: string;
     base64Data: string;
   },
-  aiProcessingConsent = false,
   signal?: AbortSignal
 ): Promise<{ extractedText: string; source: 'google-vision' | 'openai' | 'pdf-parser' | 'none' }> {
   logger.info('Odosielam súbor na OCR extrakciu', {
@@ -155,7 +154,7 @@ export async function extractTextFromImage(
   const res = await fetch(`${BASE_URL}/api/extract-text`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(await getAuthHeader()) },
-    body: JSON.stringify({ attachment, aiProcessingConsent }),
+    body: JSON.stringify({ attachment }),
     signal,
   });
 
@@ -221,16 +220,13 @@ export interface PassportInterpretation {
   healthFlags?: PassportHealthFlags;
 }
 
-export async function interpretPassportText(
-  text: string,
-  aiProcessingConsent = false
-): Promise<PassportInterpretation> {
+export async function interpretPassportText(text: string): Promise<PassportInterpretation> {
   logger.info('Odosielam text pasu na AI interpretáciu', { textLength: text.length });
 
   const res = await fetch(`${BASE_URL}/api/interpret-passport`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(await getAuthHeader()) },
-    body: JSON.stringify({ text, aiProcessingConsent }),
+    body: JSON.stringify({ text }),
   });
 
   if (!res.ok) {
@@ -247,14 +243,11 @@ export async function interpretPassportText(
   return payload;
 }
 
-export async function interpretPassportImage(
-  attachment: {
-    fileName: string;
-    mimeType: string;
-    base64Data: string;
-  },
-  aiProcessingConsent = false
-): Promise<PassportInterpretation> {
+export async function interpretPassportImage(attachment: {
+  fileName: string;
+  mimeType: string;
+  base64Data: string;
+}): Promise<PassportInterpretation> {
   logger.info('Odosielam obrázok dokumentu na AI vision interpretáciu', {
     fileName: attachment.fileName,
     mimeType: attachment.mimeType,
@@ -264,7 +257,7 @@ export async function interpretPassportImage(
   const res = await fetch(`${BASE_URL}/api/interpret-passport`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(await getAuthHeader()) },
-    body: JSON.stringify({ attachment, aiProcessingConsent }),
+    body: JSON.stringify({ attachment }),
   });
 
   if (!res.ok) {
@@ -281,14 +274,11 @@ export async function interpretPassportImage(
   return payload;
 }
 
-export async function scanMedicationPackage(
-  attachment: {
-    fileName: string;
-    mimeType: string;
-    base64Data: string;
-  },
-  aiProcessingConsent = false
-): Promise<MedicationScanResult> {
+export async function scanMedicationPackage(attachment: {
+  fileName: string;
+  mimeType: string;
+  base64Data: string;
+}): Promise<MedicationScanResult> {
   logger.info('Odosielam fotku obalu prípravku na rozpoznanie', {
     mimeType: attachment.mimeType,
     base64Length: attachment.base64Data.length,
@@ -297,7 +287,7 @@ export async function scanMedicationPackage(
   const res = await fetch(`${BASE_URL}/api/scan-medication`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(await getAuthHeader()) },
-    body: JSON.stringify({ attachment, aiProcessingConsent }),
+    body: JSON.stringify({ attachment }),
   });
 
   if (!res.ok) {

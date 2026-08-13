@@ -412,5 +412,25 @@
     "foodInsights": "A comparison of food changes with symptoms from your check-ins. This is a statistical link, not a diagnosis — the more check-ins you have, the more reliable it gets.",
     "checkInQuestion": "One answer is enough to save a check-in. Details are optional — add them when you notice something.",
     "leadDays": "How many days before the due date you get an e-mail. You can pick several values at once — 30 days to book the vet and 7 days as a reminder, for example."
+  },
+  "aiConsent": {
+    "title": "Pawly will use AI",
+    "intro": "To read the data from your photo or document, we send it to an AI service for processing.",
+    "points": [
+      "Only what you upload is sent — nothing else from your account.",
+      "AI can get things wrong, so you confirm the data before it is saved.",
+      "You can withdraw this consent any time in account settings."
+    ],
+    "privacyLink": "How we handle your data",
+    "later": "Not now",
+    "accept": "Agree and continue",
+    "saveFailed": "The consent could not be saved. Please try again.",
+    "inlineNote": "Processed by AI.",
+    "inlineLink": "How does it work?",
+    "settingsTitle": "AI document processing",
+    "settingsDescription": "Allows reading data from your photos and documents via AI.",
+    "settingsGranted": "Consent granted on {{date}}",
+    "settingsRevoked": "No consent granted — AI features will ask for it on first use.",
+    "revoke": "Withdraw consent"
   }
 }

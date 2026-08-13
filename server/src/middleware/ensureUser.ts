@@ -6,6 +6,7 @@ import { httpError } from '../utils/httpError';
 interface CachedUser {
   appUserId: string;
   blockedAt: string | null;
+  aiConsentAt: string | null;
   locale: 'sk' | 'en';
   expiresAt: number;
 }
@@ -85,6 +86,7 @@ async function resolveUser(
     if (cached && cached.expiresAt > Date.now()) {
       assertNotBlocked(cached.blockedAt, allowBlocked);
       req.appUserId = cached.appUserId;
+      req.aiConsentGranted = cached.aiConsentAt !== null;
       next();
       return;
     }
@@ -95,7 +97,7 @@ async function resolveUser(
       async () => {
         const { data, error } = await supabase
           .from('users')
-          .select('id, locale, blocked_at, email_verified, auth_provider')
+          .select('id, locale, blocked_at, email_verified, auth_provider, ai_processing_consent_at')
           .eq('firebase_uid', req.user!.uid)
           .maybeSingle();
         if (error) throw error;
@@ -106,14 +108,20 @@ async function resolveUser(
 
     if (existing) {
       const blockedAt = typeof existing.blocked_at === 'string' ? existing.blocked_at : null;
+      const aiConsentAt =
+        typeof existing.ai_processing_consent_at === 'string'
+          ? existing.ai_processing_consent_at
+          : null;
       uidCache.set(req.user.uid, {
         appUserId: existing.id,
         blockedAt,
+        aiConsentAt,
         locale,
         expiresAt: Date.now() + CACHE_TTL_MS,
       });
       assertNotBlocked(blockedAt, allowBlocked);
       req.appUserId = existing.id;
+      req.aiConsentGranted = aiConsentAt !== null;
 
       const drift: Record<string, unknown> = {};
       if (existing.locale !== locale) drift.locale = locale;
@@ -151,7 +159,7 @@ async function resolveUser(
             },
             { onConflict: 'firebase_uid' }
           )
-          .select('id, blocked_at')
+          .select('id, blocked_at, ai_processing_consent_at')
           .single();
         if (error) throw error;
         return data;
@@ -162,14 +170,20 @@ async function resolveUser(
     // Upsert na existujúcom riadku vráti jeho aktuálny stav — zablokovaný účet
     // sa takto nedá "resetovať" opakovaným prihlásením.
     const insertedBlockedAt = typeof inserted.blocked_at === 'string' ? inserted.blocked_at : null;
+    const insertedConsentAt =
+      typeof inserted.ai_processing_consent_at === 'string'
+        ? inserted.ai_processing_consent_at
+        : null;
     uidCache.set(req.user.uid, {
       appUserId: inserted.id,
       blockedAt: insertedBlockedAt,
+      aiConsentAt: insertedConsentAt,
       locale,
       expiresAt: Date.now() + CACHE_TTL_MS,
     });
     assertNotBlocked(insertedBlockedAt, allowBlocked);
     req.appUserId = inserted.id;
+    req.aiConsentGranted = insertedConsentAt !== null;
     next();
   } catch (err) {
     next(err);

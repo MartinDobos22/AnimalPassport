@@ -15,7 +15,6 @@ interface ScanBody {
     mimeType?: unknown;
     base64Data?: unknown;
   };
-  aiProcessingConsent?: unknown;
 }
 
 router.post(
@@ -56,7 +55,7 @@ router.post(
         { fileName, mimeType, base64Data },
         {
           userId: req.appUserId ?? req.user?.uid,
-          aiProcessingConsent: req.body?.aiProcessingConsent === true,
+          aiProcessingConsent: req.aiConsentGranted === true,
           processesHealthData: true,
         }
       );

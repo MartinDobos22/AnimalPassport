@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useReducer } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { scanMedicationPackage } from '../../../services/api';
@@ -38,7 +38,6 @@ export interface MedicationScanState {
   step: ScanStep;
   photo: ScanPhoto | null;
   photoError: string;
-  aiProcessingConsent: boolean;
   scanning: boolean;
   scanError: string;
   scan: MedicationScanResult | null;
@@ -61,7 +60,6 @@ const INITIAL_STATE: MedicationScanState = {
   step: 0,
   photo: null,
   photoError: '',
-  aiProcessingConsent: false,
   scanning: false,
   scanError: '',
   scan: null,
@@ -72,7 +70,6 @@ type ScanAction =
   | { type: 'SET_PHOTO'; photo: ScanPhoto }
   | { type: 'CLEAR_PHOTO' }
   | { type: 'SET_PHOTO_ERROR'; message: string }
-  | { type: 'SET_CONSENT'; value: boolean }
   | { type: 'START_SCAN' }
   | { type: 'SCAN_SUCCESS'; scan: MedicationScanResult; draft: ProductScanDraft }
   | { type: 'SCAN_ERROR'; message: string }
@@ -88,8 +85,6 @@ function reducer(state: MedicationScanState, action: ScanAction): MedicationScan
       return { ...state, photo: null, photoError: '', scanError: '' };
     case 'SET_PHOTO_ERROR':
       return { ...state, photoError: action.message };
-    case 'SET_CONSENT':
-      return { ...state, aiProcessingConsent: action.value };
     case 'START_SCAN':
       return { ...state, scanning: true, scanError: '' };
     case 'SCAN_SUCCESS':
@@ -117,7 +112,7 @@ function reducer(state: MedicationScanState, action: ScanAction): MedicationScan
   }
 }
 
-export function useMedicationScan(petId: string) {
+export function useMedicationScan(petId: string, initialFile?: File | null) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
   const { t } = useTranslation('healthPassport');
   const { profiles } = usePetProfiles();
@@ -215,7 +210,14 @@ export function useMedicationScan(petId: string) {
 
   const clearPhoto = useCallback(() => dispatch({ type: 'CLEAR_PHOTO' }), []);
 
-  const setConsent = useCallback((value: boolean) => dispatch({ type: 'SET_CONSENT', value }), []);
+  // Fotka prenesená z nahrávania dokumentov sa načíta sama, aby ju používateľ
+  // po prepnutí režimu nemusel vyberať druhýkrát.
+  const handedOffFile = useRef<File | null>(null);
+  useEffect(() => {
+    if (!initialFile || handedOffFile.current === initialFile) return;
+    handedOffFile.current = initialFile;
+    void setPhoto(initialFile);
+  }, [initialFile, setPhoto]);
 
   const setDraftField = useCallback(
     (field: keyof ProductScanDraft, value: string) =>
@@ -231,7 +233,7 @@ export function useMedicationScan(petId: string) {
     if (!state.photo || state.scanning) return;
     dispatch({ type: 'START_SCAN' });
     try {
-      const result = await scanMedicationPackage(state.photo.pending, state.aiProcessingConsent);
+      const result = await scanMedicationPackage(state.photo.pending);
       dispatch({ type: 'SCAN_SUCCESS', scan: result, draft: buildDraft(result) });
     } catch (err) {
       dispatch({
@@ -239,7 +241,7 @@ export function useMedicationScan(petId: string) {
         message: err instanceof Error && err.message ? err.message : t('productScan.scanFailed'),
       });
     }
-  }, [state.photo, state.scanning, state.aiProcessingConsent, buildDraft, t]);
+  }, [state.photo, state.scanning, buildDraft, t]);
 
   const alerts: ScanAlert[] = useMemo(() => {
     if (!state.scan) return [];
@@ -277,11 +279,10 @@ export function useMedicationScan(petId: string) {
     state,
     pet,
     alerts,
-    canScan: state.photo !== null && state.aiProcessingConsent && !state.scanning,
+    canScan: state.photo !== null && !state.scanning,
     canSave: state.draft.productName.trim().length > 0 && state.draft.dateGiven !== '',
     setPhoto,
     clearPhoto,
-    setConsent,
     setDraftField,
     scan,
     backToPhoto,

@@ -146,7 +146,6 @@ export interface AiFormState {
   attachmentLabel: string;
   analyzeError: string;
   analyzeProgress: AnalyzeProgress | null;
-  aiProcessingConsent: boolean;
   selectedMainCategory: string;
   selectedSubcategory: string;
   aiDetectedRecords: AiDetectedDraftRecord[];

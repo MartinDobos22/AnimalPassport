@@ -422,5 +422,25 @@
     "foodInsights": "Porovnanie zmien krmiva s príznakmi z tvojich check-inov. Ide o štatistickú súvislosť, nie diagnózu — čím viac check-inov máš, tým je spoľahlivejšia.",
     "checkInQuestion": "Stačí jedna odpoveď a check-in môžeš uložiť. Podrobnosti sú dobrovoľné — pridaj ich, keď si niečo všimneš.",
     "leadDays": "Koľko dní pred termínom ti príde e-mail. Môžeš zvoliť viac hodnôt naraz — napríklad 30 dní na objednanie k veterinárovi a 7 dní ako pripomienku."
+  },
+  "aiConsent": {
+    "title": "Pawly použije AI",
+    "intro": "Aby z fotky alebo dokumentu prečítala údaje, pošleme ich na spracovanie umelej inteligencii.",
+    "points": [
+      "Odosiela sa len to, čo sám nahráš — nič iné z účtu.",
+      "AI sa môže pomýliť, preto údaje pred uložením potvrdzuješ ty.",
+      "Súhlas vieš kedykoľvek odvolať v nastaveniach účtu."
+    ],
+    "privacyLink": "Ako spracúvame údaje",
+    "later": "Teraz nie",
+    "accept": "Súhlasím a pokračovať",
+    "saveFailed": "Súhlas sa nepodarilo uložiť. Skús to znova.",
+    "inlineNote": "Spracúva umelá inteligencia.",
+    "inlineLink": "Ako to funguje?",
+    "settingsTitle": "AI spracovanie dokumentov",
+    "settingsDescription": "Povoľuje čítanie údajov z tvojich fotiek a dokumentov cez AI.",
+    "settingsGranted": "Súhlas udelený {{date}}",
+    "settingsRevoked": "Súhlas nie je udelený — AI funkcie si ho vypýtajú pri prvom použití.",
+    "revoke": "Odvolať súhlas"
   }
 }
