@@ -7,6 +7,7 @@ import {
   CircularProgress,
   Collapse,
   IconButton,
+  InputAdornment,
   Stack,
   TextField,
   Typography,
@@ -261,6 +262,18 @@ function ReviewStep() {
             })}
           </Stack>
         )}
+
+        <TextField
+          size="small"
+          type="number"
+          label={t('productScan.price')}
+          value={draft.price}
+          onChange={(e) => setDraftField('price', e.target.value)}
+          helperText={t('productScan.priceHint')}
+          inputProps={{ min: 0, step: 0.01 }}
+          InputProps={{ endAdornment: <InputAdornment position="end">€</InputAdornment> }}
+          sx={{ width: { xs: '100%', sm: 200 } }}
+        />
 
         {isMedication && (
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>

@@ -1010,6 +1010,8 @@
     "retakePhoto": "Retake photo",
     "retake": "Different photo",
     "showDetails": "Show details",
-    "hideDetails": "Hide details"
+    "hideDetails": "Hide details",
+    "price": "Price",
+    "priceHint": "Optional — added to your expenses."
   }
 }

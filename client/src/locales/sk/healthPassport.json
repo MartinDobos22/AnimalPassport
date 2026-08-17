@@ -1046,6 +1046,8 @@
     "retakePhoto": "Odfotiť znova",
     "retake": "Iná fotka",
     "showDetails": "Zobraziť podrobnosti",
-    "hideDetails": "Skryť podrobnosti"
+    "hideDetails": "Skryť podrobnosti",
+    "price": "Cena",
+    "priceHint": "Nepovinné — pridá sa medzi výdavky."
   }
 }

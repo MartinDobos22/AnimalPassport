@@ -83,6 +83,8 @@ export interface ProductScanDraft {
   dose: string;
   frequency: string;
   endDate: string;
+  /** Cena zaplatená za balenie, ako ju zadal používateľ. Prázdne = bez výdavku. */
+  price: string;
 }
 
 interface ProductScanBundleInput {
@@ -435,6 +437,23 @@ export class VetVisitHelper {
       doseLogs.push({ id: uid(), petId, medicationId, date: draft.dateGiven, taken: false });
     }
 
+    const price = Number(draft.price.replace(',', '.'));
+    const expenses: ExpenseRecord[] =
+      Number.isFinite(price) && price > 0
+        ? [
+            {
+              id: uid(),
+              petId,
+              date: draft.dateGiven,
+              amount: price,
+              currency: 'EUR',
+              category: 'MEDICATION',
+              relatedVetVisitId: visitId,
+              note: productName || undefined,
+            },
+          ]
+        : [];
+
     const visit: VetVisitRecord = {
       id: visitId,
       petId,
@@ -454,7 +473,7 @@ export class VetVisitHelper {
       medications,
       doseLogs,
       dietEntries: [],
-      expenses: [],
+      expenses,
     };
   }
 
