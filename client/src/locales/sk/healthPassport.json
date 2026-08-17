@@ -303,7 +303,7 @@
     "modes": {
       "SCAN": {
         "title": "Odfotiť liek",
-        "description": "Obal prípravku a záznam je hotový"
+        "description": "Odfoť obal, zvyšok vyplníme"
       },
       "AI": {
         "title": "Nahrať dokument",
@@ -991,18 +991,16 @@
     "helper": "Zmena intervalu posunie dátum; zadaním dátumu sa prepočíta interval."
   },
   "productScan": {
-    "photoDescription": "Odfoť obal prípravku — škatuľku, blister, pipetu alebo liekovku. AI z neho prečíta názov, účinné látky, šaržu a expiráciu balenia.",
+    "photoDescription": "Odfoť obal — škatuľku, blister alebo pipetu. Zvyšok vyplníme za teba.",
     "takePhoto": "Odfotiť",
     "fromGallery": "Z galérie",
     "removePhoto": "Odstrániť fotku",
-    "unsupportedPhoto": "Podporované sú len fotky vo formáte JPEG, PNG alebo WebP.",
-    "photoTooLarge": "Fotka je príliš veľká (max {{maxMb}} MB).",
+    "unsupportedPhoto": "Nahraj fotku vo formáte JPEG, PNG alebo WebP.",
+    "photoTooLarge": "Fotka má viac než {{maxMb}} MB. Skús ju odfotiť znova.",
     "photoFailed": "Fotku sa nepodarilo načítať. Skús to znova.",
-    "scanning": "Rozpoznávam prípravok…",
-    "recognize": "Rozpoznať prípravok",
-    "scanFailed": "Rozpoznanie prípravku zlyhalo. Skús to znova.",
-    "recognizedTitle": "Čo AI prečítala z obalu",
-    "reviewHint": "Skontroluj údaje a oprav, čo AI prečítala zle. Potom záznam ulož.",
+    "scanning": "Čítam fotku…",
+    "recognize": "Prečítať z fotky",
+    "scanFailed": "Fotku sa nepodarilo prečítať. Skús ju odfotiť zblízka a bez odleskov.",
     "recordType": "Typ záznamu",
     "recordTypes": {
       "DEWORMING": "Odčervenie",
@@ -1012,9 +1010,9 @@
     },
     "productName": "Názov prípravku",
     "dateGiven": "Dátum podania",
-    "nextDueDate": "Chráni do / ďalšia dávka",
-    "nextDueHint": "Toto nie je expirácia balenia, ale termín ďalšej dávky.",
-    "presetDays": "+{{days}} dní",
+    "nextDueDate": "Ďalšia dávka",
+    "nextDueHint": "Kedy prípravok podať znova — nie expirácia balenia.",
+    "presetDays": "o {{days}} dní",
     "intervalRationale": "Odhad AI: {{value}}",
     "dose": "Dávkovanie",
     "frequency": "Frekvencia",
@@ -1022,11 +1020,6 @@
     "batchNumber": "Šarža",
     "note": "Poznámka",
     "attachmentFallback": "Fotka obalu prípravku",
-    "confidence": {
-      "high": "Vysoká istota",
-      "medium": "Stredná istota",
-      "low": "Nízka istota"
-    },
     "visitReason": {
       "DEWORMING": "Odčervenie",
       "ECTOPARASITE": "Antiparazitická ochrana",
@@ -1040,14 +1033,14 @@
     "noteDosage": "Dávkovanie z obalu: {{value}}",
     "noteManufacturer": "Výrobca: {{value}}",
     "alerts": {
-      "PACKAGE_EXPIRED": "Balenie má expiráciu {{expiry}} — k dátumu podania je už po expirácii. Nepodávaj ho.",
-      "PACKAGE_EXPIRING_SOON": "Balenie expiruje {{expiry}}, teda krátko po dátume podania.",
-      "WEIGHT_BELOW_RANGE": "Balenie je určené pre zvieratá od {{min}} kg, vybrané zviera má {{weight}} kg. Over dávkovanie s veterinárom.",
-      "WEIGHT_ABOVE_RANGE": "Balenie pokrýva zvieratá do {{max}} kg, vybrané zviera má {{weight}} kg. Možno je potrebná vyššia dávka.",
-      "WEIGHT_UNKNOWN": "Balenie je pre zvieratá {{min}}–{{max}} kg. V profile zvieraťa nie je hmotnosť, tak ju nevieme skontrolovať.",
-      "SPECIES_MISMATCH": "Prípravok je určený pre iný živočíšny druh, než má vybrané zviera v profile.",
-      "LOW_CONFIDENCE": "AI si údajmi z fotky nie je istá. Skontroluj ich obzvlášť dôkladne.",
-      "TYPE_UNKNOWN": "Typ prípravku sa nepodarilo určiť — vyber ho ručne."
+      "PACKAGE_EXPIRED": "Balenie bolo použiteľné do {{expiry}}. K dátumu podania je už po expirácii.",
+      "PACKAGE_EXPIRING_SOON": "Balenie je použiteľné do {{expiry}}, potom ho už nepodávaj.",
+      "WEIGHT_BELOW_RANGE": "Balenie je pre zvieratá od {{min}} kg, tvoje má {{weight}} kg. Over dávku s veterinárom.",
+      "WEIGHT_ABOVE_RANGE": "Balenie pokrýva zvieratá do {{max}} kg, tvoje má {{weight}} kg. Možno treba vyššiu dávku.",
+      "WEIGHT_UNKNOWN": "Balenie je pre zvieratá {{min}}–{{max}} kg. V profile chýba hmotnosť, tak to nevieme overiť.",
+      "SPECIES_MISMATCH": "Prípravok je pre iný živočíšny druh, než má vybrané zviera.",
+      "LOW_CONFIDENCE": "Fotka bola ťažko čitateľná — údaje si prejdi dôkladnejšie.",
+      "TYPE_UNKNOWN": "Typ prípravku sa nepodarilo určiť, vyber ho prosím."
     },
     "photoAlt": "Fotka obalu prípravku",
     "retakePhoto": "Odfotiť znova",

@@ -297,7 +297,7 @@
     "modes": {
       "SCAN": {
         "title": "Scan medicine",
-        "description": "Photograph the packaging, record is done"
+        "description": "Photograph the packaging, we fill in the rest"
       },
       "AI": {
         "title": "Upload document",
@@ -955,18 +955,16 @@
     "helper": "Changing the interval shifts the date; entering a date recalculates the interval."
   },
   "productScan": {
-    "photoDescription": "Take a photo of the packaging — box, blister, pipette or vial. The AI reads the product name, active substances, batch number and package expiry from it.",
+    "photoDescription": "Photograph the packaging — box, blister or pipette. We fill in the rest.",
     "takePhoto": "Take photo",
     "fromGallery": "From gallery",
     "removePhoto": "Remove photo",
-    "unsupportedPhoto": "Only JPEG, PNG and WebP photos are supported.",
-    "photoTooLarge": "The photo is too large (max {{maxMb}} MB).",
+    "unsupportedPhoto": "Upload a JPEG, PNG or WebP photo.",
+    "photoTooLarge": "The photo is over {{maxMb}} MB. Try taking it again.",
     "photoFailed": "The photo could not be loaded. Please try again.",
-    "scanning": "Recognising the product…",
-    "recognize": "Recognise product",
-    "scanFailed": "Product recognition failed. Please try again.",
-    "recognizedTitle": "What the AI read from the packaging",
-    "reviewHint": "Check the data and fix anything the AI misread, then save the record.",
+    "scanning": "Reading the photo…",
+    "recognize": "Read from photo",
+    "scanFailed": "The photo could not be read. Try again from closer up, without glare.",
     "recordType": "Record type",
     "recordTypes": {
       "DEWORMING": "Deworming",
@@ -976,9 +974,9 @@
     },
     "productName": "Product name",
     "dateGiven": "Date given",
-    "nextDueDate": "Protects until / next dose",
-    "nextDueHint": "This is not the package expiry — it is when the next dose is due.",
-    "presetDays": "+{{days}} days",
+    "nextDueDate": "Next dose",
+    "nextDueHint": "When to give it again — not the package expiry.",
+    "presetDays": "in {{days}} days",
     "intervalRationale": "AI estimate: {{value}}",
     "dose": "Dose",
     "frequency": "Frequency",
@@ -986,11 +984,6 @@
     "batchNumber": "Batch number",
     "note": "Note",
     "attachmentFallback": "Product packaging photo",
-    "confidence": {
-      "high": "High confidence",
-      "medium": "Medium confidence",
-      "low": "Low confidence"
-    },
     "visitReason": {
       "DEWORMING": "Deworming",
       "ECTOPARASITE": "Parasite protection",
@@ -1004,14 +997,14 @@
     "noteDosage": "Dosage from packaging: {{value}}",
     "noteManufacturer": "Manufacturer: {{value}}",
     "alerts": {
-      "PACKAGE_EXPIRED": "The package expired {{expiry}}, which is before the date given. Do not administer it.",
-      "PACKAGE_EXPIRING_SOON": "The package expires {{expiry}}, shortly after the date given.",
-      "WEIGHT_BELOW_RANGE": "This package is for animals from {{min}} kg, the selected pet weighs {{weight}} kg. Check the dosage with your vet.",
-      "WEIGHT_ABOVE_RANGE": "This package covers animals up to {{max}} kg, the selected pet weighs {{weight}} kg. A higher dose may be needed.",
-      "WEIGHT_UNKNOWN": "The package is for animals {{min}}–{{max}} kg. The pet profile has no weight, so we cannot check it.",
-      "SPECIES_MISMATCH": "The product is intended for a different species than the selected pet's profile.",
-      "LOW_CONFIDENCE": "The AI is not confident about the data from the photo. Check it especially carefully.",
-      "TYPE_UNKNOWN": "The product type could not be determined — pick it manually."
+      "PACKAGE_EXPIRED": "The package was usable until {{expiry}}. It is past its expiry on the date given.",
+      "PACKAGE_EXPIRING_SOON": "The package is usable until {{expiry}}, do not give it after that.",
+      "WEIGHT_BELOW_RANGE": "This package is for animals from {{min}} kg, yours weighs {{weight}} kg. Check the dose with your vet.",
+      "WEIGHT_ABOVE_RANGE": "This package covers animals up to {{max}} kg, yours weighs {{weight}} kg. A higher dose may be needed.",
+      "WEIGHT_UNKNOWN": "The package is for animals {{min}}–{{max}} kg. The profile has no weight, so we cannot check it.",
+      "SPECIES_MISMATCH": "The product is for a different species than the selected pet.",
+      "LOW_CONFIDENCE": "The photo was hard to read — go through the data more carefully.",
+      "TYPE_UNKNOWN": "The product type could not be determined, please pick it."
     },
     "photoAlt": "Photo of the product packaging",
     "retakePhoto": "Retake photo",

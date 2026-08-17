@@ -193,6 +193,12 @@ function ReviewStep() {
 
   return (
     <Stack spacing={2}>
+      {scan.summary && (
+        <Typography variant="body2" color="text.secondary">
+          {scan.summary}
+        </Typography>
+      )}
+
       {blocking.map((alert) => (
         <Alert key={alert.code} severity="error">
           {t(`productScan.alerts.${alert.code}`, { ...alert.params })}

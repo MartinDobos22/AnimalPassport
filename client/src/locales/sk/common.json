@@ -424,23 +424,22 @@
     "leadDays": "Koľko dní pred termínom ti príde e-mail. Môžeš zvoliť viac hodnôt naraz — napríklad 30 dní na objednanie k veterinárovi a 7 dní ako pripomienku."
   },
   "aiConsent": {
-    "title": "Pawly použije AI",
-    "intro": "Aby z fotky alebo dokumentu prečítala údaje, pošleme ich na spracovanie umelej inteligencii.",
+    "title": "Údaje prečíta AI",
+    "intro": "Fotku alebo dokument prečíta umelá inteligencia a vytiahne z neho údaje do záznamu.",
     "points": [
-      "Odosiela sa len to, čo sám nahráš — nič iné z účtu.",
-      "AI sa môže pomýliť, preto údaje pred uložením potvrdzuješ ty.",
-      "Súhlas vieš kedykoľvek odvolať v nastaveniach účtu."
+      "Posiela sa len nahratý súbor, nič iné z účtu.",
+      "AI sa môže pomýliť, preto výsledok pred uložením skontroluješ.",
+      "Súhlas sa dá kedykoľvek odvolať v nastaveniach."
     ],
-    "privacyLink": "Ako spracúvame údaje",
+    "privacyLink": "Ochrana údajov",
     "later": "Teraz nie",
-    "accept": "Súhlasím a pokračovať",
+    "accept": "Súhlasím",
     "saveFailed": "Súhlas sa nepodarilo uložiť. Skús to znova.",
-    "inlineNote": "Spracúva umelá inteligencia.",
-    "inlineLink": "Ako to funguje?",
-    "settingsTitle": "AI spracovanie dokumentov",
-    "settingsDescription": "Povoľuje čítanie údajov z tvojich fotiek a dokumentov cez AI.",
-    "settingsGranted": "Súhlas udelený {{date}}",
-    "settingsRevoked": "Súhlas nie je udelený — AI funkcie si ho vypýtajú pri prvom použití.",
-    "revoke": "Odvolať súhlas"
+    "inlineNote": "Prečíta to AI, údaje potom skontroluješ.",
+    "inlineLink": "Viac",
+    "settingsTitle": "Čítanie dokumentov cez AI",
+    "settingsGranted": "Povolené {{date}}",
+    "settingsRevoked": "Nepovolené — vypýtame si to pri prvom skene.",
+    "revoke": "Zrušiť"
   }
 }
