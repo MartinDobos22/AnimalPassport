@@ -11,6 +11,12 @@ declare global {
     interface Request {
       user?: AuthUser;
       appUserId?: string;
+      /**
+       * Trvalý súhlas s AI/OCR spracovaním zdravotných dokumentov, načítaný
+       * z DB v `ensureUser`. Zdroj pravdy pre privacyGuard — nikdy neber
+       * súhlas z tela requestu, klient si ho nesmie určovať sám.
+       */
+      aiConsentGranted?: boolean;
     }
   }
 }

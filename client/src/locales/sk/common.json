@@ -422,5 +422,24 @@
     "foodInsights": "Porovnanie zmien krmiva s príznakmi z tvojich check-inov. Ide o štatistickú súvislosť, nie diagnózu — čím viac check-inov máš, tým je spoľahlivejšia.",
     "checkInQuestion": "Stačí jedna odpoveď a check-in môžeš uložiť. Podrobnosti sú dobrovoľné — pridaj ich, keď si niečo všimneš.",
     "leadDays": "Koľko dní pred termínom ti príde e-mail. Môžeš zvoliť viac hodnôt naraz — napríklad 30 dní na objednanie k veterinárovi a 7 dní ako pripomienku."
+  },
+  "aiConsent": {
+    "title": "Údaje prečíta AI",
+    "intro": "Fotku alebo dokument prečíta umelá inteligencia a vytiahne z neho údaje do záznamu.",
+    "points": [
+      "Posiela sa len nahratý súbor, nič iné z účtu.",
+      "AI sa môže pomýliť, preto výsledok pred uložením skontroluješ.",
+      "Súhlas sa dá kedykoľvek odvolať v nastaveniach."
+    ],
+    "privacyLink": "Ochrana údajov",
+    "later": "Teraz nie",
+    "accept": "Súhlasím",
+    "saveFailed": "Súhlas sa nepodarilo uložiť. Skús to znova.",
+    "inlineNote": "Prečíta to AI, údaje potom skontroluješ.",
+    "inlineLink": "Viac",
+    "settingsTitle": "Čítanie dokumentov cez AI",
+    "settingsGranted": "Povolené {{date}}",
+    "settingsRevoked": "Nepovolené — vypýtame si to pri prvom skene.",
+    "revoke": "Zrušiť"
   }
 }

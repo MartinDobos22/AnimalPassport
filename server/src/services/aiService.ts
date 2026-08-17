@@ -25,6 +25,7 @@ const MODELS = {
   vetFileVision: process.env.MODEL_VET_FILE ?? 'gpt-4o',
   passportInterpret: process.env.MODEL_PASSPORT_INTERPRET ?? 'gpt-4o',
   passportVision: process.env.MODEL_PASSPORT_VISION ?? 'gpt-4.1',
+  medicationScan: process.env.MODEL_MEDICATION_SCAN ?? 'gpt-4o',
   episodeSummary: process.env.MODEL_EPISODE_SUMMARY ?? 'gpt-4o-mini',
   foodSafety: process.env.MODEL_FOOD_SAFETY ?? 'gpt-4o-mini',
   feedAnalysis: process.env.MODEL_FEED_ANALYSIS ?? 'gpt-4o',

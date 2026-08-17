@@ -75,7 +75,7 @@ router.post(
         });
         const extractionResult = await extractTextFromAttachment(attachment, validatedExamAlias, {
           userId: req.appUserId ?? req.user?.uid,
-          aiProcessingConsent: req.body?.aiProcessingConsent === true,
+          aiProcessingConsent: req.aiConsentGranted === true,
           processesHealthData: Boolean(validatedExamAlias),
         });
         logger.info('Analýza súboru dokončená, odosielam odpoveď na frontend', {
@@ -105,7 +105,7 @@ router.post(
       const validatedProfile = validatePetProfile(petProfile);
       const result = await callAiModel(normalizedComposition, validatedProfile, {
         userId: req.appUserId ?? req.user?.uid,
-        aiProcessingConsent: req.body?.aiProcessingConsent === true,
+        aiProcessingConsent: req.aiConsentGranted === true,
         processesHealthData: false,
       });
       logger.info('Textová analýza dokončená', {

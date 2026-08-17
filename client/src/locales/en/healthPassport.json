@@ -186,8 +186,6 @@
   },
   "addRecord": {
     "title": "New record",
-    "tabManual": "Manual entry",
-    "tabAiImport": "AI import",
     "stepUpload": "Upload pages",
     "stepReview": "Review records",
     "stepConfirm": "Confirm & save",
@@ -225,7 +223,6 @@
     },
     "aiImport": {
       "uploadDescription": "Upload one or more pages of a document (health passport, lab results, vet report…). AI will extract records at once and give you a list to approve in the next step.",
-      "accuracyNotice": "AI reads the data from your photo/document and can get it wrong — especially dates and numbers. In the next step, check every value it read and correct it if needed before saving.",
       "required": "Fill in {{count}} required field",
       "required_other": "Fill in {{count}} required fields",
       "analyzing": "Analysing…",
@@ -251,15 +248,9 @@
       "suitabilityNoAllergens": "No conflict with allergies or diagnoses",
       "suitabilityCheckAllergens": "Check ingredients against allergens",
       "importRecordCount": "AI records imported: {{count}}",
-      "privacyNotice": "AI import processes health data from the document. Before sending it to OCR/AI providers, we minimise the payload and audit only metadata (user, operation, provider, size, time), not document content.",
-      "aiProcessingConsent": "I consent to AI/OCR processing of health data from this document for importing records."
+      "optionsToggle": "More options",
+      "tryAsMedicine": "Try as medicine packaging"
     },
-    "modeQuick": "Quick",
-    "modeManual": "Manual visit",
-    "modeAi": "From document (AI)",
-    "subtitleQuick": "Quickly log a single record type (without full visit details).",
-    "subtitleManual": "A full visit — including examinations (blood, X-ray, ultrasound…), diagnosis and linked records.",
-    "subtitleAi": "AI extracts vaccinations and records from uploaded documents.",
     "addTitle": "Add record",
     "kindVaccination": "Vaccination",
     "kindDeworming": "Deworming",
@@ -300,6 +291,26 @@
       "treatment": "Chronic or recurring treatment of a condition (allergy, heart, joints…) with a next-due reminder.",
       "medication": "One-off or short-term medication with dosing – no next-due reminder.",
       "diet": "Food and how the animal tolerates it."
+    },
+    "chooserSubtitle": "What do you want to add?",
+    "backToModes": "Back to options",
+    "modes": {
+      "SCAN": {
+        "title": "Scan medicine",
+        "description": "Photograph the packaging, we fill in the rest"
+      },
+      "AI": {
+        "title": "Upload document",
+        "description": "Passport, vet report, lab results"
+      },
+      "QUICK": {
+        "title": "Quick entry",
+        "description": "One record in a few seconds"
+      },
+      "MANUAL": {
+        "title": "Detailed visit",
+        "description": "Visit with medication, findings and cost"
+      }
     }
   },
   "attachmentUpload": {
@@ -942,5 +953,65 @@
   "nextDue": {
     "dateLabel": "Next dose date",
     "helper": "Changing the interval shifts the date; entering a date recalculates the interval."
+  },
+  "productScan": {
+    "photoDescription": "Photograph the packaging — box, blister or pipette. We fill in the rest.",
+    "takePhoto": "Take photo",
+    "fromGallery": "From gallery",
+    "removePhoto": "Remove photo",
+    "unsupportedPhoto": "Upload a JPEG, PNG or WebP photo.",
+    "photoTooLarge": "The photo is over {{maxMb}} MB. Try taking it again.",
+    "photoFailed": "The photo could not be loaded. Please try again.",
+    "scanning": "Reading the photo…",
+    "recognize": "Read from photo",
+    "scanFailed": "The photo could not be read. Try again from closer up, without glare.",
+    "recordType": "Record type",
+    "recordTypes": {
+      "DEWORMING": "Deworming",
+      "ECTOPARASITE": "Parasite control (ticks, fleas)",
+      "VACCINATION": "Vaccination",
+      "MEDICATION": "Medication"
+    },
+    "productName": "Product name",
+    "dateGiven": "Date given",
+    "nextDueDate": "Next dose",
+    "nextDueHint": "When to give it again — not the package expiry.",
+    "presetDays": "in {{days}} days",
+    "intervalRationale": "AI estimate: {{value}}",
+    "dose": "Dose",
+    "frequency": "Frequency",
+    "endDate": "End of treatment",
+    "batchNumber": "Batch number",
+    "note": "Note",
+    "attachmentFallback": "Product packaging photo",
+    "visitReason": {
+      "DEWORMING": "Deworming",
+      "ECTOPARASITE": "Parasite protection",
+      "VACCINATION": "Vaccination",
+      "MEDICATION": "Medication given"
+    },
+    "noteActive": "Active substances: {{value}}",
+    "noteStrength": "Strength: {{value}}",
+    "noteBatch": "Batch: {{value}}",
+    "noteExpiry": "Package expiry: {{value}}",
+    "noteDosage": "Dosage from packaging: {{value}}",
+    "noteManufacturer": "Manufacturer: {{value}}",
+    "alerts": {
+      "PACKAGE_EXPIRED": "The package was usable until {{expiry}}. It is past its expiry on the date given.",
+      "PACKAGE_EXPIRING_SOON": "The package is usable until {{expiry}}, do not give it after that.",
+      "WEIGHT_BELOW_RANGE": "This package is for animals from {{min}} kg, yours weighs {{weight}} kg. Check the dose with your vet.",
+      "WEIGHT_ABOVE_RANGE": "This package covers animals up to {{max}} kg, yours weighs {{weight}} kg. A higher dose may be needed.",
+      "WEIGHT_UNKNOWN": "The package is for animals {{min}}–{{max}} kg. The profile has no weight, so we cannot check it.",
+      "SPECIES_MISMATCH": "The product is for a different species than the selected pet.",
+      "LOW_CONFIDENCE": "The photo was hard to read — go through the data more carefully.",
+      "TYPE_UNKNOWN": "The product type could not be determined, please pick it."
+    },
+    "photoAlt": "Photo of the product packaging",
+    "retakePhoto": "Retake photo",
+    "retake": "Different photo",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details",
+    "price": "Price",
+    "priceHint": "Optional — added to your expenses."
   }
 }

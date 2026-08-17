@@ -6,7 +6,7 @@ Tieto tri domény sa rozšírili nad pôvodnú analýzu krmiva. Tento dokument j
 
 | Doména | URL | Page | Komponenty | Hooks | Service |
 |---|---|---|---|---|---|
-| Zdravotný pas | `/zdravotny-pas/*` | `HealthPassportPage.tsx` | `components/healthPassport/` | `useAddRecordForm`, `useAiImport` | `dogHealthApi.ts` |
+| Zdravotný pas | `/zdravotny-pas/*` | `HealthPassportPage.tsx` | `components/healthPassport/` | `useAddRecordForm`, `useAiImport`, `useMedicationScan` | `dogHealthApi.ts` |
 | Denník epizód | `/dennik` | `EpisodeDiaryPage.tsx` | `components/episodes/` | `useHealthEpisodes`, `useEpisodeStorageSize` | `api.ts` (`fetchSimilarEpisodeSummary`) |
 | Karta pre veterinára | `/karta-pre-veterinara` | `VetCardPage.tsx` | `components/vetCard/` | (read-only zo zdielanej perzistencie) | (žiadna AI) |
 
@@ -50,6 +50,7 @@ V `localStorage` ostávajú už len lokálne preferencie: `granule-check-dark-mo
 | `POST /api/interpret-passport` | `interpretPassportText` (api.ts) | AI parsing fotenej/scanovanej zdravotnej karty → štruktúrované vakcinácie |
 | `POST /api/extract-text` | `extractTextFromImage` (api.ts) | Surový OCR fallback ladder |
 | `POST /api/episodes/similar-summary` | `fetchSimilarEpisodeSummary` (api.ts) | Zhrnutie podobných minulých epizód pre kontext aktuálnej |
+| `POST /api/scan-medication` | `scanMedicationPackage` (api.ts) | Fotka **obalu prípravku** → názov, účinné látky, šarža, expirácia balenia, navrhnutý typ záznamu a interval do ďalšej dávky |
 
 Všetky tieto endpointy vyžadujú `aiHeavyLimiter`. Pri pridávaní novej AI funkcie zachovaj rovnaký vzor — extra service v `server/src/services/<doména>AiService.ts`, route handler tenký, prompt v service.
 
@@ -59,6 +60,10 @@ Všetky tieto endpointy vyžadujú `aiHeavyLimiter`. Pri pridávaní novej AI fu
 - **Denník epizód** filter cez `utils/episodeFilters.ts` — žiadne ad-hoc filtre v komponentoch.
 - **Zdravotný pas** "Add record" formulár drží stav v `useAddRecordForm` — komponenty len renderujú; ak pridávaš pole, urob to v hooku + v type.
 - **AI import** (`useAiImport`) je opt-in tok pre používateľa: explicitné CTA, žiadne automatické skenovanie pri prvom load.
+- **`AddRecord` začína výberom režimu** (`CHOOSER`), nie prepínačom záložiek — dlaždice `SCAN` / `AI` / `QUICK` / `MANUAL` s popisom, čo ktorý režim rieši. Nové režimy pridávaj do `MODE_ORDER` a `addRecord.modes.*`, nie ako ďalšiu záložku.
+- **Súhlas s AI sa nepýta pri každej analýze.** Je trvalý (`useAiConsent` + `AiConsentDialog`), vypýta si ho až prvá AI akcia a odvoláva sa v nastaveniach. V AI tokoch nesmie pribudnúť ďalší consent checkbox — na obrazovke je len `AiProcessingNote` (jeden riadok + „Ako to funguje?").
+- **Fotka obalu v toku pre dokumenty** neskončí slepou chybou: keď analýza zlyhá a je nahratá jedna fotka, `AiImportBody` ponúkne prepnutie do scanu lieku a fotku prenesie (`onScanHandoff` → `initialFile`).
+- **Scan obalu lieku** (režim „Odfotiť liek" v `AddRecord`, `useMedicationScan`) drží dva **rôzne** dátumy oddelene: `packageExpiry` (trvanlivosť balenia, „Exp." z obalu — do záznamu ide len ako poznámka) a `nextDueDate` (dokedy prípravok chráni / kedy je ďalšia dávka — riadi pripomienky). Nikdy ich nezlievaj do jedného poľa. AI z obalu iba **číta**; porovnanie s profilom zvieraťa (hmotnostný rozsah, druh, expirácia k dátumu podania) je deterministické v `utils/medicationScanChecks.ts`.
 
 ## Pri pridávaní novej zdravotnej domény (napr. nutričný plán)
 

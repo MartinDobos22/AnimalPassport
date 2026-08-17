@@ -6,6 +6,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { sk, enUS } from 'date-fns/locale';
 import { PetProfilesProvider } from './contexts/PetProfilesContext';
+import { AiConsentProvider } from './contexts/AiConsentContext';
 import { ActivePetProvider } from './contexts/ActivePetContext';
 import { HealthDataProvider } from './contexts/HealthDataContext';
 import Layout from './components/Layout';
@@ -55,80 +56,82 @@ export default function ProtectedApp({ darkMode, onToggleTheme, language }: Prop
   const dateLocale = language === 'en' ? enUS : sk;
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={dateLocale}>
-      <PetProfilesProvider>
-        <ActivePetProvider>
-          <HealthDataProvider>
-            <Layout darkMode={darkMode} onToggleTheme={onToggleTheme}>
-              <Suspense fallback={fallback}>
-                <Routes>
-                  <Route path="/prehlad" element={<OverviewPage />} />
-                  <Route path="/check-in" element={<CheckInPage />} />
-                  <Route path="/krmivo" element={<FoodPage />} />
-                  <Route path="/analyza" element={<AnalyzePage />} />
-                  <Route path="/profily" element={<PetProfilePage />} />
-                  <Route path="/historia" element={<HistoryPage />} />
-                  <Route path="/zdravotny-pas" element={<HealthPassportPage />} />
-                  <Route path="/zdravotny-pas/prehlad" element={<HealthPassportPage />} />
-                  <Route path="/zdravotny-pas/zaznamy" element={<HealthPassportPage />} />
-                  <Route path="/zdravotny-pas/novy-zaznam" element={<HealthPassportPage />} />
-                  <Route path="/karta-pre-veterinara" element={<VetCardPage />} />
-                  <Route path="/dennik" element={<EpisodeDiaryPage />} />
-                  <Route path="/notifikacie" element={<NotificationsPage />} />
-                  <Route path="/info" element={<InfoPage />} />
-                  <Route path="/kontakt" element={<ContactPage />} />
-                  <Route
-                    path="/admin/clanky"
-                    element={
-                      <AdminGuard>
-                        <AdminArticlesPage />
-                      </AdminGuard>
-                    }
-                  />
-                  <Route
-                    path="/admin/clanky/novy"
-                    element={
-                      <AdminGuard>
-                        <AdminArticleEditPage />
-                      </AdminGuard>
-                    }
-                  />
-                  <Route
-                    path="/admin/clanky/:slug"
-                    element={
-                      <AdminGuard>
-                        <AdminArticleEditPage />
-                      </AdminGuard>
-                    }
-                  />
-                  <Route
-                    path="/admin/pouzivatelia"
-                    element={
-                      <AdminGuard>
-                        <AdminUsersPage />
-                      </AdminGuard>
-                    }
-                  />
-                  <Route
-                    path="/admin/recenzie"
-                    element={
-                      <AdminGuard>
-                        <AdminReviewsPage />
-                      </AdminGuard>
-                    }
-                  />
-                  <Route path="/podpora" element={<SupportProjectPage />} />
-                  <Route path="/dakujeme" element={<DonateThanksPage />} />
-                  <Route
-                    path="/nastavenia"
-                    element={<SettingsPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
-                  />
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </Suspense>
-            </Layout>
-          </HealthDataProvider>
-        </ActivePetProvider>
-      </PetProfilesProvider>
+      <AiConsentProvider>
+        <PetProfilesProvider>
+          <ActivePetProvider>
+            <HealthDataProvider>
+              <Layout darkMode={darkMode} onToggleTheme={onToggleTheme}>
+                <Suspense fallback={fallback}>
+                  <Routes>
+                    <Route path="/prehlad" element={<OverviewPage />} />
+                    <Route path="/check-in" element={<CheckInPage />} />
+                    <Route path="/krmivo" element={<FoodPage />} />
+                    <Route path="/analyza" element={<AnalyzePage />} />
+                    <Route path="/profily" element={<PetProfilePage />} />
+                    <Route path="/historia" element={<HistoryPage />} />
+                    <Route path="/zdravotny-pas" element={<HealthPassportPage />} />
+                    <Route path="/zdravotny-pas/prehlad" element={<HealthPassportPage />} />
+                    <Route path="/zdravotny-pas/zaznamy" element={<HealthPassportPage />} />
+                    <Route path="/zdravotny-pas/novy-zaznam" element={<HealthPassportPage />} />
+                    <Route path="/karta-pre-veterinara" element={<VetCardPage />} />
+                    <Route path="/dennik" element={<EpisodeDiaryPage />} />
+                    <Route path="/notifikacie" element={<NotificationsPage />} />
+                    <Route path="/info" element={<InfoPage />} />
+                    <Route path="/kontakt" element={<ContactPage />} />
+                    <Route
+                      path="/admin/clanky"
+                      element={
+                        <AdminGuard>
+                          <AdminArticlesPage />
+                        </AdminGuard>
+                      }
+                    />
+                    <Route
+                      path="/admin/clanky/novy"
+                      element={
+                        <AdminGuard>
+                          <AdminArticleEditPage />
+                        </AdminGuard>
+                      }
+                    />
+                    <Route
+                      path="/admin/clanky/:slug"
+                      element={
+                        <AdminGuard>
+                          <AdminArticleEditPage />
+                        </AdminGuard>
+                      }
+                    />
+                    <Route
+                      path="/admin/pouzivatelia"
+                      element={
+                        <AdminGuard>
+                          <AdminUsersPage />
+                        </AdminGuard>
+                      }
+                    />
+                    <Route
+                      path="/admin/recenzie"
+                      element={
+                        <AdminGuard>
+                          <AdminReviewsPage />
+                        </AdminGuard>
+                      }
+                    />
+                    <Route path="/podpora" element={<SupportProjectPage />} />
+                    <Route path="/dakujeme" element={<DonateThanksPage />} />
+                    <Route
+                      path="/nastavenia"
+                      element={<SettingsPage darkMode={darkMode} onToggleTheme={onToggleTheme} />}
+                    />
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </Suspense>
+              </Layout>
+            </HealthDataProvider>
+          </ActivePetProvider>
+        </PetProfilesProvider>
+      </AiConsentProvider>
     </LocalizationProvider>
   );
 }

@@ -7,7 +7,6 @@ const router = Router();
 const MAX_BASE64_LENGTH = Math.ceil((5 * 1024 * 1024 * 4) / 3);
 
 interface ExtractTextBody {
-  aiProcessingConsent?: unknown;
   attachment?: {
     fileName?: unknown;
     mimeType?: unknown;
@@ -49,7 +48,7 @@ router.post(
         { fileName, mimeType, base64Data },
         {
           userId: req.appUserId ?? req.user?.uid,
-          aiProcessingConsent: req.body?.aiProcessingConsent === true,
+          aiProcessingConsent: req.aiConsentGranted === true,
           processesHealthData: true,
         }
       );

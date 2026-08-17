@@ -70,6 +70,33 @@ export interface AiVisitDraftInput {
   recommendations: string;
 }
 
+export type ProductScanTargetType = 'VACCINATION' | 'DEWORMING' | 'ECTOPARASITE' | 'MEDICATION';
+
+export interface ProductScanDraft {
+  targetType: ProductScanTargetType;
+  productName: string;
+  dateGiven: string;
+  /** Dokedy prípravok chráni / kedy je ďalšia dávka — NIE trvanlivosť balenia. */
+  nextDueDate: string;
+  batchNumber: string;
+  note: string;
+  dose: string;
+  frequency: string;
+  endDate: string;
+  /** Cena zaplatená za balenie, ako ju zadal používateľ. Prázdne = bez výdavku. */
+  price: string;
+}
+
+interface ProductScanBundleInput {
+  petId: string;
+  draft: ProductScanDraft;
+  visitReason: string;
+  visitFindings: string;
+  attachmentDraft?: VisitAttachmentDraft;
+  plusDays: (date: string, days: number) => string;
+  uid: () => string;
+}
+
 interface WizardVisitBundleInput {
   petId: string;
   draft: WizardVisitDraft;
@@ -322,6 +349,132 @@ export class VetVisitHelper {
     }
 
     return { visit, vaccinations, dewormings, ectos, medications, doseLogs, dietEntries, expenses };
+  }
+
+  static createProductScanBundle(input: ProductScanBundleInput): VisitBundle {
+    const { petId, draft, visitReason, visitFindings, attachmentDraft, plusDays, uid } = input;
+    const visitId = uid();
+    const createdAt = new Date().toISOString();
+    const attachments = attachmentDraft
+      ? VetVisitHelper.buildAttachment(
+          attachmentDraft,
+          i18n.t('productScan.attachmentFallback', { ns: 'healthPassport' }) as string,
+          createdAt
+        )
+      : undefined;
+
+    const note = draft.note.trim() || undefined;
+    const productName = draft.productName.trim();
+    const fallbackInterval = draft.targetType === 'ECTOPARASITE' ? 30 : 90;
+    const intervalDays = computeIntervalDays(draft.dateGiven, draft.nextDueDate, fallbackInterval);
+    const nextDueDate = draft.nextDueDate || plusDays(draft.dateGiven, fallbackInterval);
+
+    const vaccinations: VaccinationRecord[] =
+      draft.targetType === 'VACCINATION'
+        ? [
+            {
+              id: uid(),
+              petId,
+              type: inferVaccineType(productName),
+              name: productName,
+              dateApplied: draft.dateGiven,
+              validUntil: draft.nextDueDate || plusDays(draft.dateGiven, 365),
+              batchNumber: draft.batchNumber.trim() || undefined,
+              note,
+              attachments,
+            },
+          ]
+        : [];
+
+    const dewormings: DewormingRecord[] =
+      draft.targetType === 'DEWORMING'
+        ? [
+            {
+              id: uid(),
+              petId,
+              productName,
+              dateGiven: draft.dateGiven,
+              intervalDays,
+              nextDueDate,
+              note,
+              attachments,
+            },
+          ]
+        : [];
+
+    const ectos: EctoparasiteRecord[] =
+      draft.targetType === 'ECTOPARASITE'
+        ? [
+            {
+              id: uid(),
+              petId,
+              productName,
+              form: 'TABLET',
+              dateGiven: draft.dateGiven,
+              intervalDays,
+              nextDueDate,
+              note,
+              attachments,
+            },
+          ]
+        : [];
+
+    const medications: MedicationRecord[] = [];
+    const doseLogs: MedicationDoseLog[] = [];
+    if (draft.targetType === 'MEDICATION') {
+      const medicationId = uid();
+      medications.push({
+        id: medicationId,
+        petId,
+        name: productName,
+        reason: note ?? '',
+        dose: draft.dose.trim(),
+        frequency: draft.frequency.trim(),
+        startDate: draft.dateGiven,
+        endDate: draft.endDate || undefined,
+        fromVetVisitId: visitId,
+      });
+      doseLogs.push({ id: uid(), petId, medicationId, date: draft.dateGiven, taken: false });
+    }
+
+    const price = Number(draft.price.replace(',', '.'));
+    const expenses: ExpenseRecord[] =
+      Number.isFinite(price) && price > 0
+        ? [
+            {
+              id: uid(),
+              petId,
+              date: draft.dateGiven,
+              amount: price,
+              currency: 'EUR',
+              category: 'MEDICATION',
+              relatedVetVisitId: visitId,
+              note: productName || undefined,
+            },
+          ]
+        : [];
+
+    const visit: VetVisitRecord = {
+      id: visitId,
+      petId,
+      date: draft.dateGiven,
+      clinicName: i18n.t('addRecord.ownRecord', { ns: 'healthPassport' }) as string,
+      reason: visitReason,
+      findings: visitFindings || undefined,
+      medicationIds: medications.map((item) => item.id),
+      attachments,
+    };
+
+    return {
+      visit,
+      vaccinations,
+      dewormings,
+      ectos,
+      medications,
+      doseLogs,
+      dietEntries: [],
+      expenses,
+    };
   }
 
   static createAiVisitBundle(input: AiVisitBundleInput): VisitBundle {

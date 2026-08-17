@@ -8,6 +8,8 @@ import episodesRouter from './routes/episodes';
 import extractTextRouter from './routes/extractText';
 import foodSafetyRouter from './routes/foodSafety';
 import interpretPassportRouter from './routes/interpretPassport';
+import scanMedicationRouter from './routes/scanMedication';
+import consentRouter from './routes/consent';
 import petsRouter from './routes/pets';
 import healthRouter from './routes/health';
 import accountRouter from './routes/account';
@@ -240,6 +242,7 @@ app.use('/api/health', ensureUser, healthRouter);
 // GDPR práva, o ktoré používateľ nesmie prísť ani po zablokovaní účtu.
 app.use('/api/account', ensureUserAllowBlocked, accountRouter);
 app.use('/api/notifications', ensureUser, notificationsRouter);
+app.use('/api/consent', ensureUser, consentRouter);
 app.use('/api/my-review', ensureUser, myReviewRouter);
 app.use('/api/analyze', aiHeavyLimiter, ensureUser, requireAiQuota(), analyzeRouter);
 app.use('/api/episodes', aiHeavyLimiter, ensureUser, episodesRouter);
@@ -252,6 +255,7 @@ app.use(
   requireAiQuota(),
   interpretPassportRouter
 );
+app.use('/api/scan-medication', aiHeavyLimiter, ensureUser, requireAiQuota(), scanMedicationRouter);
 
 // Global error handler
 app.use(errorHandler);

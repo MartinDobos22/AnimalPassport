@@ -13,6 +13,7 @@ import {
   useTheme,
 } from '@mui/material';
 import {
+  AutoAwesome as AiIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
   MailOutline as MailOutlineIcon,
@@ -23,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useAuth } from '../hooks/useAuth';
+import { useAiConsent } from '../hooks/useAiConsent';
 import { deleteAccount, exportUserData } from '../services/accountApi';
 
 const DONATE_URL = import.meta.env.VITE_STRIPE_PAYMENT_LINK ?? '';
@@ -37,6 +39,11 @@ export default function SettingsPage({ darkMode, onToggleTheme }: Props) {
   const theme = useTheme();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const {
+    granted: aiConsentGranted,
+    grantedAt: aiConsentAt,
+    revoke: revokeAiConsent,
+  } = useAiConsent();
 
   const isDark = theme.palette.mode === 'dark';
   const itemSx = {
@@ -147,6 +154,35 @@ export default function SettingsPage({ darkMode, onToggleTheme }: Props) {
       </Typography>
       <Box sx={sectionCardSx}>
         <List disablePadding>
+          <ListItemButton
+            onClick={() => {
+              if (aiConsentGranted) void revokeAiConsent();
+            }}
+            disabled={!aiConsentGranted}
+            sx={itemSx}
+            aria-label={t('aiConsent.settingsTitle')}
+          >
+            <ListItemIcon>
+              <AiIcon />
+            </ListItemIcon>
+            <ListItemText
+              primary={t('aiConsent.settingsTitle')}
+              secondary={
+                aiConsentGranted
+                  ? t('aiConsent.settingsGranted', {
+                      date: aiConsentAt ? new Date(aiConsentAt).toLocaleDateString() : '',
+                    })
+                  : t('aiConsent.settingsRevoked')
+              }
+              primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 500 }}
+              secondaryTypographyProps={{ fontSize: '0.78rem' }}
+            />
+            {aiConsentGranted && (
+              <Typography variant="caption" color="primary" sx={{ flexShrink: 0 }}>
+                {t('aiConsent.revoke')}
+              </Typography>
+            )}
+          </ListItemButton>
           <ListItemButton onClick={handleExportData} sx={itemSx} aria-label={t('auth.exportData')}>
             <ListItemIcon>
               <CloudDownloadIcon />

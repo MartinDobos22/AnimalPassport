@@ -5,10 +5,10 @@ import { useAiImportContext } from './AiImport';
 
 export default function AiImportFooter() {
   const { t } = useTranslation('healthPassport');
-  const { state, setStep, restartUpload, analyze, submit, cancel } = useAiImportContext();
+  const { state, setStep, restartUpload, requestAnalyze, submit, cancel } = useAiImportContext();
 
   const analyzing = state.analyzeProgress !== null;
-  const canAnalyze = state.attachments.length > 0 && state.aiProcessingConsent && !analyzing;
+  const canAnalyze = state.attachments.length > 0 && !analyzing;
   const canAdvanceFromReview =
     state.aiDetectedRecords.some((r) => r.targetType !== 'SKIP') || state.detectedProfileAvailable;
 
@@ -25,9 +25,7 @@ export default function AiImportFooter() {
           <Button
             variant="contained"
             disabled={!canAnalyze}
-            onClick={() => {
-              void analyze();
-            }}
+            onClick={requestAnalyze}
             startIcon={analyzing ? <CircularProgress size={16} color="inherit" /> : null}
           >
             {analyzing ? t('addRecord.aiImport.analyzing') : t('addRecord.aiImport.analyze')}

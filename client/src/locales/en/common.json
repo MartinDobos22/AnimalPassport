@@ -412,5 +412,24 @@
     "foodInsights": "A comparison of food changes with symptoms from your check-ins. This is a statistical link, not a diagnosis — the more check-ins you have, the more reliable it gets.",
     "checkInQuestion": "One answer is enough to save a check-in. Details are optional — add them when you notice something.",
     "leadDays": "How many days before the due date you get an e-mail. You can pick several values at once — 30 days to book the vet and 7 days as a reminder, for example."
+  },
+  "aiConsent": {
+    "title": "AI will read the data",
+    "intro": "An AI service reads the photo or document you upload and pulls the data into a record.",
+    "points": [
+      "Only the uploaded file is sent, nothing else from your account.",
+      "AI can get things wrong, so you check the result before saving.",
+      "You can withdraw this consent any time in settings."
+    ],
+    "privacyLink": "How we handle data",
+    "later": "Not now",
+    "accept": "I agree",
+    "saveFailed": "The consent could not be saved. Please try again.",
+    "inlineNote": "AI reads it, then you check the data.",
+    "inlineLink": "More",
+    "settingsTitle": "AI document reading",
+    "settingsGranted": "Allowed on {{date}}",
+    "settingsRevoked": "Not allowed — we will ask on your first scan.",
+    "revoke": "Turn off"
   }
 }

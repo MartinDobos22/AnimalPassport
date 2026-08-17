@@ -190,8 +190,6 @@
   },
   "addRecord": {
     "title": "Nový záznam",
-    "tabManual": "Ručný záznam",
-    "tabAiImport": "AI import",
     "stepUpload": "Nahrať strany",
     "stepReview": "Skontrolovať záznamy",
     "stepConfirm": "Potvrdiť a uložiť",
@@ -230,7 +228,6 @@
     },
     "aiImport": {
       "uploadDescription": "Nahraj jednu alebo viac strán dokumentu (zdravotný pas, laboratórny výsledok, správa od veterinára…). AI z nich extrahuje záznamy naraz a v ďalšom kroku ti dá zoznam na schválenie.",
-      "accuracyNotice": "AI číta údaje z fotky/dokumentu a môže sa pomýliť — najmä pri dátumoch a číslach. V ďalšom kroku si všetky prečítané údaje skontroluj a podľa potreby oprav pred uložením.",
       "required": "Doplň {{count}} povinné pole",
       "required_other": "Doplň {{count}} povinných polí",
       "analyzing": "Analyzujem…",
@@ -256,15 +253,9 @@
       "suitabilityNoAllergens": "Bez konfliktu s alergiami a diagnózami",
       "suitabilityCheckAllergens": "Skontrolovať zloženie voči alergénom",
       "importRecordCount": "AI import záznamov: {{count}}",
-      "privacyNotice": "AI import spracúva zdravotné údaje z dokumentu. Pred odoslaním do OCR/AI služieb minimalizujeme payload a auditujeme len metadáta (používateľ, operácia, provider, veľkosť, čas), nie obsah dokumentu.",
-      "aiProcessingConsent": "Súhlasím s AI/OCR spracovaním zdravotných údajov z dokumentu pre účely importu záznamov."
+      "optionsToggle": "Doplňujúce možnosti",
+      "tryAsMedicine": "Skúsiť ako obal lieku"
     },
-    "modeQuick": "Rýchly",
-    "modeManual": "Manuálna návšteva",
-    "modeAi": "Z dokumentu (AI)",
-    "subtitleQuick": "Rýchle zalogovanie jedného typu záznamu (bez detailov o návšteve).",
-    "subtitleManual": "Kompletná návšteva — vrátane vyšetrení (krv, RTG, USG…), diagnózy a súvisiacich záznamov.",
-    "subtitleAi": "AI extrahuje vakcinácie a záznamy z nahraných dokumentov.",
     "addTitle": "Pridať záznam",
     "kindVaccination": "Očkovanie",
     "kindDeworming": "Odčervenie",
@@ -306,6 +297,26 @@
       "treatment": "Chronická alebo opakovaná liečba problému (alergia, srdce, kĺby…) s pripomienkou ďalšieho termínu.",
       "medication": "Jednorazový alebo krátkodobý liek s dávkovaním – bez pripomienky ďalšieho termínu.",
       "diet": "Krmivo a jeho znášanlivosť u zvieraťa."
+    },
+    "chooserSubtitle": "Čo chceš pridať?",
+    "backToModes": "Späť na výber",
+    "modes": {
+      "SCAN": {
+        "title": "Odfotiť liek",
+        "description": "Odfoť obal, zvyšok vyplníme"
+      },
+      "AI": {
+        "title": "Nahrať dokument",
+        "description": "Pas, správa od veterinára, výsledky"
+      },
+      "QUICK": {
+        "title": "Rýchly zápis",
+        "description": "Jeden záznam za pár sekúnd"
+      },
+      "MANUAL": {
+        "title": "Podrobná návšteva",
+        "description": "Návšteva s liekmi, nálezom a cenou"
+      }
     }
   },
   "attachmentUpload": {
@@ -978,5 +989,65 @@
   "nextDue": {
     "dateLabel": "Dátum ďalšej dávky",
     "helper": "Zmena intervalu posunie dátum; zadaním dátumu sa prepočíta interval."
+  },
+  "productScan": {
+    "photoDescription": "Odfoť obal — škatuľku, blister alebo pipetu. Zvyšok vyplníme za teba.",
+    "takePhoto": "Odfotiť",
+    "fromGallery": "Z galérie",
+    "removePhoto": "Odstrániť fotku",
+    "unsupportedPhoto": "Nahraj fotku vo formáte JPEG, PNG alebo WebP.",
+    "photoTooLarge": "Fotka má viac než {{maxMb}} MB. Skús ju odfotiť znova.",
+    "photoFailed": "Fotku sa nepodarilo načítať. Skús to znova.",
+    "scanning": "Čítam fotku…",
+    "recognize": "Prečítať z fotky",
+    "scanFailed": "Fotku sa nepodarilo prečítať. Skús ju odfotiť zblízka a bez odleskov.",
+    "recordType": "Typ záznamu",
+    "recordTypes": {
+      "DEWORMING": "Odčervenie",
+      "ECTOPARASITE": "Antiparazitiká (kliešte, blchy)",
+      "VACCINATION": "Vakcinácia",
+      "MEDICATION": "Liek"
+    },
+    "productName": "Názov prípravku",
+    "dateGiven": "Dátum podania",
+    "nextDueDate": "Ďalšia dávka",
+    "nextDueHint": "Kedy prípravok podať znova — nie expirácia balenia.",
+    "presetDays": "o {{days}} dní",
+    "intervalRationale": "Odhad AI: {{value}}",
+    "dose": "Dávkovanie",
+    "frequency": "Frekvencia",
+    "endDate": "Koniec podávania",
+    "batchNumber": "Šarža",
+    "note": "Poznámka",
+    "attachmentFallback": "Fotka obalu prípravku",
+    "visitReason": {
+      "DEWORMING": "Odčervenie",
+      "ECTOPARASITE": "Antiparazitická ochrana",
+      "VACCINATION": "Vakcinácia",
+      "MEDICATION": "Podanie lieku"
+    },
+    "noteActive": "Účinné látky: {{value}}",
+    "noteStrength": "Sila balenia: {{value}}",
+    "noteBatch": "Šarža: {{value}}",
+    "noteExpiry": "Expirácia balenia: {{value}}",
+    "noteDosage": "Dávkovanie z obalu: {{value}}",
+    "noteManufacturer": "Výrobca: {{value}}",
+    "alerts": {
+      "PACKAGE_EXPIRED": "Balenie bolo použiteľné do {{expiry}}. K dátumu podania je už po expirácii.",
+      "PACKAGE_EXPIRING_SOON": "Balenie je použiteľné do {{expiry}}, potom ho už nepodávaj.",
+      "WEIGHT_BELOW_RANGE": "Balenie je pre zvieratá od {{min}} kg, tvoje má {{weight}} kg. Over dávku s veterinárom.",
+      "WEIGHT_ABOVE_RANGE": "Balenie pokrýva zvieratá do {{max}} kg, tvoje má {{weight}} kg. Možno treba vyššiu dávku.",
+      "WEIGHT_UNKNOWN": "Balenie je pre zvieratá {{min}}–{{max}} kg. V profile chýba hmotnosť, tak to nevieme overiť.",
+      "SPECIES_MISMATCH": "Prípravok je pre iný živočíšny druh, než má vybrané zviera.",
+      "LOW_CONFIDENCE": "Fotka bola ťažko čitateľná — údaje si prejdi dôkladnejšie.",
+      "TYPE_UNKNOWN": "Typ prípravku sa nepodarilo určiť, vyber ho prosím."
+    },
+    "photoAlt": "Fotka obalu prípravku",
+    "retakePhoto": "Odfotiť znova",
+    "retake": "Iná fotka",
+    "showDetails": "Zobraziť podrobnosti",
+    "hideDetails": "Skryť podrobnosti",
+    "price": "Cena",
+    "priceHint": "Nepovinné — pridá sa medzi výdavky."
   }
 }

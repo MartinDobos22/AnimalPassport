@@ -37,6 +37,7 @@ Voliteľné — slúžia na A/B testing kvality vs ceny bez code change. Default
 | `MODEL_VET_FILE` | `gpt-4o` | Multi-image vakc. preukaz (`analyzeVetFile`) |
 | `MODEL_PASSPORT_INTERPRET` | `gpt-4o` | JSON extract z passport textu (`interpretHealthPassportWithOpenAI`). Kľúčový krok pre kvalitu extrahovaných zdravotných záznamov — default je plný `gpt-4o` (nie mini) kvôli presnosti dátumov, typov záznamov a identifikátorov. Pre lacnejšiu prevádzku možno prepnúť na `gpt-4o-mini`. |
 | `MODEL_PASSPORT_VISION` | `gpt-4.1` | Jednokrokové vision volanie: obrázok dokumentu → štruktúrované záznamy (`interpretHealthPassportFromImage`), bez samostatného OCR kroku. Aktívne len keď klient beží v `VITE_EXTRACTION_MODE=vision`. Musí to byť model s vision podporou. |
+| `MODEL_MEDICATION_SCAN` | `gpt-4o` | Rozpoznanie obalu prípravku z fotky (`scanMedicationPackage`, `POST /api/scan-medication`). Musí to byť model s vision podporou. |
 | `MODEL_EPISODE_SUMMARY` | `gpt-4o-mini` | Similar-episode summary |
 | `MODEL_FOOD_SAFETY` | `gpt-4o-mini` | Food safety Q&A |
 | `MODEL_FEED_ANALYSIS` | `gpt-4o` | Analýza krmiva (text) |
