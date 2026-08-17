@@ -62,7 +62,7 @@ router.post(
 
       if (!result) {
         res.status(502).json({
-          error: { message: 'Rozpoznanie prípravku zlyhalo. Skús to znova.' },
+          error: { message: 'Fotku sa nepodarilo prečítať. Skús to o chvíľu znova.' },
         });
         return;
       }
