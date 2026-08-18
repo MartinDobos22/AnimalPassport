@@ -276,6 +276,17 @@ function ReviewStep() {
         />
 
         {isMedication && (
+          <TextField
+            size="small"
+            label={t('productScan.reason')}
+            value={draft.reason}
+            onChange={(e) => setDraftField('reason', e.target.value)}
+            placeholder={t('productScan.reasonPlaceholder')}
+            fullWidth
+          />
+        )}
+
+        {isMedication && (
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
             <TextField
               size="small"

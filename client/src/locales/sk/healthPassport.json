@@ -1048,6 +1048,8 @@
     "showDetails": "Zobraziť podrobnosti",
     "hideDetails": "Skryť podrobnosti",
     "price": "Cena",
-    "priceHint": "Nepovinné — pridá sa medzi výdavky."
+    "priceHint": "Nepovinné — pridá sa medzi výdavky.",
+    "reason": "Dôvod podávania",
+    "reasonPlaceholder": "Napr. zápal ucha"
   }
 }

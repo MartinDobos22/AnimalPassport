@@ -54,6 +54,7 @@ const emptyDraft = (): ProductScanDraft => ({
   dose: '',
   frequency: '',
   endDate: '',
+  reason: '',
   price: '',
 });
 
@@ -163,6 +164,7 @@ export function useMedicationScan(petId: string, initialFile?: File | null) {
         dose: scan.dosageNote,
         frequency: '',
         endDate: '',
+        reason: '',
         price: '',
       };
     },

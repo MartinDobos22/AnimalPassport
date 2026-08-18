@@ -1012,6 +1012,8 @@
     "showDetails": "Show details",
     "hideDetails": "Hide details",
     "price": "Price",
-    "priceHint": "Optional — added to your expenses."
+    "priceHint": "Optional — added to your expenses.",
+    "reason": "Reason for treatment",
+    "reasonPlaceholder": "e.g. ear infection"
   }
 }
