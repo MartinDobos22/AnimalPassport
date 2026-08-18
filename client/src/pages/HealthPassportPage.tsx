@@ -571,6 +571,7 @@ export default function HealthPassportPage() {
         frequency: string;
         startDate: string;
         endDate: string;
+        note: string;
       }
     ) => {
       try {

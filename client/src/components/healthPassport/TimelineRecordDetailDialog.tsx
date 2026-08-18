@@ -81,6 +81,7 @@ interface MedDraft {
   frequency: string;
   startDate: string;
   endDate: string;
+  note: string;
 }
 interface DietDraft {
   foodName: string;
@@ -178,6 +179,7 @@ export default function TimelineRecordDetailDialog({
     frequency: '',
     startDate: today(),
     endDate: '',
+    note: '',
   });
   const [dietDraft, setDietDraft] = useState<DietDraft>({
     foodName: '',
@@ -237,6 +239,7 @@ export default function TimelineRecordDetailDialog({
         frequency: medication.frequency,
         startDate: medication.startDate,
         endDate: medication.endDate ?? '',
+        note: medication.note ?? '',
       });
     if (diet)
       setDietDraft({
@@ -722,6 +725,14 @@ export default function TimelineRecordDetailDialog({
               size="small"
             />
           </Box>
+          <TextField
+            label={t('detail.note')}
+            value={medDraft.note}
+            onChange={(e) => setMedDraft((p) => ({ ...p, note: e.target.value }))}
+            size="small"
+            multiline
+            minRows={2}
+          />
         </Stack>
       ) : (
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
@@ -755,6 +766,15 @@ export default function TimelineRecordDetailDialog({
               {medDraft.endDate || '–'}
             </Typography>
           </FieldRow>
+          {medDraft.note && (
+            <Box sx={{ gridColumn: '1 / -1' }}>
+              <FieldRow label={t('detail.note')}>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  {medDraft.note}
+                </Typography>
+              </FieldRow>
+            </Box>
+          )}
         </Box>
       );
     }

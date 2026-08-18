@@ -149,6 +149,7 @@ export interface MedicationRecord {
   endDate?: string;
   longTerm?: boolean;
   fromVetVisitId?: string;
+  note?: string;
 }
 
 export interface MedicationDoseLog {

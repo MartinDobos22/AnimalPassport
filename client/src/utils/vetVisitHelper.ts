@@ -83,6 +83,8 @@ export interface ProductScanDraft {
   dose: string;
   frequency: string;
   endDate: string;
+  /** Prečo sa liek podáva — na obale to nie je, dopĺňa používateľ. */
+  reason: string;
   /** Cena zaplatená za balenie, ako ju zadal používateľ. Prázdne = bez výdavku. */
   price: string;
 }
@@ -427,12 +429,13 @@ export class VetVisitHelper {
         id: medicationId,
         petId,
         name: productName,
-        reason: note ?? '',
+        reason: draft.reason.trim(),
         dose: draft.dose.trim(),
         frequency: draft.frequency.trim(),
         startDate: draft.dateGiven,
         endDate: draft.endDate || undefined,
         fromVetVisitId: visitId,
+        note,
       });
       doseLogs.push({ id: uid(), petId, medicationId, date: draft.dateGiven, taken: false });
     }

@@ -187,6 +187,7 @@ export const medicationMapper: EntityMapper<MedicationRecord> = {
       ['end_date', d.endDate],
       ['long_term', d.longTerm],
       ['from_vet_visit_id', d.fromVetVisitId],
+      ['note', d.note],
     ]),
   toDto: (r) => ({
     id: String(r.id),
@@ -199,6 +200,7 @@ export const medicationMapper: EntityMapper<MedicationRecord> = {
     endDate: str(r.end_date),
     longTerm: bool(r.long_term),
     fromVetVisitId: str(r.from_vet_visit_id),
+    note: str(r.note),
   }),
 };
 
