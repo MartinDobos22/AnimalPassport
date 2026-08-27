@@ -1,4 +1,7 @@
-import { Navigate, useParams } from 'react-router-dom';
+import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Box, Button, Container, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { SearchOffOutlined as SearchOffOutlinedIcon } from '@mui/icons-material';
 import Seo from '../../components/Seo';
 import BlogLayout from '../../components/public/BlogLayout';
 import ArticleView from '../../components/public/ArticleView';
@@ -42,6 +45,38 @@ export function articleSeo(article: Article) {
   };
 }
 
+// Neznámy slug NESMIE presmerovať na /poradna: Googlebot renderuje JS, klientský
+// <Navigate> vyhodnotí ako presmerovanie a URL skončí v Search Console ako
+// „Page with redirect". Soft-404 s `noindex` je správna odpoveď — Google ju
+// zaradí medzi nenájdené/neindexované, nie medzi redirecty.
+function ArticleNotFound({ darkMode, onToggleTheme }: Pick<Props, 'darkMode' | 'onToggleTheme'>) {
+  const theme = useTheme();
+
+  return (
+    <BlogLayout darkMode={darkMode} onToggleTheme={onToggleTheme}>
+      <Seo
+        title="Článok sa nenašiel | Pawly"
+        description="Tento článok v poradni Pawly neexistuje alebo bol presunutý."
+        noindex
+      />
+      <Container maxWidth="sm" sx={{ py: theme.spacing(10), textAlign: 'center' }}>
+        <Box sx={{ color: 'text.secondary', mb: theme.spacing(2) }}>
+          <SearchOffOutlinedIcon sx={{ fontSize: 64 }} />
+        </Box>
+        <Typography variant="h5" sx={{ fontWeight: 600, mb: theme.spacing(1) }}>
+          Článok sa nenašiel
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: theme.spacing(4) }}>
+          Tento článok neexistuje alebo bol presunutý. Skús ho nájsť v poradni.
+        </Typography>
+        <Button component={RouterLink} to={PORADNA_PATH} variant="contained">
+          Prejsť do poradne
+        </Button>
+      </Container>
+    </BlogLayout>
+  );
+}
+
 export default function PoradnaArticlePage({ darkMode, onToggleTheme, slug: slugProp }: Props) {
   const params = useParams();
   const slug = slugProp ?? params.slug;
@@ -49,7 +84,7 @@ export default function PoradnaArticlePage({ darkMode, onToggleTheme, slug: slug
 
   useArticleTracking(article?.slug);
 
-  if (!article) return <Navigate to={PORADNA_PATH} replace />;
+  if (!article) return <ArticleNotFound darkMode={darkMode} onToggleTheme={onToggleTheme} />;
 
   return (
     <BlogLayout darkMode={darkMode} onToggleTheme={onToggleTheme}>

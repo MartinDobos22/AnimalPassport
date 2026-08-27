@@ -9,6 +9,7 @@ Klient (`cd client`) a server (`cd server`) majú samostatné `package.json`. In
 | `npm run dev` | Vite dev server na `:5173` | manuálne počas vývoja |
 | `npm run build` | TS build + Vite production build do `dist/` | pred nasadením; CI |
 | `npm run preview` | Vite preview production buildu | pre lokálne overenie produkčného buildu |
+| `npm run sitemap:check` | Overí, že každá URL v `dist/sitemap.xml` je prerendrovaná 200-URL bez koncovej lomky (súčasť `build`) | po builde, pri ladení SEO |
 | `npm run type-check` | `tsc --noEmit` | CI, pre-commit, počas review |
 | `npm run lint` | alias na `type-check` (ESLint sa pridá neskôr) | CI |
 | `npm test` | placeholder (žiadne testy zatiaľ) | CI |
