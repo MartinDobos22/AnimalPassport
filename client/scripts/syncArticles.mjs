@@ -1,10 +1,13 @@
 // Build-time sync: načíta verejné články zo Supabase a prepíše committed mirror
 // `src/content/poradna/articles.data.json`, ktorý konzumuje SPA aj prerender.
 //
-// Bezpečnostná zásada: build NIKDY nesmie spadnúť kvôli tomuto skriptu.
-// - chýbajúce env alebo nedostupná DB → ponechá posledný committed mirror (fallback),
-// - prázdna odpoveď z DB → ponechá fallback (nechceme vymazať obsah),
-// - akákoľvek chyba → varovanie + exit 0.
+// Fallback vs. fail-fast: pri lokálnom builde smie chýbajúca DB len varovať a
+// nechať posledný committed mirror. Na produkčnom builde (Netlify/CI) sú chýbajúce
+// credentials konfiguračná chyba — mirror ostane starý, nové články sa
+// neprerendrujú ani nedostanú do sitemap a Google ich zaradí ako neindexované.
+// Preto tam build zámerne padne. Prechodné zlyhanie DB (fetch/HTTP/0 riadkov) len
+// varuje — deploy sa vtedy zaobíde s obsahom z posledného buildu.
+// Únikový ventil: ARTICLES_SYNC_OPTIONAL=1 vráti staré mäkké správanie.
 //
 // Env (build, server-side — NEbundluje sa do klienta):
 //   SUPABASE_URL a SUPABASE_SERVICE_ROLE_KEY (alebo SUPABASE_SERVICE_KEY).
@@ -52,14 +55,28 @@ function rowToArticle(row) {
   };
 }
 
+function isProductionBuild() {
+  return Boolean(process.env.NETLIFY || process.env.CI);
+}
+
+function isSyncOptional() {
+  return process.env.ARTICLES_SYNC_OPTIONAL === '1';
+}
+
 async function main() {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY;
 
   if (!url || !key) {
-    console.warn(
-      '[syncArticles] SUPABASE_URL/kľúč nie sú nastavené — používam committed mirror (fallback).'
-    );
+    const message =
+      '[syncArticles] SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY nie sú nastavené — mirror sa neobnoví z DB.';
+    if (isProductionBuild() && !isSyncOptional()) {
+      throw new Error(
+        `${message} Na produkčnom builde je to konfiguračná chyba: novo publikované články by ostali bez prerenderu a mimo sitemap. ` +
+          'Doplň build env premenné v Netlify (Site settings → Environment variables), alebo nastav ARTICLES_SYNC_OPTIONAL=1.'
+      );
+    }
+    console.warn(`${message} Používam committed mirror (fallback).`);
     return;
   }
 
@@ -94,5 +111,9 @@ async function main() {
 }
 
 main().catch((err) => {
+  if (isProductionBuild() && !isSyncOptional()) {
+    console.error(`[syncArticles] ${err?.message ?? err}`);
+    process.exit(1);
+  }
   console.warn(`[syncArticles] neočakávaná chyba (${err?.message ?? err}) — ponechávam fallback.`);
 });

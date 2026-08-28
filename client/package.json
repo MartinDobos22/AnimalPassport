@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/syncArticles.mjs && tsc -b && vite build && node scripts/generateSitemap.mjs && node scripts/prerender.mjs",
+    "build": "node scripts/syncArticles.mjs && tsc -b && vite build && node scripts/generateSitemap.mjs && node scripts/prerender.mjs && node scripts/checkSitemap.mjs",
     "articles:sync": "node scripts/syncArticles.mjs",
     "sitemap:generate": "node scripts/generateSitemap.mjs",
+    "sitemap:check": "node scripts/checkSitemap.mjs",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "lint": "tsc --noEmit",
