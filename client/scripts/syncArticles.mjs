@@ -1,13 +1,14 @@
 // Build-time sync: načíta verejné články zo Supabase a prepíše committed mirror
 // `src/content/poradna/articles.data.json`, ktorý konzumuje SPA aj prerender.
 //
-// Fallback vs. fail-fast: pri lokálnom builde smie chýbajúca DB len varovať a
-// nechať posledný committed mirror. Na produkčnom builde (Netlify/CI) sú chýbajúce
-// credentials konfiguračná chyba — mirror ostane starý, nové články sa
+// Fallback vs. fail-fast: pri lokálnom builde a v CI smie chýbajúca DB len varovať
+// a nechať posledný committed mirror — tie buildy sa nenasadzujú, overujú len, že
+// kód preloží. Na DEPLOY builde (Netlify, premenná `NETLIFY`) sú chýbajúce
+// credentials konfiguračná chyba: mirror ostane starý, nové články sa
 // neprerendrujú ani nedostanú do sitemap a Google ich zaradí ako neindexované.
 // Preto tam build zámerne padne. Prechodné zlyhanie DB (fetch/HTTP/0 riadkov) len
-// varuje — deploy sa vtedy zaobíde s obsahom z posledného buildu.
-// Únikový ventil: ARTICLES_SYNC_OPTIONAL=1 vráti staré mäkké správanie.
+// varuje aj na deployi — výpadok Supabase nemá blokovať vydanie.
+// Únikový ventil: ARTICLES_SYNC_OPTIONAL=1 vráti všade mäkké správanie.
 //
 // Env (build, server-side — NEbundluje sa do klienta):
 //   SUPABASE_URL a SUPABASE_SERVICE_ROLE_KEY (alebo SUPABASE_SERVICE_KEY).
@@ -55,8 +56,10 @@ function rowToArticle(row) {
   };
 }
 
-function isProductionBuild() {
-  return Boolean(process.env.NETLIFY || process.env.CI);
+// Zámerne LEN `NETLIFY` (deploy build), nie `CI`: GitHub Actions Supabase
+// credentials nemá a mať nemusí — jeho build je verifikačný, nie nasadzovaný.
+function isDeployBuild() {
+  return Boolean(process.env.NETLIFY);
 }
 
 function isSyncOptional() {
@@ -69,14 +72,14 @@ async function main() {
 
   if (!url || !key) {
     const message =
-      '[syncArticles] SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY nie sú nastavené — mirror sa neobnoví z DB.';
-    if (isProductionBuild() && !isSyncOptional()) {
+      'SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY nie sú nastavené — mirror sa neobnoví z DB.';
+    if (isDeployBuild() && !isSyncOptional()) {
       throw new Error(
-        `${message} Na produkčnom builde je to konfiguračná chyba: novo publikované články by ostali bez prerenderu a mimo sitemap. ` +
+        `${message} Na deploy builde je to konfiguračná chyba: novo publikované články by ostali bez prerenderu a mimo sitemap. ` +
           'Doplň build env premenné v Netlify (Site settings → Environment variables), alebo nastav ARTICLES_SYNC_OPTIONAL=1.'
       );
     }
-    console.warn(`${message} Používam committed mirror (fallback).`);
+    console.warn(`[syncArticles] ${message} Používam committed mirror (fallback).`);
     return;
   }
 
@@ -111,7 +114,7 @@ async function main() {
 }
 
 main().catch((err) => {
-  if (isProductionBuild() && !isSyncOptional()) {
+  if (isDeployBuild() && !isSyncOptional()) {
     console.error(`[syncArticles] ${err?.message ?? err}`);
     process.exit(1);
   }

@@ -74,11 +74,11 @@ Tieto sa čítajú LEN počas buildu v `client/scripts/syncArticles.mjs` (prebui
 
 | Premenná | Povinná | Default | Popis |
 |---|---|---|---|
-| `SUPABASE_URL` | **áno na produkčnom builde** (Netlify/CI) | — | URL Supabase projektu (rovnaká ako server). Lokálne nepovinná — sync sa preskočí a použije sa committed mirror. |
-| `SUPABASE_SERVICE_ROLE_KEY` | **áno na produkčnom builde** (Netlify/CI) | — | service_role kľúč (alias `SUPABASE_SERVICE_KEY`). Číta sa len pri builde; **nikdy sa nedostane do klientského bundla**. |
-| `ARTICLES_SYNC_OPTIONAL` | nie | prázdne | `1` = vráti staré mäkké správanie (chýbajúce credentials len varujú aj na produkčnom builde). Únikový ventil pre výnimočný deploy bez DB. |
+| `SUPABASE_URL` | **áno na deploy builde** (Netlify) | — | URL Supabase projektu (rovnaká ako server). Lokálne a v GitHub Actions nepovinná — sync sa preskočí a použije sa committed mirror. |
+| `SUPABASE_SERVICE_ROLE_KEY` | **áno na deploy builde** (Netlify) | — | service_role kľúč (alias `SUPABASE_SERVICE_KEY`). Číta sa len pri builde; **nikdy sa nedostane do klientského bundla**. |
+| `ARTICLES_SYNC_OPTIONAL` | nie | prázdne | `1` = vráti staré mäkké správanie (chýbajúce credentials len varujú aj na deploy builde). Únikový ventil pre výnimočný deploy bez DB. |
 
-> **Chýbajúce credentials zhodia produkčný build.** Keď `syncArticles.mjs` nenájde `SUPABASE_URL`/kľúč a beží pod `NETLIFY` alebo `CI`, build **zámerne padne**. Tichý fallback tu totiž de-indexuje web: novo publikované články ostanú mimo mirroru, neprerendrujú sa, nedostanú sa do `sitemap.xml` a Google ich zaradí ako neindexované. Padnutý build je lacnejší než stratené pozície vo vyhľadávaní.
+> **Chýbajúce credentials zhodia deploy build.** Keď `syncArticles.mjs` nenájde `SUPABASE_URL`/kľúč a beží pod `NETLIFY`, build **zámerne padne**. Gate je zámerne len `NETLIFY`, nie `CI` — GitHub Actions buduje len na overenie, nenasadzuje, a tie credentials mať nemusí. Tichý fallback tu totiž de-indexuje web: novo publikované články ostanú mimo mirroru, neprerendrujú sa, nedostanú sa do `sitemap.xml` a Google ich zaradí ako neindexované. Padnutý build je lacnejší než stratené pozície vo vyhľadávaní.
 >
 > **Prechodné zlyhanie DB** (fetch timeout, HTTP chyba, 0 riadkov) build **nezhodí** — použije posledný committed `articles.data.json`, takže výpadok Supabase neblokuje deploy. Cenou je, že sa nasadí obsah z posledného buildu.
 >
