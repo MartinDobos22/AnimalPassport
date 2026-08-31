@@ -10,6 +10,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { track } from '../../utils/analytics';
+import { landingCardSx } from './landingCardSx';
 
 interface ScanLine {
   raw: string;
@@ -182,10 +183,7 @@ export default function PassportScanDemo() {
             sx={{
               borderRadius: 4,
               p: { xs: 2.5, md: 3 },
-              bgcolor: alpha(theme.palette.background.paper, 0.6),
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              border: `1px solid ${theme.palette.divider}`,
+              ...landingCardSx(theme),
               display: 'flex',
               flexDirection: 'column',
             }}

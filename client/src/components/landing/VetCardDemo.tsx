@@ -8,6 +8,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { track } from '../../utils/analytics';
+import { landingCardSx } from './landingCardSx';
 
 interface VetCardPet {
   id: string;
@@ -128,9 +129,7 @@ export default function VetCardDemo() {
           sx={{
             borderRadius: 4,
             p: { xs: 2.5, md: 4 },
-            bgcolor: theme.palette.background.paper,
-            border: `1px solid ${theme.palette.divider}`,
-            boxShadow: `0 20px 50px ${alpha(theme.palette.primary.main, 0.08)}`,
+            ...landingCardSx(theme),
           }}
         >
           <Stack

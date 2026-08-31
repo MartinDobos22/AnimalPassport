@@ -11,6 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { track } from '../../utils/analytics';
+import { landingCardSx } from './landingCardSx';
 
 type ReminderStatus = 'overdue' | 'soon' | 'ok';
 type ReminderType = 'vaccine' | 'deworm' | 'ecto' | 'vet';
@@ -125,11 +126,7 @@ export default function HealthRemindersDemo() {
           sx={{
             p: { xs: 2.5, md: 4 },
             borderRadius: 4,
-            bgcolor: alpha(theme.palette.background.paper, 0.6),
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            border: `1px solid ${theme.palette.divider}`,
-            boxShadow: `0 20px 50px ${alpha(theme.palette.primary.main, 0.08)}`,
+            ...landingCardSx(theme),
           }}
         >
           <Stack direction="row" alignItems="center" gap={1.75} sx={{ mb: 1 }}>

@@ -21,6 +21,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { track } from '../../utils/analytics';
+import { landingCardSx } from './landingCardSx';
 
 type Verdict = 'SAFE' | 'CAUTION' | 'UNSAFE';
 
@@ -249,11 +250,7 @@ export default function InteractiveAiDemo() {
           sx={{
             p: { xs: 2.5, md: 3 },
             borderRadius: 4,
-            bgcolor: alpha(theme.palette.background.paper, 0.6),
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            border: `1px solid ${theme.palette.divider}`,
-            boxShadow: `0 20px 50px ${alpha(theme.palette.primary.main, 0.08)}`,
+            ...landingCardSx(theme),
           }}
         >
           <Stack direction="row" gap={1} alignItems="stretch">

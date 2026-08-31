@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { scoreColor } from '../../utils/scoreColor';
 import { track } from '../../utils/analytics';
+import { landingCardSx } from './landingCardSx';
 
 type Quality = 'excellent' | 'good' | 'average' | 'poor';
 
@@ -152,11 +153,7 @@ export default function ProductAnalysisDemo() {
           sx={{
             p: { xs: 2.5, md: 4 },
             borderRadius: 4,
-            bgcolor: alpha(theme.palette.background.paper, 0.6),
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            border: `1px solid ${theme.palette.divider}`,
-            boxShadow: `0 20px 50px ${alpha(theme.palette.primary.main, 0.08)}`,
+            ...landingCardSx(theme),
             transition: 'opacity 200ms ease',
             opacity: analyzing ? 0.55 : 1,
           }}
